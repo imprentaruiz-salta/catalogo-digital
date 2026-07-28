@@ -6,589 +6,371 @@
 <meta name="description" content="Catálogo Digital - Pedí por WhatsApp">
 <title>MiCatálogo Digital</title>
 <style>
-  :root {
-    --primary: #25D366;
-    --primary-dark: #128C7E;
-    --accent: #FF6B35;
-    --bg: #f5f6fa;
-    --card: #ffffff;
-    --text: #2d3436;
-    --muted: #636e72;
-    --border: #e0e0e0;
-    --shadow: 0 2px 12px rgba(0,0,0,0.08);
-    --radius: 12px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  header {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    color: white;
-    padding: 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-  }
-
-  .header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px 10px;
-  }
-
-  .logo-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 42px;
-    height: 42px;
-    background: white;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-  }
-
-  .logo-text h1 {
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.1;
-  }
-
-  .logo-text span {
-    font-size: 11px;
-    opacity: 0.85;
-  }
-
-  .cart-btn {
-    background: rgba(255,255,255,0.2);
-    border: 2px solid rgba(255,255,255,0.5);
-    border-radius: 50px;
-    color: white;
-    padding: 8px 14px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
-    text-decoration: none;
-  }
-
-  .cart-badge {
-    background: var(--accent);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* SEARCH */
-  .search-bar {
-    padding: 0 16px 12px;
-  }
-
-  .search-bar input {
-    width: 100%;
-    padding: 10px 16px;
-    border-radius: 50px;
-    border: none;
-    font-size: 14px;
-    outline: none;
-    background: rgba(255,255,255,0.95);
-  }
-
-  /* CATEGORY NAV */
-  .cat-nav {
-    background: white;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    display: flex;
-    gap: 0;
-  }
-
-  .cat-nav::-webkit-scrollbar { display: none; }
-
-  .cat-nav a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 10px 14px;
-    text-decoration: none;
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-    min-width: 70px;
-  }
-
-  .cat-nav a span.icon { font-size: 20px; }
-  .cat-nav a.active { color: var(--primary-dark); border-bottom-color: var(--primary); }
-
-  /* MAIN */
-  main { padding: 16px; max-width: 600px; margin: 0 auto; }
-
-  /* SECTION */
-  .section { margin-bottom: 32px; }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary);
-  }
-
-  .section-icon { font-size: 26px; }
-
-  .section-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .section-count {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--muted);
-    background: var(--bg);
-    padding: 3px 8px;
-    border-radius: 50px;
-  }
-
-  /* SUBCATEGORY */
-  .subcat-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--primary-dark);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 14px 0 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .subcat-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* PRODUCT GRID */
-  .products-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  /* PRODUCT CARD */
-  .product-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border);
-    transition: transform 0.15s;
-  }
-
-  .product-card:active { transform: scale(0.97); }
-
-  .product-img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    background: var(--bg);
-    font-size: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .product-img.emoji-img {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  }
-
-  .product-body {
-    padding: 10px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .product-code {
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-
-  .product-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1.3;
-  }
-
-  .product-desc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.4;
-    flex: 1;
-  }
-
-  .product-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-  }
-
-  .product-price {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--primary-dark);
-  }
-
-  .product-price small {
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 400;
-    display: block;
-  }
-
-  .add-btn {
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    line-height: 1;
-    transition: background 0.2s;
-    text-decoration: none;
-  }
-
-  .add-btn:hover { background: var(--primary-dark); }
-
-  /* CART DRAWER */
-  .cart-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-  }
-
-  .cart-overlay.open { display: block; }
-
-  .cart-drawer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 600px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 20px 20px 0 0;
-    z-index: 201;
-    padding: 20px 16px 32px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  .cart-drawer.open { transform: translateY(0); }
-
-  .cart-handle {
-    width: 40px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0 auto 16px;
-  }
-
-  .cart-title {
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .cart-empty {
-    text-align: center;
-    color: var(--muted);
-    padding: 32px 0;
-    font-size: 14px;
-  }
-
-  .cart-empty span { font-size: 48px; display: block; margin-bottom: 10px; }
-
-  .cart-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .cart-item-icon { font-size: 28px; }
-
-  .cart-item-info { flex: 1; }
-
-  .cart-item-name { font-size: 13px; font-weight: 700; }
-  .cart-item-price { font-size: 12px; color: var(--muted); }
-
-  .cart-item-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .qty-btn {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: var(--text);
-    text-decoration: none;
-  }
-
-  .qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
-
-  /* CUSTOMER FORM */
-  .customer-form { margin: 16px 0; }
-
-  .customer-form label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--muted);
-    margin-bottom: 4px;
-    margin-top: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .customer-form input, .customer-form select {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
-    color: var(--text);
-    background: white;
-  }
-
-  .customer-form input:focus, .customer-form select:focus {
-    border-color: var(--primary);
-  }
-
-  /* TOTALS */
-  .cart-totals {
-    background: var(--bg);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin: 16px 0;
-  }
-
-  .cart-totals-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 6px;
-    color: var(--muted);
-  }
-
-  .cart-totals-total {
-    display: flex;
-    justify-content: space-between;
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--text);
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-    margin-top: 4px;
-  }
-
-  /* PAYMENT OPTIONS */
-  .payment-opts {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-
-  .pay-opt {
-    background: var(--bg);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--muted);
-    transition: all 0.15s;
-    text-decoration: none;
-    display: inline-block;
-  }
-
-  .pay-opt.selected {
-    border-color: var(--primary);
-    color: var(--primary-dark);
-    background: #f0fff4;
-  }
-
-  /* WA BUTTON */
-  .wha-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 15px 24px;
-    font-size: 16px;
-    font-weight: 800;
-    width: 100%;
-    cursor: pointer;
-    text-decoration: none;
-    margin-top: 8px;
-    box-shadow: 0 4px 16px rgba(37,211,102,0.4);
-    transition: background 0.2s, transform 0.1s;
-  }
-
-  .wha-btn:active { transform: scale(0.97); background: var(--primary-dark); }
-
-  .wha-icon { font-size: 22px; }
-
-  /* FLOAT CART BTN */
-  .float-cart {
-    position: fixed;
-    bottom: 24px;
-    right: 16px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 14px 20px;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(37,211,102,0.45);
-    display: none;
-    align-items: center;
-    gap: 8px;
-    z-index: 150;
-    text-decoration: none;
-    transition: transform 0.15s;
-  }
-
-  .float-cart.visible { display: flex; }
-  .float-cart:active { transform: scale(0.95); }
-
-  /* BANNER */
-  .hero-banner {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .hero-banner-icon { font-size: 40px; }
-
-  .hero-banner h2 { font-size: 16px; font-weight: 800; }
-  .hero-banner p { font-size: 12px; opacity: 0.9; margin-top: 3px; }
-
-  /* FOOTER */
-  footer {
-    text-align: center;
-    padding: 24px 16px 80px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-
-  footer strong { color: var(--primary-dark); }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-20px);
-    background: #2d3436;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 300;
-    white-space: nowrap;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  @media (max-width: 360px) {
-    .products-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  }
+:root {
+  --primary: #25D366;
+  --primary-dark: #128C7E;
+  --accent: #FF6B35;
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: linear-gradient(135deg, #0f4c35, var(--primary-dark), var(--primary));
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.logo-area { display: flex; align-items: center; gap: 10px; }
+.logo-icon { font-size: 32px; }
+.logo-text h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+.logo-text span { font-size: 11px; opacity: 0.85; }
+.cart-btn {
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.cart-btn:hover { background: rgba(255,255,255,0.3); }
+.search-bar { padding: 0 16px 12px; }
+.search-bar input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 50px;
+  border: none;
+  font-size: 14px;
+  background: rgba(255,255,255,0.95);
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* CATEGORY NAV */
+.cat-nav {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+  position: sticky;
+  top: 118px;
+  z-index: 150;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.cat-nav::-webkit-scrollbar { display: none; }
+.cat-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  min-width: 60px;
+}
+.cat-nav a .icon { font-size: 20px; }
+.cat-nav a:hover { background: #f0fdf4; color: var(--primary-dark); }
+.cat-nav a.active { background: #f0fdf4; color: var(--primary-dark); border-color: var(--primary); }
+
+/* HERO */
+.hero-banner {
+  margin: 16px 12px 8px;
+  background: linear-gradient(135deg, #0f4c35, var(--primary-dark));
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: white;
+}
+.hero-banner-icon { font-size: 44px; }
+.hero-banner h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+.hero-banner p { font-size: 12px; opacity: 0.85; line-height: 1.4; }
+
+/* SECTION */
+.section { margin: 20px 12px 8px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--primary);
+}
+.section-icon { font-size: 28px; }
+.section-title { font-size: 20px; font-weight: 800; flex: 1; }
+.section-count { font-size: 11px; color: var(--muted); background: var(--bg); padding: 3px 10px; border-radius: 50px; }
+
+/* BRAND ACCORDION */
+.brand-block { margin-bottom: 14px; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: white; }
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.brand-header:hover { background: #f8fffe; }
+.brand-logo { font-size: 28px; width: 44px; height: 44px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: var(--bg); }
+.brand-name { flex: 1; font-size: 16px; font-weight: 700; }
+.brand-count { font-size: 11px; color: var(--muted); }
+.brand-arrow { font-size: 14px; color: var(--muted); transition: transform 0.25s; }
+.brand-block.open .brand-arrow { transform: rotate(180deg); }
+.brand-products { display: none; padding: 12px; }
+.brand-block.open .brand-products { display: block; }
+
+/* PRODUCTS GRID */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 10px;
+}
+.product-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--border);
+}
+.product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.product-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+.product-body { padding: 10px; }
+.product-code { font-size: 9px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 3px; }
+.product-name { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; }
+.product-desc { font-size: 11px; color: var(--muted); line-height: 1.3; margin-bottom: 8px; }
+.product-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.product-price { font-size: 15px; font-weight: 800; color: var(--primary-dark); line-height: 1; }
+.product-price small { display: block; font-size: 9px; font-weight: 400; color: var(--muted); }
+.add-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.1s;
+}
+.add-btn:hover { background: var(--primary-dark); transform: scale(1.1); }
+.product-card.added { border-color: var(--primary); }
+.product-card.added .add-btn { background: var(--primary-dark); }
+
+/* CART PANEL */
+.cart-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 900;
+  backdrop-filter: blur(3px);
+}
+.cart-overlay.open { display: block; }
+.cart-panel {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1000;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+}
+.cart-panel.open { transform: translateY(0); }
+.cart-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 12px auto 0; }
+.cart-header { padding: 12px 20px 16px; border-bottom: 1px solid var(--border); }
+.cart-header h3 { font-size: 18px; font-weight: 800; }
+.cart-items { padding: 12px 20px; min-height: 60px; }
+.cart-empty { text-align: center; color: var(--muted); padding: 24px; font-size: 14px; }
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cart-item-icon { font-size: 24px; width: 36px; text-align: center; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-size: 13px; font-weight: 600; }
+.cart-item-price { font-size: 12px; color: var(--muted); }
+.cart-qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qty-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 26px; height: 26px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+
+.cart-footer { padding: 16px 20px; border-top: 1px solid var(--border); background: #fafafa; }
+.cart-subtotal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.cart-subtotal span:first-child { font-size: 14px; color: var(--muted); }
+.cart-subtotal strong { font-size: 22px; font-weight: 800; color: var(--primary-dark); }
+
+.pay-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+.pay-options { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.pay-opt {
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+.pay-opt:hover { border-color: var(--primary); color: var(--primary-dark); }
+.pay-opt.selected { border-color: var(--primary); background: #f0fdf4; color: var(--primary-dark); }
+
+.name-input-wrap { margin-bottom: 14px; }
+.name-input-wrap label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 5px; }
+.name-input-wrap input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.name-input-wrap input:focus { border-color: var(--primary); }
+
+.wpp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #25D366;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+  margin-bottom: 8px;
+}
+.wpp-btn:hover { background: var(--primary-dark); transform: scale(1.01); }
+.wpp-btn svg { width: 22px; height: 22px; fill: white; }
+
+/* FLOAT BAR */
+.float-bar {
+  display: none;
+  position: fixed;
+  bottom: 16px; left: 12px; right: 12px;
+  background: var(--primary-dark);
+  color: white;
+  border-radius: 50px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  z-index: 800;
+  box-shadow: 0 8px 32px rgba(18,140,126,0.4);
+  transition: transform 0.2s;
+}
+.float-bar:hover { transform: scale(1.02); }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 32px 16px 100px;
+  color: var(--muted);
+  font-size: 12px;
+}
+footer strong { color: var(--primary-dark); }
+.powered { margin-top: 8px; font-size: 11px; opacity: 0.6; }
+
+/* HIDDEN */
+.hidden { display: none !important; }
+
+@media (min-width: 600px) {
+  .products-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .cart-panel { max-width: 480px; left: 50%; right: auto; transform: translateX(-50%) translateY(100%); border-radius: 24px 24px 0 0; }
+  .cart-panel.open { transform: translateX(-50%) translateY(0); }
+  .float-bar { max-width: 480px; left: 50%; right: auto; transform: translateX(-50%); }
+}
 </style>
 </head>
 <body>
@@ -608,831 +390,1278 @@
     </a>
   </div>
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." oninput="filterProducts(this.value)" />
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto, marca..." oninput="filterProducts(this.value)" />
   </div>
 </header>
 
 <!-- CATEGORY NAV -->
 <nav class="cat-nav" id="catNav">
-  <a href="#sec-comestibles" class="active"><span class="icon">🥫</span>Comestibles</a>
+  <a href="#sec-bebidas" class="active"><span class="icon">🥤</span>Bebidas</a>
+  <a href="#sec-panales"><span class="icon">👶</span>Pañales</a>
+  <a href="#sec-comestibles"><span class="icon">🥫</span>Comestibles</a>
   <a href="#sec-verduras"><span class="icon">🥬</span>Verdulería</a>
   <a href="#sec-golosinas"><span class="icon">🍬</span>Golosinas</a>
   <a href="#sec-limpieza"><span class="icon">🧹</span>Limpieza</a>
+  <a href="#sec-lacteos"><span class="icon">🥛</span>Lácteos</a>
   <a href="#sec-libreria"><span class="icon">📚</span>Librería</a>
-  <a href="#sec-bebidas"><span class="icon">🥤</span>Bebidas</a>
 </nav>
 
-<!-- MAIN -->
 <main id="mainContent">
 
   <!-- BANNER -->
   <div class="hero-banner">
     <div class="hero-banner-icon">🛒</div>
     <div>
-      <h2>¡Hacé tu pedido fácil!</h2>
-      <p>Elegí tus productos, armá tu carrito y recibí tu presupuesto al instante por WhatsApp.</p>
+      <h2>¡Pedí fácil y rápido!</h2>
+      <p>Elegí por marca y variante · Armá tu carrito · Recibí tu presupuesto por WhatsApp al instante.</p>
     </div>
   </div>
 
-  <!-- COMESTIBLES -->
-  <section class="section" id="sec-comestibles">
-    <div class="section-header">
-      <span class="section-icon">🥫</span>
-      <span class="section-title">Comestibles</span>
-      <span class="section-count">12 productos</span>
-    </div>
-
-    <div class="subcat-label">🌾 Secos y Graneles</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Arroz Largo Fino 1kg" data-search="arroz comestibles secos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🌾</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-001</div>
-          <div class="product-name">Arroz Largo Fino 1kg</div>
-          <div class="product-desc">Arroz de primera calidad, grano suelto y perfecto</div>
-          <div class="product-footer">
-            <div class="product-price">$1.200<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-001','Arroz Largo Fino 1kg',1200,'🌾'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Fideos Spaghetti 500g" data-search="fideos pasta comestibles secos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍝</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-002</div>
-          <div class="product-name">Fideos Spaghetti 500g</div>
-          <div class="product-desc">Pasta seca de trigo, larga cocción</div>
-          <div class="product-footer">
-            <div class="product-price">$950<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-002','Fideos Spaghetti 500g',950,'🍝'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Harina 0000 1kg" data-search="harina comestibles secos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🌊</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-003</div>
-          <div class="product-name">Harina 0000 1kg</div>
-          <div class="product-desc">Harina de trigo extra fina, ideal para repostería</div>
-          <div class="product-footer">
-            <div class="product-price">$800<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-003','Harina 0000 1kg',800,'🌊'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Azúcar Blanca 1kg" data-search="azucar comestibles secos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍚</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-004</div>
-          <div class="product-name">Azúcar Blanca 1kg</div>
-          <div class="product-desc">Azúcar refinada de primera calidad</div>
-          <div class="product-footer">
-            <div class="product-price">$1.100<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-004','Azúcar Blanca 1kg',1100,'🍚'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">🛢️ Aceites y Salsas</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Aceite de Girasol 1.5L" data-search="aceite comestibles">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🛢️</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-005</div>
-          <div class="product-name">Aceite Girasol 1.5L</div>
-          <div class="product-desc">Aceite de girasol puro, primera prensada</div>
-          <div class="product-footer">
-            <div class="product-price">$2.800<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-005','Aceite Girasol 1.5L',2800,'🛢️'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Tomate Triturado 400g" data-search="tomate salsa comestibles">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍅</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-006</div>
-          <div class="product-name">Tomate Triturado 400g</div>
-          <div class="product-desc">Tomate al natural, sin conservantes</div>
-          <div class="product-footer">
-            <div class="product-price">$750<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-006','Tomate Triturado 400g',750,'🍅'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">🍞 Panadería</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Pan de Molde 500g" data-search="pan panaderia comestibles">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍞</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-007</div>
-          <div class="product-name">Pan de Molde 500g</div>
-          <div class="product-desc">Pan blando, larga duración, ideal para sándwiches</div>
-          <div class="product-footer">
-            <div class="product-price">$1.400<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-007','Pan de Molde 500g',1400,'🍞'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Galletitas Crackers x6" data-search="galletitas crackers panaderia comestibles">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🫙</div>
-        <div class="product-body">
-          <div class="product-code">COD: COM-008</div>
-          <div class="product-name">Galletitas Crackers x6</div>
-          <div class="product-desc">Pack 6 paquetes galletitas saladas clásicas</div>
-          <div class="product-footer">
-            <div class="product-price">$3.200<small>por pack</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('COM-008','Galletitas Crackers x6',3200,'🫙'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- VERDULERÍA -->
-  <section class="section" id="sec-verduras">
-    <div class="section-header">
-      <span class="section-icon">🥬</span>
-      <span class="section-title">Verdulería</span>
-      <span class="section-count">8 productos</span>
-    </div>
-
-    <div class="subcat-label">🥦 Verduras</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Papa 1kg" data-search="papa verdura verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🥔</div>
-        <div class="product-body">
-          <div class="product-code">COD: VER-001</div>
-          <div class="product-name">Papa 1kg</div>
-          <div class="product-desc">Papa fresca de estación, ideal para todo uso</div>
-          <div class="product-footer">
-            <div class="product-price">$600<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('VER-001','Papa 1kg',600,'🥔'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Zanahoria 1kg" data-search="zanahoria verdura verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🥕</div>
-        <div class="product-body">
-          <div class="product-code">COD: VER-002</div>
-          <div class="product-name">Zanahoria 1kg</div>
-          <div class="product-desc">Zanahoria tierna, bien lavada y lista para usar</div>
-          <div class="product-footer">
-            <div class="product-price">$500<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('VER-002','Zanahoria 1kg',500,'🥕'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Cebolla 1kg" data-search="cebolla verdura verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🧅</div>
-        <div class="product-body">
-          <div class="product-code">COD: VER-003</div>
-          <div class="product-name">Cebolla 1kg</div>
-          <div class="product-desc">Cebolla blanca de primera calidad</div>
-          <div class="product-footer">
-            <div class="product-price">$450<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('VER-003','Cebolla 1kg',450,'🧅'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Tomate 1kg" data-search="tomate verdura verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍅</div>
-        <div class="product-body">
-          <div class="product-code">COD: VER-004</div>
-          <div class="product-name">Tomate 1kg</div>
-          <div class="product-desc">Tomate perita fresco, maduro y carnoso</div>
-          <div class="product-footer">
-            <div class="product-price">$700<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('VER-004','Tomate 1kg',700,'🍅'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">🍎 Frutas</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Manzana 1kg" data-search="manzana fruta verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍎</div>
-        <div class="product-body">
-          <div class="product-code">COD: FRU-001</div>
-          <div class="product-name">Manzana 1kg</div>
-          <div class="product-desc">Manzana roja de temporada, dulce y fresca</div>
-          <div class="product-footer">
-            <div class="product-price">$900<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('FRU-001','Manzana 1kg',900,'🍎'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Banana 1kg" data-search="banana fruta verduleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍌</div>
-        <div class="product-body">
-          <div class="product-code">COD: FRU-002</div>
-          <div class="product-name">Banana 1kg</div>
-          <div class="product-desc">Banana madura en su punto, sin manchas</div>
-          <div class="product-footer">
-            <div class="product-price">$650<small>por kg</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('FRU-002','Banana 1kg',650,'🍌'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- GOLOSINAS -->
-  <section class="section" id="sec-golosinas">
-    <div class="section-header">
-      <span class="section-icon">🍬</span>
-      <span class="section-title">Golosinas y Kiosco</span>
-      <span class="section-count">6 productos</span>
-    </div>
-
-    <div class="subcat-label">🍫 Chocolates</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Chocolate con Leche 100g" data-search="chocolate golosinas kiosco">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍫</div>
-        <div class="product-body">
-          <div class="product-code">COD: GOL-001</div>
-          <div class="product-name">Chocolate c/Leche 100g</div>
-          <div class="product-desc">Tableta clásica de chocolate con leche cremoso</div>
-          <div class="product-footer">
-            <div class="product-price">$1.800<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('GOL-001','Chocolate c/Leche 100g',1800,'🍫'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Alfajor Triple x12" data-search="alfajor golosinas kiosco">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍪</div>
-        <div class="product-body">
-          <div class="product-code">COD: GOL-002</div>
-          <div class="product-name">Alfajor Triple x12</div>
-          <div class="product-desc">Caja 12 alfajores triple de chocolate</div>
-          <div class="product-footer">
-            <div class="product-price">$7.500<small>por caja</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('GOL-002','Alfajor Triple x12',7500,'🍪'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">🍭 Caramelos y Chicles</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Caramelos surtidos 100u" data-search="caramelos golosinas kiosco">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🍬</div>
-        <div class="product-body">
-          <div class="product-code">COD: GOL-003</div>
-          <div class="product-name">Caramelos Surtidos 100u</div>
-          <div class="product-desc">Bolsa 100 caramelos variados sabores frutales</div>
-          <div class="product-footer">
-            <div class="product-price">$2.200<small>por bolsa</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('GOL-003','Caramelos Surtidos 100u',2200,'🍬'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Chicles x20" data-search="chicles golosinas kiosco">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🫧</div>
-        <div class="product-body">
-          <div class="product-code">COD: GOL-004</div>
-          <div class="product-name">Chicles Menta x20</div>
-          <div class="product-desc">Pack 20 chicles menta suave sin azúcar</div>
-          <div class="product-footer">
-            <div class="product-price">$900<small>por pack</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('GOL-004','Chicles Menta x20',900,'🫧'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- LIMPIEZA -->
-  <section class="section" id="sec-limpieza">
-    <div class="section-header">
-      <span class="section-icon">🧹</span>
-      <span class="section-title">Artículos de Limpieza</span>
-      <span class="section-count">8 productos</span>
-    </div>
-
-    <div class="subcat-label">🧴 Líquidos</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Lavandina 1L" data-search="lavandina limpieza liquidos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🧴</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-001</div>
-          <div class="product-name">Lavandina 1L</div>
-          <div class="product-desc">Lavandina concentrada, máximo poder desinfectante</div>
-          <div class="product-footer">
-            <div class="product-price">$850<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-001','Lavandina 1L',850,'🧴'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Detergente 750ml" data-search="detergente limpieza liquidos">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🫧</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-002</div>
-          <div class="product-name">Detergente 750ml</div>
-          <div class="product-desc">Detergente lavavajillas limón, alta espuma</div>
-          <div class="product-footer">
-            <div class="product-price">$1.100<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-002','Detergente 750ml',1100,'🫧'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Jabón en Polvo 1kg" data-search="jabon polvo limpieza">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🫙</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-003</div>
-          <div class="product-name">Jabón en Polvo 1kg</div>
-          <div class="product-desc">Jabón en polvo ropa blanca y color, doble poder</div>
-          <div class="product-footer">
-            <div class="product-price">$2.400<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-003','Jabón en Polvo 1kg',2400,'🫙'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Suavizante 500ml" data-search="suavizante limpieza ropa">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🌸</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-004</div>
-          <div class="product-name">Suavizante 500ml</div>
-          <div class="product-desc">Suavizante ropa aroma floral, rinde 20 lavados</div>
-          <div class="product-footer">
-            <div class="product-price">$1.600<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-004','Suavizante 500ml',1600,'🌸'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">🧻 Descartables</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Papel Higiénico x4" data-search="papel higienico limpieza descartables">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🧻</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-005</div>
-          <div class="product-name">Papel Higiénico x4</div>
-          <div class="product-desc">Pack 4 rollos doble hoja, absorbente y suave</div>
-          <div class="product-footer">
-            <div class="product-price">$1.800<small>por pack</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-005','Papel Higiénico x4',1800,'🧻'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Bolsas Basura x10" data-search="bolsas basura limpieza descartables">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🗑️</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIM-006</div>
-          <div class="product-name">Bolsas Basura x10</div>
-          <div class="product-desc">Bolsas negras resistentes 70x90cm, pack 10u</div>
-          <div class="product-footer">
-            <div class="product-price">$900<small>por pack</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIM-006','Bolsas Basura x10',900,'🗑️'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- LIBRERÍA -->
-  <section class="section" id="sec-libreria">
-    <div class="section-header">
-      <span class="section-icon">📚</span>
-      <span class="section-title">Librería</span>
-      <span class="section-count">8 productos</span>
-    </div>
-
-    <div class="subcat-label">✏️ Escritura</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Lapicera Bic x12" data-search="lapicera bic libreria escritura">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🖊️</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-001</div>
-          <div class="product-name">Lapicera Bic x12</div>
-          <div class="product-desc">Caja 12 lapiceras azul punto medio, clásica</div>
-          <div class="product-footer">
-            <div class="product-price">$2.800<small>por caja</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-001','Lapicera Bic x12',2800,'🖊️'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Lápiz HB x12" data-search="lapiz libreria escritura">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">✏️</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-002</div>
-          <div class="product-name">Lápiz HB x12</div>
-          <div class="product-desc">Caja 12 lápices grafito HB, punta media</div>
-          <div class="product-footer">
-            <div class="product-price">$1.900<small>por caja</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-002','Lápiz HB x12',1900,'✏️'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Resaltador x5 colores" data-search="resaltador libreria escritura colores">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🖍️</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-003</div>
-          <div class="product-name">Resaltador x5 colores</div>
-          <div class="product-desc">Set 5 resaltadores colores surtidos, trazo grueso</div>
-          <div class="product-footer">
-            <div class="product-price">$2.200<small>por set</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-003','Resaltador x5 colores',2200,'🖍️'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Goma de Borrar x2" data-search="goma borrar libreria escritura">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">⬜</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-004</div>
-          <div class="product-name">Goma de Borrar x2</div>
-          <div class="product-desc">Pack 2 gomas blancas no daña el papel</div>
-          <div class="product-footer">
-            <div class="product-price">$650<small>por pack</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-004','Goma de Borrar x2',650,'⬜'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="subcat-label">📓 Papelería</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Carpeta A4 con elástico" data-search="carpeta libreria papeleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">📁</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-005</div>
-          <div class="product-name">Carpeta A4 c/Elástico</div>
-          <div class="product-desc">Carpeta plástica A4, cierre elástico, varios colores</div>
-          <div class="product-footer">
-            <div class="product-price">$1.500<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-005','Carpeta A4 c/Elástico',1500,'📁'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="Cuaderno 96 hojas" data-search="cuaderno libreria papeleria">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">📓</div>
-        <div class="product-body">
-          <div class="product-code">COD: LIB-006</div>
-          <div class="product-name">Cuaderno 96 Hojas</div>
-          <div class="product-desc">Cuaderno A4 tapa dura, 96 hojas rayadas</div>
-          <div class="product-footer">
-            <div class="product-price">$2.100<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('LIB-006','Cuaderno 96 Hojas',2100,'📓'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- BEBIDAS -->
+  <!-- ══════════════════════════════════════════
+       BEBIDAS
+  ══════════════════════════════════════════ -->
   <section class="section" id="sec-bebidas">
     <div class="section-header">
       <span class="section-icon">🥤</span>
       <span class="section-title">Bebidas</span>
-      <span class="section-count">6 productos</span>
+      <span class="section-count">4 marcas</span>
     </div>
 
-    <div class="subcat-label">🥤 Gaseosas</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Coca-Cola 2.25L" data-search="coca cola gaseosa bebidas">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🥤</div>
-        <div class="product-body">
-          <div class="product-code">COD: BEB-001</div>
-          <div class="product-name">Coca-Cola 2.25L</div>
-          <div class="product-desc">Gaseosa cola sabor original, botella grande</div>
-          <div class="product-footer">
-            <div class="product-price">$2.500<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('BEB-001','Coca-Cola 2.25L',2500,'🥤'); return false;">+</a>
+    <!-- Coca-Cola -->
+    <div class="brand-block open" id="brand-cocacola">
+      <div class="brand-header" onclick="toggleBrand('brand-cocacola')">
+        <div class="brand-logo">🥤</div>
+        <div class="brand-name">Coca-Cola</div>
+        <div class="brand-count">5 variantes</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="coca cola bebidas">
+            <div class="product-img">🥤</div>
+            <div class="product-body">
+              <div class="product-code">BEB-001</div>
+              <div class="product-name">Coca-Cola 500ml</div>
+              <div class="product-desc">Personal, bien fría</div>
+              <div class="product-footer">
+                <div class="product-price">$850<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-001','Coca-Cola 500ml',850,'🥤'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="coca cola bebidas">
+            <div class="product-img">🥤</div>
+            <div class="product-body">
+              <div class="product-code">BEB-002</div>
+              <div class="product-name">Coca-Cola 1.5L</div>
+              <div class="product-desc">Mediana, familiar</div>
+              <div class="product-footer">
+                <div class="product-price">$1.400<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-002','Coca-Cola 1.5L',1400,'🥤'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="coca cola bebidas">
+            <div class="product-img">🥤</div>
+            <div class="product-body">
+              <div class="product-code">BEB-003</div>
+              <div class="product-name">Coca-Cola 2.25L</div>
+              <div class="product-desc">Grande, para la familia</div>
+              <div class="product-footer">
+                <div class="product-price">$1.800<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-003','Coca-Cola 2.25L',1800,'🥤'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="coca cola zero bebidas">
+            <div class="product-img">🖤</div>
+            <div class="product-body">
+              <div class="product-code">BEB-004</div>
+              <div class="product-name">Coca-Cola Zero 1.5L</div>
+              <div class="product-desc">Sin azúcar, mismo sabor</div>
+              <div class="product-footer">
+                <div class="product-price">$1.450<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-004','Coca-Cola Zero 1.5L',1450,'🖤'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="coca cola light bebidas">
+            <div class="product-img">🔵</div>
+            <div class="product-body">
+              <div class="product-code">BEB-005</div>
+              <div class="product-name">Coca-Cola Light 1.5L</div>
+              <div class="product-desc">Light, baja en calorías</div>
+              <div class="product-footer">
+                <div class="product-price">$1.450<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-005','Coca-Cola Light 1.5L',1450,'🔵'); return false;">+</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="product-card" data-name="Agua Mineral 2L" data-search="agua mineral bebidas">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">💧</div>
-        <div class="product-body">
-          <div class="product-code">COD: BEB-002</div>
-          <div class="product-name">Agua Mineral 2L</div>
-          <div class="product-desc">Agua sin gas natural, pureza garantizada</div>
-          <div class="product-footer">
-            <div class="product-price">$1.200<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('BEB-002','Agua Mineral 2L',1200,'💧'); return false;">+</a>
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <div class="subcat-label">☕ Infusiones</div>
-    <div class="products-grid">
-
-      <div class="product-card" data-name="Yerba Mate 500g" data-search="yerba mate infusiones bebidas">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">🧉</div>
-        <div class="product-body">
-          <div class="product-code">COD: BEB-003</div>
-          <div class="product-name">Yerba Mate 500g</div>
-          <div class="product-desc">Yerba selección especial, suave y aromática</div>
-          <div class="product-footer">
-            <div class="product-price">$2.800<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('BEB-003','Yerba Mate 500g',2800,'🧉'); return false;">+</a>
+    <!-- Sprite -->
+    <div class="brand-block" id="brand-sprite">
+      <div class="brand-header" onclick="toggleBrand('brand-sprite')">
+        <div class="brand-logo">🍋</div>
+        <div class="brand-name">Sprite</div>
+        <div class="brand-count">3 variantes</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="sprite bebidas">
+            <div class="product-img">🍋</div>
+            <div class="product-body">
+              <div class="product-code">BEB-010</div>
+              <div class="product-name">Sprite 500ml</div>
+              <div class="product-desc">Lima-limón refrescante</div>
+              <div class="product-footer">
+                <div class="product-price">$800<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-010','Sprite 500ml',800,'🍋'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="sprite bebidas">
+            <div class="product-img">🍋</div>
+            <div class="product-body">
+              <div class="product-code">BEB-011</div>
+              <div class="product-name">Sprite 1.5L</div>
+              <div class="product-desc">Lima-limón, tamaño familiar</div>
+              <div class="product-footer">
+                <div class="product-price">$1.350<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-011','Sprite 1.5L',1350,'🍋'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="sprite bebidas">
+            <div class="product-img">🍋</div>
+            <div class="product-body">
+              <div class="product-code">BEB-012</div>
+              <div class="product-name">Sprite 2.25L</div>
+              <div class="product-desc">Lima-limón, gran formato</div>
+              <div class="product-footer">
+                <div class="product-price">$1.750<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-012','Sprite 2.25L',1750,'🍋'); return false;">+</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="product-card" data-name="Café Molido 250g" data-search="cafe molido infusiones bebidas">
-        <div class="product-img emoji-img" style="font-size:52px; display:flex; align-items:center; justify-content:center;">☕</div>
-        <div class="product-body">
-          <div class="product-code">COD: BEB-004</div>
-          <div class="product-name">Café Molido 250g</div>
-          <div class="product-desc">Café de altura molido fino, aroma intenso</div>
-          <div class="product-footer">
-            <div class="product-price">$3.200<small>por unidad</small></div>
-            <a href="#" class="add-btn" onclick="addToCart('BEB-004','Café Molido 250g',3200,'☕'); return false;">+</a>
+    <!-- Villavicencio -->
+    <div class="brand-block" id="brand-villa">
+      <div class="brand-header" onclick="toggleBrand('brand-villa')">
+        <div class="brand-logo">💧</div>
+        <div class="brand-name">Villavicencio</div>
+        <div class="brand-count">3 variantes</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="agua villavicencio bebidas">
+            <div class="product-img">💧</div>
+            <div class="product-body">
+              <div class="product-code">BEB-020</div>
+              <div class="product-name">Villavicencio 500ml</div>
+              <div class="product-desc">Agua mineral natural</div>
+              <div class="product-footer">
+                <div class="product-price">$600<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-020','Villavicencio 500ml',600,'💧'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="agua villavicencio bebidas">
+            <div class="product-img">💧</div>
+            <div class="product-body">
+              <div class="product-code">BEB-021</div>
+              <div class="product-name">Villavicencio 1.5L</div>
+              <div class="product-desc">Agua mineral familiar</div>
+              <div class="product-footer">
+                <div class="product-price">$950<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-021','Villavicencio 1.5L',950,'💧'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="agua villavicencio con gas bebidas">
+            <div class="product-img">🫧</div>
+            <div class="product-body">
+              <div class="product-code">BEB-022</div>
+              <div class="product-name">Villavicencio con Gas 1L</div>
+              <div class="product-desc">Agua mineral con gas</div>
+              <div class="product-footer">
+                <div class="product-price">$880<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-022','Villavicencio con Gas 1L',880,'🫧'); return false;">+</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
+    <!-- Manaos -->
+    <div class="brand-block" id="brand-manaos">
+      <div class="brand-header" onclick="toggleBrand('brand-manaos')">
+        <div class="brand-logo">🟡</div>
+        <div class="brand-name">Manaos</div>
+        <div class="brand-count">4 variantes</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="manaos cola bebidas">
+            <div class="product-img">🟡</div>
+            <div class="product-body">
+              <div class="product-code">BEB-030</div>
+              <div class="product-name">Manaos Cola 2.25L</div>
+              <div class="product-desc">Sabor cola económica</div>
+              <div class="product-footer">
+                <div class="product-price">$1.100<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-030','Manaos Cola 2.25L',1100,'🟡'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="manaos naranja bebidas">
+            <div class="product-img">🟠</div>
+            <div class="product-body">
+              <div class="product-code">BEB-031</div>
+              <div class="product-name">Manaos Naranja 2.25L</div>
+              <div class="product-desc">Sabor naranja refrescante</div>
+              <div class="product-footer">
+                <div class="product-price">$1.050<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-031','Manaos Naranja 2.25L',1050,'🟠'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="manaos pomelo bebidas">
+            <div class="product-img">🍊</div>
+            <div class="product-body">
+              <div class="product-code">BEB-032</div>
+              <div class="product-name">Manaos Pomelo 2.25L</div>
+              <div class="product-desc">Sabor pomelo rosado</div>
+              <div class="product-footer">
+                <div class="product-price">$1.050<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-032','Manaos Pomelo 2.25L',1050,'🍊'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="manaos lima limon bebidas">
+            <div class="product-img">💚</div>
+            <div class="product-body">
+              <div class="product-code">BEB-033</div>
+              <div class="product-name">Manaos Lima-Limón 2.25L</div>
+              <div class="product-desc">Sabor lima-limón</div>
+              <div class="product-footer">
+                <div class="product-price">$1.050<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('BEB-033','Manaos Lima-Limón 2.25L',1050,'💚'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       PAÑALES
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-panales">
+    <div class="section-header">
+      <span class="section-icon">👶</span>
+      <span class="section-title">Pañales</span>
+      <span class="section-count">3 marcas</span>
+    </div>
+
+    <!-- Pampers -->
+    <div class="brand-block open" id="brand-pampers">
+      <div class="brand-header" onclick="toggleBrand('brand-pampers')">
+        <div class="brand-logo">💛</div>
+        <div class="brand-name">Pampers</div>
+        <div class="brand-count">5 talles</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="pampers panales recien nacido">
+            <div class="product-img">👶</div>
+            <div class="product-body">
+              <div class="product-code">PAN-001</div>
+              <div class="product-name">Pampers RN</div>
+              <div class="product-desc">Recién Nacido · hasta 4 kg · x28 u</div>
+              <div class="product-footer">
+                <div class="product-price">$4.800<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-001','Pampers RN x28',4800,'👶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="pampers panales talle chico pequeno">
+            <div class="product-img">👶</div>
+            <div class="product-body">
+              <div class="product-code">PAN-002</div>
+              <div class="product-name">Pampers Talle S</div>
+              <div class="product-desc">Chico · 4 a 8 kg · x36 u</div>
+              <div class="product-footer">
+                <div class="product-price">$5.500<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-002','Pampers Talle S x36',5500,'👶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="pampers panales talle mediano">
+            <div class="product-img">👶</div>
+            <div class="product-body">
+              <div class="product-code">PAN-003</div>
+              <div class="product-name">Pampers Talle M</div>
+              <div class="product-desc">Mediano · 6 a 10 kg · x32 u</div>
+              <div class="product-footer">
+                <div class="product-price">$5.800<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-003','Pampers Talle M x32',5800,'👶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="pampers panales talle grande">
+            <div class="product-img">👶</div>
+            <div class="product-body">
+              <div class="product-code">PAN-004</div>
+              <div class="product-name">Pampers Talle G</div>
+              <div class="product-desc">Grande · 9 a 14 kg · x28 u</div>
+              <div class="product-footer">
+                <div class="product-price">$6.200<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-004','Pampers Talle G x28',6200,'👶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="pampers panales talle extra grande xg">
+            <div class="product-img">👶</div>
+            <div class="product-body">
+              <div class="product-code">PAN-005</div>
+              <div class="product-name">Pampers Talle XG</div>
+              <div class="product-desc">Extra Grande · +13 kg · x24 u</div>
+              <div class="product-footer">
+                <div class="product-price">$6.500<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-005','Pampers Talle XG x24',6500,'👶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Huggies -->
+    <div class="brand-block" id="brand-huggies">
+      <div class="brand-header" onclick="toggleBrand('brand-huggies')">
+        <div class="brand-logo">🟢</div>
+        <div class="brand-name">Huggies</div>
+        <div class="brand-count">4 talles</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="huggies panales chico">
+            <div class="product-img">🍃</div>
+            <div class="product-body">
+              <div class="product-code">PAN-010</div>
+              <div class="product-name">Huggies Talle S</div>
+              <div class="product-desc">Chico · 4 a 7 kg · x32 u</div>
+              <div class="product-footer">
+                <div class="product-price">$5.200<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-010','Huggies Talle S x32',5200,'🍃'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="huggies panales mediano">
+            <div class="product-img">🍃</div>
+            <div class="product-body">
+              <div class="product-code">PAN-011</div>
+              <div class="product-name">Huggies Talle M</div>
+              <div class="product-desc">Mediano · 6 a 9 kg · x30 u</div>
+              <div class="product-footer">
+                <div class="product-price">$5.500<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-011','Huggies Talle M x30',5500,'🍃'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="huggies panales grande">
+            <div class="product-img">🍃</div>
+            <div class="product-body">
+              <div class="product-code">PAN-012</div>
+              <div class="product-name">Huggies Talle G</div>
+              <div class="product-desc">Grande · 8 a 13 kg · x26 u</div>
+              <div class="product-footer">
+                <div class="product-price">$5.900<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-012','Huggies Talle G x26',5900,'🍃'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="huggies panales extra grande xg">
+            <div class="product-img">🍃</div>
+            <div class="product-body">
+              <div class="product-code">PAN-013</div>
+              <div class="product-name">Huggies Talle XG</div>
+              <div class="product-desc">Extra Grande · +12 kg · x22 u</div>
+              <div class="product-footer">
+                <div class="product-price">$6.200<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-013','Huggies Talle XG x22',6200,'🍃'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MamiBebé -->
+    <div class="brand-block" id="brand-mamibebe">
+      <div class="brand-header" onclick="toggleBrand('brand-mamibebe')">
+        <div class="brand-logo">🩷</div>
+        <div class="brand-name">MamiBebé</div>
+        <div class="brand-count">4 talles · Económica</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="mamibebe panales chico economico">
+            <div class="product-img">🩷</div>
+            <div class="product-body">
+              <div class="product-code">PAN-020</div>
+              <div class="product-name">MamiBebé Talle S</div>
+              <div class="product-desc">Chico · 3 a 6 kg · x40 u</div>
+              <div class="product-footer">
+                <div class="product-price">$3.900<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-020','MamiBebé Talle S x40',3900,'🩷'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="mamibebe panales mediano economico">
+            <div class="product-img">🩷</div>
+            <div class="product-body">
+              <div class="product-code">PAN-021</div>
+              <div class="product-name">MamiBebé Talle M</div>
+              <div class="product-desc">Mediano · 5 a 9 kg · x36 u</div>
+              <div class="product-footer">
+                <div class="product-price">$4.200<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-021','MamiBebé Talle M x36',4200,'🩷'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="mamibebe panales grande economico">
+            <div class="product-img">🩷</div>
+            <div class="product-body">
+              <div class="product-code">PAN-022</div>
+              <div class="product-name">MamiBebé Talle G</div>
+              <div class="product-desc">Grande · 8 a 13 kg · x32 u</div>
+              <div class="product-footer">
+                <div class="product-price">$4.500<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-022','MamiBebé Talle G x32',4500,'🩷'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="mamibebe panales extra grande economico">
+            <div class="product-img">🩷</div>
+            <div class="product-body">
+              <div class="product-code">PAN-023</div>
+              <div class="product-name">MamiBebé Talle XG</div>
+              <div class="product-desc">Extra Grande · +12 kg · x28 u</div>
+              <div class="product-footer">
+                <div class="product-price">$4.800<small>paquete</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('PAN-023','MamiBebé Talle XG x28',4800,'🩷'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       COMESTIBLES
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-comestibles">
+    <div class="section-header">
+      <span class="section-icon">🥫</span>
+      <span class="section-title">Comestibles</span>
+      <span class="section-count">3 categorías</span>
+    </div>
+
+    <!-- Secos -->
+    <div class="brand-block open" id="brand-secos">
+      <div class="brand-header" onclick="toggleBrand('brand-secos')">
+        <div class="brand-logo">🌾</div>
+        <div class="brand-name">Secos y Graneles</div>
+        <div class="brand-count">4 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="arroz comestibles secos">
+            <div class="product-img">🌾</div>
+            <div class="product-body">
+              <div class="product-code">COM-001</div>
+              <div class="product-name">Arroz Largo Fino 1kg</div>
+              <div class="product-desc">Grano suelto, primera calidad</div>
+              <div class="product-footer">
+                <div class="product-price">$1.200<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-001','Arroz Largo Fino 1kg',1200,'🌾'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="fideos pasta comestibles secos">
+            <div class="product-img">🍝</div>
+            <div class="product-body">
+              <div class="product-code">COM-002</div>
+              <div class="product-name">Fideos Spaghetti 500g</div>
+              <div class="product-desc">Pasta seca de trigo</div>
+              <div class="product-footer">
+                <div class="product-price">$950<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-002','Fideos Spaghetti 500g',950,'🍝'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="harina comestibles secos">
+            <div class="product-img">⚪</div>
+            <div class="product-body">
+              <div class="product-code">COM-003</div>
+              <div class="product-name">Harina 0000 1kg</div>
+              <div class="product-desc">Extra fina, ideal para repostería</div>
+              <div class="product-footer">
+                <div class="product-price">$800<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-003','Harina 0000 1kg',800,'⚪'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="azucar comestibles secos">
+            <div class="product-img">🍚</div>
+            <div class="product-body">
+              <div class="product-code">COM-004</div>
+              <div class="product-name">Azúcar Blanca 1kg</div>
+              <div class="product-desc">Refinada, primera calidad</div>
+              <div class="product-footer">
+                <div class="product-price">$1.100<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-004','Azúcar Blanca 1kg',1100,'🍚'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aceites y Conservas -->
+    <div class="brand-block" id="brand-aceites">
+      <div class="brand-header" onclick="toggleBrand('brand-aceites')">
+        <div class="brand-logo">🫙</div>
+        <div class="brand-name">Aceites y Conservas</div>
+        <div class="brand-count">3 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="aceite girasol comestibles">
+            <div class="product-img">🌻</div>
+            <div class="product-body">
+              <div class="product-code">COM-010</div>
+              <div class="product-name">Aceite Girasol 900ml</div>
+              <div class="product-desc">Cocinero, primera calidad</div>
+              <div class="product-footer">
+                <div class="product-price">$2.800<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-010','Aceite Girasol 900ml',2800,'🌻'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="aceite oliva comestibles">
+            <div class="product-img">🫒</div>
+            <div class="product-body">
+              <div class="product-code">COM-011</div>
+              <div class="product-name">Aceite de Oliva 500ml</div>
+              <div class="product-desc">Extra virgen, ideal para ensaladas</div>
+              <div class="product-footer">
+                <div class="product-price">$5.200<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-011','Aceite de Oliva 500ml',5200,'🫒'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="tomate triturado comestibles conserva">
+            <div class="product-img">🍅</div>
+            <div class="product-body">
+              <div class="product-code">COM-012</div>
+              <div class="product-name">Tomate Triturado 400g</div>
+              <div class="product-desc">Arcor, lata, natural</div>
+              <div class="product-footer">
+                <div class="product-price">$750<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('COM-012','Tomate Triturado 400g',750,'🍅'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       VERDULERÍA
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-verduras">
+    <div class="section-header">
+      <span class="section-icon">🥬</span>
+      <span class="section-title">Verdulería</span>
+      <span class="section-count">2 grupos</span>
+    </div>
+
+    <div class="brand-block open" id="brand-verduras">
+      <div class="brand-header" onclick="toggleBrand('brand-verduras')">
+        <div class="brand-logo">🥦</div>
+        <div class="brand-name">Verduras de estación</div>
+        <div class="brand-count">4 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="papa verdura kilo">
+            <div class="product-img">🥔</div>
+            <div class="product-body">
+              <div class="product-code">VER-001</div>
+              <div class="product-name">Papa Blanca</div>
+              <div class="product-desc">Por kilogramo, fresca</div>
+              <div class="product-footer">
+                <div class="product-price">$800<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-001','Papa Blanca 1kg',800,'🥔'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="cebolla verdura kilo">
+            <div class="product-img">🧅</div>
+            <div class="product-body">
+              <div class="product-code">VER-002</div>
+              <div class="product-name">Cebolla</div>
+              <div class="product-desc">Por kilogramo</div>
+              <div class="product-footer">
+                <div class="product-price">$650<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-002','Cebolla 1kg',650,'🧅'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="tomate verdura kilo">
+            <div class="product-img">🍅</div>
+            <div class="product-body">
+              <div class="product-code">VER-003</div>
+              <div class="product-name">Tomate Redondo</div>
+              <div class="product-desc">Por kilogramo, maduro</div>
+              <div class="product-footer">
+                <div class="product-price">$900<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-003','Tomate Redondo 1kg',900,'🍅'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="zanahoria verdura kilo">
+            <div class="product-img">🥕</div>
+            <div class="product-body">
+              <div class="product-code">VER-004</div>
+              <div class="product-name">Zanahoria</div>
+              <div class="product-desc">Por kilogramo</div>
+              <div class="product-footer">
+                <div class="product-price">$550<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-004','Zanahoria 1kg',550,'🥕'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-block" id="brand-frutas">
+      <div class="brand-header" onclick="toggleBrand('brand-frutas')">
+        <div class="brand-logo">🍎</div>
+        <div class="brand-name">Frutas</div>
+        <div class="brand-count">3 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="manzana fruta verduleria">
+            <div class="product-img">🍎</div>
+            <div class="product-body">
+              <div class="product-code">VER-010</div>
+              <div class="product-name">Manzana Roja</div>
+              <div class="product-desc">Por kilogramo</div>
+              <div class="product-footer">
+                <div class="product-price">$1.200<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-010','Manzana Roja 1kg',1200,'🍎'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="banana fruta verduleria">
+            <div class="product-img">🍌</div>
+            <div class="product-body">
+              <div class="product-code">VER-011</div>
+              <div class="product-name">Banana</div>
+              <div class="product-desc">Por kilogramo</div>
+              <div class="product-footer">
+                <div class="product-price">$700<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-011','Banana 1kg',700,'🍌'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="naranja fruta verduleria">
+            <div class="product-img">🍊</div>
+            <div class="product-body">
+              <div class="product-code">VER-012</div>
+              <div class="product-name">Naranja</div>
+              <div class="product-desc">Por kilogramo, dulce</div>
+              <div class="product-footer">
+                <div class="product-price">$650<small>/kg</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('VER-012','Naranja 1kg',650,'🍊'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       GOLOSINAS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-golosinas">
+    <div class="section-header">
+      <span class="section-icon">🍬</span>
+      <span class="section-title">Golosinas</span>
+      <span class="section-count">2 marcas</span>
+    </div>
+
+    <div class="brand-block open" id="brand-arcor">
+      <div class="brand-header" onclick="toggleBrand('brand-arcor')">
+        <div class="brand-logo">🍫</div>
+        <div class="brand-name">Arcor</div>
+        <div class="brand-count">3 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="arcor chocolate golosinas">
+            <div class="product-img">🍫</div>
+            <div class="product-body">
+              <div class="product-code">GOL-001</div>
+              <div class="product-name">Chocolate con Leche 25g</div>
+              <div class="product-desc">Barra individual</div>
+              <div class="product-footer">
+                <div class="product-price">$350<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('GOL-001','Arcor Chocolate 25g',350,'🍫'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="arcor caramelos golosinas">
+            <div class="product-img">🍬</div>
+            <div class="product-body">
+              <div class="product-code">GOL-002</div>
+              <div class="product-name">Caramelos Masticables x20</div>
+              <div class="product-desc">Surtido de sabores</div>
+              <div class="product-footer">
+                <div class="product-price">$280<small>bolsa</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('GOL-002','Arcor Caramelos x20',280,'🍬'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="arcor paleta golosinas">
+            <div class="product-img">🍭</div>
+            <div class="product-body">
+              <div class="product-code">GOL-003</div>
+              <div class="product-name">Paleta Cream Toffee</div>
+              <div class="product-desc">Sabor caramelo</div>
+              <div class="product-footer">
+                <div class="product-price">$180<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('GOL-003','Paleta Cream Toffee',180,'🍭'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-block" id="brand-bagley">
+      <div class="brand-header" onclick="toggleBrand('brand-bagley')">
+        <div class="brand-logo">🍪</div>
+        <div class="brand-name">Bagley</div>
+        <div class="brand-count">2 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="bagley maravilla golosinas galletas">
+            <div class="product-img">🍪</div>
+            <div class="product-body">
+              <div class="product-code">GOL-010</div>
+              <div class="product-name">Maravilla Chocolate 200g</div>
+              <div class="product-desc">Galletitas rellenas</div>
+              <div class="product-footer">
+                <div class="product-price">$950<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('GOL-010','Bagley Maravilla 200g',950,'🍪'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="bagley lincoln golosinas galletas">
+            <div class="product-img">🫙</div>
+            <div class="product-body">
+              <div class="product-code">GOL-011</div>
+              <div class="product-name">Lincoln 200g</div>
+              <div class="product-desc">Galletitas de agua</div>
+              <div class="product-footer">
+                <div class="product-price">$750<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('GOL-011','Bagley Lincoln 200g',750,'🫙'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       LIMPIEZA
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-limpieza">
+    <div class="section-header">
+      <span class="section-icon">🧹</span>
+      <span class="section-title">Limpieza</span>
+      <span class="section-count">2 marcas</span>
+    </div>
+
+    <div class="brand-block open" id="brand-ala">
+      <div class="brand-header" onclick="toggleBrand('brand-ala')">
+        <div class="brand-logo">🌊</div>
+        <div class="brand-name">Ala — Detergente y Ropa</div>
+        <div class="brand-count">3 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="ala detergente limpieza">
+            <div class="product-img">🌊</div>
+            <div class="product-body">
+              <div class="product-code">LIM-001</div>
+              <div class="product-name">Ala Detergente 750ml</div>
+              <div class="product-desc">Limón, vajilla</div>
+              <div class="product-footer">
+                <div class="product-price">$1.100<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIM-001','Ala Detergente 750ml',1100,'🌊'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="ala jabon ropa limpieza">
+            <div class="product-img">🧺</div>
+            <div class="product-body">
+              <div class="product-code">LIM-002</div>
+              <div class="product-name">Ala Jabón en Polvo 800g</div>
+              <div class="product-desc">Para ropa blanca y color</div>
+              <div class="product-footer">
+                <div class="product-price">$2.400<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIM-002','Ala Jabón en Polvo 800g',2400,'🧺'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="ala jabon ropa limpieza 3kg">
+            <div class="product-img">🧺</div>
+            <div class="product-body">
+              <div class="product-code">LIM-003</div>
+              <div class="product-name">Ala Jabón en Polvo 3kg</div>
+              <div class="product-desc">Formato familiar</div>
+              <div class="product-footer">
+                <div class="product-price">$7.500<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIM-003','Ala Jabón en Polvo 3kg',7500,'🧺'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-block" id="brand-pinesol">
+      <div class="brand-header" onclick="toggleBrand('brand-pinesol')">
+        <div class="brand-logo">🟣</div>
+        <div class="brand-name">Pino Sol — Pisos y Baños</div>
+        <div class="brand-count">2 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="pino sol lavanda limpieza piso">
+            <div class="product-img">🟣</div>
+            <div class="product-body">
+              <div class="product-code">LIM-010</div>
+              <div class="product-name">Pino Sol Lavanda 900ml</div>
+              <div class="product-desc">Para pisos, desinfectante</div>
+              <div class="product-footer">
+                <div class="product-price">$1.600<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIM-010','Pino Sol Lavanda 900ml',1600,'🟣'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="pino sol citrus limpieza piso">
+            <div class="product-img">🟡</div>
+            <div class="product-body">
+              <div class="product-code">LIM-011</div>
+              <div class="product-name">Pino Sol Citrus 900ml</div>
+              <div class="product-desc">Para pisos, aroma cítrico</div>
+              <div class="product-footer">
+                <div class="product-price">$1.600<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIM-011','Pino Sol Citrus 900ml',1600,'🟡'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       LÁCTEOS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-lacteos">
+    <div class="section-header">
+      <span class="section-icon">🥛</span>
+      <span class="section-title">Lácteos</span>
+      <span class="section-count">2 marcas</span>
+    </div>
+
+    <div class="brand-block open" id="brand-sancor">
+      <div class="brand-header" onclick="toggleBrand('brand-sancor')">
+        <div class="brand-logo">🐮</div>
+        <div class="brand-name">SanCor</div>
+        <div class="brand-count">3 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="sancor leche lacteos">
+            <div class="product-img">🥛</div>
+            <div class="product-body">
+              <div class="product-code">LAC-001</div>
+              <div class="product-name">Leche Entera 1L</div>
+              <div class="product-desc">Sachet, larga vida</div>
+              <div class="product-footer">
+                <div class="product-price">$1.050<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LAC-001','SanCor Leche Entera 1L',1050,'🥛'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="sancor yogur lacteos">
+            <div class="product-img">🍶</div>
+            <div class="product-body">
+              <div class="product-code">LAC-002</div>
+              <div class="product-name">Yogur Bebible 1L</div>
+              <div class="product-desc">Frutilla o durazno</div>
+              <div class="product-footer">
+                <div class="product-price">$1.900<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LAC-002','SanCor Yogur Bebible 1L',1900,'🍶'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="sancor crema lacteos">
+            <div class="product-img">🧈</div>
+            <div class="product-body">
+              <div class="product-code">LAC-003</div>
+              <div class="product-name">Crema de Leche 200g</div>
+              <div class="product-desc">Para cocina y repostería</div>
+              <div class="product-footer">
+                <div class="product-price">$1.400<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LAC-003','SanCor Crema de Leche 200g',1400,'🧈'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       LIBRERÍA
+  ══════════════════════════════════════════ -->
+  <section class="section" id="sec-libreria">
+    <div class="section-header">
+      <span class="section-icon">📚</span>
+      <span class="section-title">Librería</span>
+      <span class="section-count">2 grupos</span>
+    </div>
+
+    <div class="brand-block open" id="brand-escolar">
+      <div class="brand-header" onclick="toggleBrand('brand-escolar')">
+        <div class="brand-logo">✏️</div>
+        <div class="brand-name">Útiles Escolares</div>
+        <div class="brand-count">4 productos</div>
+        <div class="brand-arrow">▼</div>
+      </div>
+      <div class="brand-products">
+        <div class="products-grid">
+          <div class="product-card" data-search="cuaderno libreria escolar">
+            <div class="product-img">📓</div>
+            <div class="product-body">
+              <div class="product-code">LIB-001</div>
+              <div class="product-name">Cuaderno Rivadavia 48h</div>
+              <div class="product-desc">Araña, tapa dura, rayado</div>
+              <div class="product-footer">
+                <div class="product-price">$1.800<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIB-001','Cuaderno Rivadavia 48h',1800,'📓'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="cuaderno libreria escolar 96">
+            <div class="product-img">📔</div>
+            <div class="product-body">
+              <div class="product-code">LIB-002</div>
+              <div class="product-name">Cuaderno Rivadavia 96h</div>
+              <div class="product-desc">Araña, tapa dura, rayado</div>
+              <div class="product-footer">
+                <div class="product-price">$3.200<small>c/u</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIB-002','Cuaderno Rivadavia 96h',3200,'📔'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="lapiz faber castell libreria">
+            <div class="product-img">✏️</div>
+            <div class="product-body">
+              <div class="product-code">LIB-003</div>
+              <div class="product-name">Lápiz Faber Castell N°2</div>
+              <div class="product-desc">HB, con goma, x12 u</div>
+              <div class="product-footer">
+                <div class="product-price">$1.200<small>caja</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIB-003','Lápiz Faber Castell N2 x12',1200,'✏️'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+          <div class="product-card" data-search="boligrafo biro lapicera libreria">
+            <div class="product-img">🖊️</div>
+            <div class="product-body">
+              <div class="product-code">LIB-004</div>
+              <div class="product-name">Bic Cristal x10</div>
+              <div class="product-desc">Negro y azul, punta media</div>
+              <div class="product-footer">
+                <div class="product-price">$1.500<small>pack</small></div>
+                <a href="#" class="add-btn" onclick="addToCart('LIB-004','Bic Cristal x10',1500,'🖊️'); return false;">+</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
 </main>
 
 <footer>
-  <p>💚 Powered by <strong>MiCatálogo Digital</strong></p>
-  <p style="margin-top:4px">¿Querés tu catálogo para tu negocio? Contactanos</p>
+  <strong>Almacén Don Jorge</strong> · Pedidos por WhatsApp 📱<br>
+  <div class="powered">⚡ Catálogo Digital · Tecnología MiCatálogo</div>
 </footer>
 
 <!-- CART OVERLAY -->
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 
-<!-- CART DRAWER -->
-<div class="cart-drawer" id="cartDrawer">
+<!-- CART PANEL -->
+<div class="cart-panel" id="cartPanel">
   <div class="cart-handle"></div>
-  <div class="cart-title">🛒 Tu Pedido</div>
-
-  <div id="cartBody">
-    <div class="cart-empty">
-      <span>🛒</span>
-      Aún no agregaste productos.<br>¡Explorá el catálogo!
-    </div>
+  <div class="cart-header">
+    <h3>🛒 Tu pedido</h3>
   </div>
-
-  <div id="cartFooter" style="display:none">
-    <div class="customer-form">
-      <label>Tu nombre</label>
-      <input type="text" id="customerName" placeholder="Ej: María González" />
-      <label>Forma de pago</label>
-      <div class="payment-opts" id="paymentOpts">
-        <a href="#" class="pay-opt selected" onclick="selectPay(this,'Efectivo'); return false;">💵 Efectivo</a>
-        <a href="#" class="pay-opt" onclick="selectPay(this,'Transferencia'); return false;">🏦 Transferencia</a>
-        <a href="#" class="pay-opt" onclick="selectPay(this,'Mercado Pago'); return false;">📱 Mercado Pago</a>
-      </div>
-      <label>¿Alguna nota?</label>
-      <input type="text" id="customerNote" placeholder="Ej: sin TACC, para llevar, etc." />
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty">Todavía no agregaste productos.</div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-subtotal">
+      <span>Total estimado</span>
+      <strong id="cartTotal">$0</strong>
     </div>
 
-    <div class="cart-totals" id="cartTotals"></div>
+    <div class="name-input-wrap">
+      <label>Tu nombre (para el presupuesto)</label>
+      <input type="text" id="customerName" placeholder="Ej: María González" />
+    </div>
 
-    <a href="#" class="wha-btn" id="whaBtn" onclick="sendWhatsApp(); return false;">
-      <span class="wha-icon">💬</span>
+    <div class="pay-label">Forma de pago</div>
+    <div class="pay-options">
+      <div class="pay-opt" onclick="selectPay(this,'Efectivo')">💵 Efectivo</div>
+      <div class="pay-opt" onclick="selectPay(this,'Transferencia')">🏦 Transferencia</div>
+      <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📲 Mercado Pago</div>
+    </div>
+
+    <a href="#" class="wpp-btn" id="wppBtn" onclick="sendWhatsApp(); return false;">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Enviar pedido por WhatsApp
     </a>
   </div>
 </div>
 
-<!-- FLOAT CART -->
-<a href="#" class="float-cart" id="floatCart" onclick="toggleCart(); return false;">
+<!-- FLOAT BAR -->
+<div class="float-bar" id="floatBar" onclick="toggleCart()">
   🛒 Ver pedido · <span id="floatTotal">$0</span>
-</a>
+</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-  // ─── STATE ───────────────────────────────────────────────────────────────────
-  var cart = {};
-  var selectedPay = 'Efectivo';
-  var WA_NUMBER = '5493872101274'; // REEMPLAZAR con el número del negocio
+var cart = {};
+var selectedPay = '';
+var WPP_NUMBER = '5493872101274';
 
-  // ─── CART FUNCTIONS ───────────────────────────────────────────────────────────
-  function addToCart(code, name, price, icon) {
-    if (cart[code]) {
-      cart[code].qty++;
-    } else {
-      cart[code] = { name: name, price: price, icon: icon, qty: 1 };
-    }
-    updateCartUI();
-    showToast('✅ ' + name.split(' ').slice(0,2).join(' ') + ' agregado');
+function toggleBrand(id) {
+  var block = document.getElementById(id);
+  block.classList.toggle('open');
+}
+
+function addToCart(code, name, price, icon) {
+  if (cart[code]) {
+    cart[code].qty += 1;
+  } else {
+    cart[code] = { name: name, price: price, icon: icon, qty: 1 };
+  }
+  updateCartUI();
+  showToast('✅ ' + name + ' agregado');
+  var card = document.querySelector('[onclick*="' + code + '"]');
+  if (card) card.closest('.product-card').classList.add('added');
+}
+
+function changeQty(code, delta) {
+  if (!cart[code]) return;
+  cart[code].qty += delta;
+  if (cart[code].qty <= 0) {
+    delete cart[code];
+    var card = document.querySelector('[onclick*="' + code + '"]');
+    if (card) card.closest('.product-card').classList.remove('added');
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  var items = Object.keys(cart);
+  var total = 0;
+  var count = 0;
+
+  items.forEach(function(code) {
+    total += cart[code].price * cart[code].qty;
+    count += cart[code].qty;
+  });
+
+  document.getElementById('cartCountHeader').textContent = count;
+  document.getElementById('cartTotal').textContent = formatPrice(total);
+  document.getElementById('floatTotal').textContent = formatPrice(total);
+
+  var cartItemsEl = document.getElementById('cartItems');
+  var cartFooter = document.getElementById('cartFooter');
+
+  if (items.length === 0) {
+    cartItemsEl.innerHTML = '<div class="cart-empty">Todavía no agregaste productos.</div>';
+    cartFooter.style.display = 'none';
+    document.getElementById('floatBar').style.display = 'none';
+    return;
   }
 
-  function changeQty(code, delta) {
-    if (!cart[code]) return;
-    cart[code].qty += delta;
-    if (cart[code].qty <= 0) delete cart[code];
-    updateCartUI();
-  }
+  document.getElementById('floatBar').style.display = 'block';
+  cartFooter.style.display = 'block';
 
-  function updateCartUI() {
-    var total = 0;
-    var count = 0;
-    var items = Object.keys(cart);
+  var html = '';
+  items.forEach(function(code) {
+    var item = cart[code];
+    var subtotal = formatPrice(item.price * item.qty);
+    html += '<div class="cart-item">' +
+      '<div class="cart-item-icon">' + item.icon + '</div>' +
+      '<div class="cart-item-info">' +
+        '<div class="cart-item-name">' + item.name + '</div>' +
+        '<div class="cart-item-price">' + formatPrice(item.price) + ' c/u · Total: ' + subtotal + '</div>' +
+      '</div>' +
+      '<div class="cart-qty">' +
+        '<button class="qty-btn" onclick="changeQty(\'' + code + '\',-1)">−</button>' +
+        '<span class="qty-num">' + item.qty + '</span>' +
+        '<button class="qty-btn" onclick="changeQty(\'' + code + '\',1)">+</button>' +
+      '</div>' +
+    '</div>';
+  });
+  cartItemsEl.innerHTML = html;
+}
 
-    items.forEach(function(code) {
-      total += cart[code].price * cart[code].qty;
-      count += cart[code].qty;
+function toggleCart() {
+  var panel = document.getElementById('cartPanel');
+  var overlay = document.getElementById('cartOverlay');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+  document.body.style.overflow = panel.classList.contains('open') ? 'hidden' : '';
+}
+
+function selectPay(el, method) {
+  selectedPay = method;
+  document.querySelectorAll('.pay-opt').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function sendWhatsApp() {
+  var items = Object.keys(cart);
+  if (items.length === 0) { showToast('⚠️ Tu carrito está vacío'); return; }
+  var name = document.getElementById('customerName').value.trim() || 'Cliente';
+  var pay = selectedPay || 'No especificada';
+  var total = 0;
+  var lines = '🛒 *PEDIDO — Almacén Don Jorge*\n\n';
+  lines += '👤 *Cliente:* ' + name + '\n\n';
+  lines += '📋 *Detalle:*\n';
+  items.forEach(function(code) {
+    var item = cart[code];
+    var sub = item.price * item.qty;
+    total += sub;
+    lines += '  • ' + item.icon + ' ' + item.name + ' x' + item.qty + ' = ' + formatPrice(sub) + '\n';
+  });
+  lines += '\n💰 *TOTAL: ' + formatPrice(total) + '*\n';
+  lines += '💳 *Pago:* ' + pay + '\n\n';
+  lines += '¡Gracias por su pedido! 🙏';
+  var url = 'https://wa.me/' + WPP_NUMBER + '?text=' + encodeURIComponent(lines);
+  window.open(url, '_blank');
+}
+
+function filterProducts(query) {
+  var q = query.toLowerCase().trim();
+  var cards = document.querySelectorAll('.product-card');
+  cards.forEach(function(card) {
+    var name = (card.dataset.name || card.querySelector('.product-name').textContent).toLowerCase();
+    var search = (card.dataset.search || '').toLowerCase();
+    var match = !q || name.includes(q) || search.includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+  if (q) {
+    document.querySelectorAll('.brand-block').forEach(function(block) {
+      var visible = block.querySelectorAll('.product-card[style=""],.product-card:not([style])');
+      var hasVisible = false;
+      block.querySelectorAll('.product-card').forEach(function(c) {
+        if (c.style.display !== 'none') hasVisible = true;
+      });
+      block.style.display = hasVisible ? '' : 'none';
+      if (hasVisible) block.classList.add('open');
     });
-
-    // Header badge
-    document.getElementById('cartCountHeader').textContent = count;
-
-    // Float button
-    var floatCart = document.getElementById('floatCart');
-    if (count > 0) {
-      floatCart.className = 'float-cart visible';
-      document.getElementById('floatTotal').textContent = formatPrice(total);
-    } else {
-      floatCart.className = 'float-cart';
-    }
-
-    // Cart body
-    var body = document.getElementById('cartBody');
-    var footer = document.getElementById('cartFooter');
-
-    if (items.length === 0) {
-      body.innerHTML = '<div class="cart-empty"><span>🛒</span>Aún no agregaste productos.<br>¡Explorá el catálogo!</div>';
-      footer.style.display = 'none';
-      return;
-    }
-
-    footer.style.display = 'block';
-
-    var html = '';
-    items.forEach(function(code) {
-      var item = cart[code];
-      html += '<div class="cart-item">';
-      html += '<div class="cart-item-icon">' + item.icon + '</div>';
-      html += '<div class="cart-item-info">';
-      html += '<div class="cart-item-name">' + item.name + '</div>';
-      html += '<div class="cart-item-price">' + formatPrice(item.price) + ' c/u · Subtotal: ' + formatPrice(item.price * item.qty) + '</div>';
-      html += '</div>';
-      html += '<div class="cart-item-controls">';
-      html += '<a href="#" class="qty-btn" onclick="changeQty(\'' + code + '\',-1); return false;">−</a>';
-      html += '<span class="qty-num">' + item.qty + '</span>';
-      html += '<a href="#" class="qty-btn" onclick="changeQty(\'' + code + '\',1); return false;">+</a>';
-      html += '</div>';
-      html += '</div>';
-    });
-    body.innerHTML = html;
-
-    // Totals
-    var rows = '';
-    items.forEach(function(code) {
-      var item = cart[code];
-      rows += '<div class="cart-totals-row"><span>' + item.qty + 'x ' + item.name + '</span><span>' + formatPrice(item.price * item.qty) + '</span></div>';
-    });
-    document.getElementById('cartTotals').innerHTML = rows + '<div class="cart-totals-total"><span>TOTAL</span><span>' + formatPrice(total) + '</span></div>';
-  }
-
-  // ─── TOGGLE CART ─────────────────────────────────────────────────────────────
-  function toggleCart() {
-    var overlay = document.getElementById('cartOverlay');
-    var drawer = document.getElementById('cartDrawer');
-    var isOpen = drawer.classList.contains('open');
-    if (isOpen) {
-      overlay.classList.remove('open');
-      drawer.classList.remove('open');
-    } else {
-      overlay.classList.add('open');
-      drawer.classList.add('open');
-    }
-  }
-
-  // ─── PAYMENT ─────────────────────────────────────────────────────────────────
-  function selectPay(el, method) {
-    selectedPay = method;
-    var opts = document.querySelectorAll('.pay-opt');
-    opts.forEach(function(o) { o.classList.remove('selected'); });
-    el.classList.add('selected');
-  }
-
-  // ─── WHATSAPP ─────────────────────────────────────────────────────────────────
-  function sendWhatsApp() {
-    var name = document.getElementById('customerName').value.trim() || 'Cliente';
-    var note = document.getElementById('customerNote').value.trim();
-    var items = Object.keys(cart);
-
-    if (items.length === 0) {
-      showToast('❌ Agregá productos primero');
-      return;
-    }
-
-    var total = 0;
-    var lines = '🛒 *NUEVO PEDIDO*\n';
-    lines += '👤 *Cliente:* ' + name + '\n';
-    lines += '━━━━━━━━━━━━━━━\n';
-
-    items.forEach(function(code) {
-      var item = cart[code];
-      var sub = item.price * item.qty;
-      total += sub;
-      lines += item.icon + ' *' + item.name + '*\n';
-      lines += '   Código: ' + code + '\n';
-      lines += '   ' + item.qty + ' x ' + formatPrice(item.price) + ' = *' + formatPrice(sub) + '*\n';
-    });
-
-    lines += '━━━━━━━━━━━━━━━\n';
-    lines += '💰 *TOTAL: ' + formatPrice(total) + '*\n';
-    lines += '💳 *Forma de pago:* ' + selectedPay + '\n';
-
-    if (note) {
-      lines += '📝 *Nota:* ' + note + '\n';
-    }
-
-    lines += '\n✅ Por favor confirmame disponibilidad. ¡Gracias!';
-
-    var url = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(lines);
-    window.open(url, '_blank');
-  }
-
-  // ─── SEARCH ───────────────────────────────────────────────────────────────────
-  function filterProducts(query) {
-    var cards = document.querySelectorAll('.product-card');
-    var q = query.toLowerCase();
-    cards.forEach(function(card) {
-      var name = (card.getAttribute('data-name') || '').toLowerCase();
-      var search = (card.getAttribute('data-search') || '').toLowerCase();
-      card.style.display = (name.indexOf(q) >= 0 || search.indexOf(q) >= 0) ? '' : 'none';
+  } else {
+    document.querySelectorAll('.brand-block').forEach(function(block) {
+      block.style.display = '';
     });
   }
+}
 
-  // ─── TOAST ───────────────────────────────────────────────────────────────────
-  function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(function() { t.classList.remove('show'); }, 2000);
-  }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
 
-  // ─── FORMAT ──────────────────────────────────────────────────────────────────
-  function formatPrice(n) {
-    return '$' + n.toLocaleString('es-AR');
-  }
+function formatPrice(n) {
+  return '$' + n.toLocaleString('es-AR');
+}
 
-  // ─── ACTIVE NAV ──────────────────────────────────────────────────────────────
-  var sections = document.querySelectorAll('.section');
-  var navLinks = document.querySelectorAll('.cat-nav a');
-
-  window.addEventListener('scroll', function() {
-    var scrollY = window.scrollY + 120;
-    sections.forEach(function(sec) {
-      if (scrollY >= sec.offsetTop && scrollY < sec.offsetTop + sec.offsetHeight) {
-        var id = sec.id;
-        navLinks.forEach(function(link) {
-          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
-        });
-      }
-    });
-  }, { passive: true });
+// Scroll activo en nav
+var sections = document.querySelectorAll('section[id]');
+var navLinks = document.querySelectorAll('.cat-nav a');
+window.addEventListener('scroll', function() {
+  var scrollY = window.scrollY + 200;
+  sections.forEach(function(sec) {
+    if (scrollY >= sec.offsetTop && scrollY < sec.offsetTop + sec.offsetHeight) {
+      var id = sec.id;
+      navLinks.forEach(function(link) {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { passive: true });
 </script>
 
 </body>
