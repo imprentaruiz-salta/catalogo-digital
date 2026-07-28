@@ -3,381 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Catálogo Digital - Pedí por WhatsApp">
-<title>MiCatálogo Digital</title>
+<meta name="description" content="Catálogo Digital — Pedí por WhatsApp">
+<title>Almacén Don Jorge</title>
 <style>
-:root {
-  --primary: #25D366;
-  --primary-dark: #128C7E;
-  --accent: #FF6B35;
-  --bg: #f0f2f5;
-  --card: #ffffff;
-  --text: #1a1a2e;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --shadow: 0 2px 16px rgba(0,0,0,0.08);
-  --radius: 14px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+:root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
 /* HEADER */
-header {
-  background: linear-gradient(135deg, #0f4c35, var(--primary-dark), var(--primary));
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-}
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 8px;
-}
-.logo-area { display: flex; align-items: center; gap: 10px; }
-.logo-icon { font-size: 32px; }
-.logo-text h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
-.logo-text span { font-size: 11px; opacity: 0.85; }
-.cart-btn {
-  background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.4);
-  color: white;
-  padding: 8px 14px;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.2s;
-  cursor: pointer;
-}
-.cart-btn:hover { background: rgba(255,255,255,0.3); }
-.search-bar { padding: 0 16px 12px; }
-.search-bar input {
-  width: 100%;
-  padding: 10px 16px;
-  border-radius: 50px;
-  border: none;
-  font-size: 14px;
-  background: rgba(255,255,255,0.95);
-  outline: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
+header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:28px}
+.logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.logo-text span{font-size:11px;opacity:.85}
+.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}
+.cart-btn:hover{background:rgba(255,255,255,.35)}
+.search-bar{padding:0 16px 12px}
+.search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 
-/* CATEGORY NAV */
-.cat-nav {
-  display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  overflow-x: auto;
-  background: white;
-  border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
-  position: sticky;
-  top: 118px;
-  z-index: 150;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-.cat-nav::-webkit-scrollbar { display: none; }
-.cat-nav a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-  min-width: 60px;
-}
-.cat-nav a .icon { font-size: 20px; }
-.cat-nav a:hover { background: #f0fdf4; color: var(--primary-dark); }
-.cat-nav a.active { background: #f0fdf4; color: var(--primary-dark); border-color: var(--primary); }
+/* CAT NAV */
+.cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:0 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100}
+.cat-nav::-webkit-scrollbar{display:none}
+.cat-nav a{display:inline-block;padding:12px 14px;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;border-bottom:3px solid transparent;transition:.2s}
+.cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-bottom-color:var(--g)}
+.cat-nav a .icon{margin-right:4px;font-size:15px}
 
 /* HERO */
-.hero-banner {
-  margin: 16px 12px 8px;
-  background: linear-gradient(135deg, #0f4c35, var(--primary-dark));
-  border-radius: 18px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: white;
-}
-.hero-banner-icon { font-size: 44px; }
-.hero-banner h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
-.hero-banner p { font-size: 12px; opacity: 0.85; line-height: 1.4; }
+.hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
+.hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
+.hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
+.hero p{font-size:13px;color:var(--mut)}
 
-/* SECTION */
-.section { margin: 20px 12px 8px; }
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 3px solid var(--primary);
-}
-.section-icon { font-size: 28px; }
-.section-title { font-size: 20px; font-weight: 800; flex: 1; }
-.section-count { font-size: 11px; color: var(--muted); background: var(--bg); padding: 3px 10px; border-radius: 50px; }
+/* SECCIONES */
+.cat-section{margin:0 12px 24px}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.cat-header .cat-emoji{font-size:28px}
+.cat-header h2{font-size:18px;font-weight:800;color:var(--txt)}
+.cat-header .cat-count{font-size:12px;color:var(--mut);margin-top:2px}
 
-/* BRAND ACCORDION */
-.brand-block { margin-bottom: 14px; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: white; }
-.brand-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  cursor: pointer;
-  user-select: none;
-  background: white;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-.brand-header:hover { background: #f8fffe; }
-.brand-logo { font-size: 28px; width: 44px; height: 44px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: var(--bg); }
-.brand-name { flex: 1; font-size: 16px; font-weight: 700; }
-.brand-count { font-size: 11px; color: var(--muted); }
-.brand-arrow { font-size: 14px; color: var(--muted); transition: transform 0.25s; }
-.brand-block.open .brand-arrow { transform: rotate(180deg); }
-.brand-products { display: none; padding: 12px; }
-.brand-block.open .brand-products { display: block; }
+/* MARCA ACCORDION */
+.brand-block{margin-bottom:12px;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.07)}
+.brand-header{background:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:none;width:100%;text-align:left;font-size:15px;font-weight:700;color:var(--txt);border-left:4px solid var(--g)}
+.brand-header:hover{background:#f9fffe}
+.brand-header .brand-left{display:flex;align-items:center;gap:10px}
+.brand-header .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800}
+.brand-header .chevron{font-size:12px;color:var(--mut);transition:.3s}
+.brand-header.open .chevron{transform:rotate(180deg)}
+.brand-products{display:none;background:#fafafa;padding:12px}
+.brand-products.open{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 
-/* PRODUCTS GRID */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-  gap: 10px;
-}
-.product-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
-  transition: transform 0.15s, box-shadow 0.15s;
-  border: 1px solid var(--border);
-}
-.product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-.product-img {
-  width: 100%;
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-}
-.product-body { padding: 10px; }
-.product-code { font-size: 9px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 3px; }
-.product-name { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; }
-.product-desc { font-size: 11px; color: var(--muted); line-height: 1.3; margin-bottom: 8px; }
-.product-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.product-price { font-size: 15px; font-weight: 800; color: var(--primary-dark); line-height: 1; }
-.product-price small { display: block; font-size: 9px; font-weight: 400; color: var(--muted); }
-.add-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 20px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  flex-shrink: 0;
-  transition: background 0.2s, transform 0.1s;
-}
-.add-btn:hover { background: var(--primary-dark); transform: scale(1.1); }
-.product-card.added { border-color: var(--primary); }
-.product-card.added .add-btn { background: var(--primary-dark); }
+/* PRODUCTO CARD */
+.product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);transition:.2s}
+.product-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
+.product-card[data-hidden="true"]{display:none}
+.prod-img{width:100%;height:110px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-body{padding:10px}
+.prod-code{font-size:10px;color:var(--mut);font-family:monospace;margin-bottom:3px}
+.prod-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
+.prod-footer{display:flex;align-items:center;justify-content:space-between}
+.prod-price{font-size:15px;font-weight:800;color:var(--gd)}
+.prod-price small{font-size:9px;color:var(--mut);display:block;font-weight:400}
+.add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}
+.add-btn:hover{transform:scale(1.15)}
 
-/* CART PANEL */
-.cart-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 900;
-  backdrop-filter: blur(3px);
-}
-.cart-overlay.open { display: block; }
-.cart-panel {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: white;
-  border-radius: 24px 24px 0 0;
-  max-height: 80vh;
-  overflow-y: auto;
-  z-index: 1000;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
-}
-.cart-panel.open { transform: translateY(0); }
-.cart-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 12px auto 0; }
-.cart-header { padding: 12px 20px 16px; border-bottom: 1px solid var(--border); }
-.cart-header h3 { font-size: 18px; font-weight: 800; }
-.cart-items { padding: 12px 20px; min-height: 60px; }
-.cart-empty { text-align: center; color: var(--muted); padding: 24px; font-size: 14px; }
-.cart-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.cart-item-icon { font-size: 24px; width: 36px; text-align: center; }
-.cart-item-info { flex: 1; }
-.cart-item-name { font-size: 13px; font-weight: 600; }
-.cart-item-price { font-size: 12px; color: var(--muted); }
-.cart-qty {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.qty-btn {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 26px; height: 26px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+/* FLOAT CART */
+.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}
+.float-cart.visible{display:flex}
 
-.cart-footer { padding: 16px 20px; border-top: 1px solid var(--border); background: #fafafa; }
-.cart-subtotal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.cart-subtotal span:first-child { font-size: 14px; color: var(--muted); }
-.cart-subtotal strong { font-size: 22px; font-weight: 800; color: var(--primary-dark); }
+/* CARRITO MODAL */
+.cart-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
+.cart-overlay.open{display:block}
+.cart-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:80vh;overflow-y:auto;z-index:500;transform:translateY(100%);transition:.35s cubic-bezier(.4,0,.2,1)}
+.cart-modal.open{transform:translateY(0)}
+.cart-modal h3{font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--brd)}
+.cart-item-name{font-size:13px;font-weight:600;flex:1}
+.cart-item-price{font-size:13px;color:var(--gd);font-weight:700;margin:0 10px}
+.qty-ctrl{display:flex;align-items:center;gap:8px}
+.qty-btn{background:var(--bg);border:1px solid var(--brd);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-val{font-size:14px;font-weight:700;min-width:20px;text-align:center}
+.cart-total{font-size:17px;font-weight:800;color:var(--gd);padding:14px 0 6px;text-align:right}
 
-.pay-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
-.pay-options { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.pay-opt {
-  padding: 8px 14px;
-  border: 2px solid var(--border);
-  border-radius: 50px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: white;
-}
-.pay-opt:hover { border-color: var(--primary); color: var(--primary-dark); }
-.pay-opt.selected { border-color: var(--primary); background: #f0fdf4; color: var(--primary-dark); }
+/* PAGO */
+.pay-title{font-size:13px;font-weight:700;color:var(--txt);margin:12px 0 8px}
+.pay-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pay-opt{padding:8px 14px;border:2px solid var(--brd);border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.pay-opt.selected,.pay-opt:hover{border-color:var(--g);background:#e8f5e9;color:var(--gd)}
 
-.name-input-wrap { margin-bottom: 14px; }
-.name-input-wrap label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 5px; }
-.name-input-wrap input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.name-input-wrap input:focus { border-color: var(--primary); }
+/* NOMBRE */
+.nombre-input{width:100%;padding:12px 16px;border:2px solid var(--brd);border-radius:50px;font-size:14px;margin-bottom:14px;outline:none}
+.nombre-input:focus{border-color:var(--g)}
 
-.wpp-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  background: #25D366;
-  color: white;
-  border: none;
-  border-radius: 14px;
-  padding: 16px;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.1s;
-  margin-bottom: 8px;
-}
-.wpp-btn:hover { background: var(--primary-dark); transform: scale(1.01); }
-.wpp-btn svg { width: 22px; height: 22px; fill: white; }
+/* BTN WPP */
+.wpp-btn{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.close-btn{width:100%;background:var(--bg);border:none;padding:12px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer}
 
-/* FLOAT BAR */
-.float-bar {
-  display: none;
-  position: fixed;
-  bottom: 16px; left: 12px; right: 12px;
-  background: var(--primary-dark);
-  color: white;
-  border-radius: 50px;
-  padding: 14px 20px;
-  font-size: 15px;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  z-index: 800;
-  box-shadow: 0 8px 32px rgba(18,140,126,0.4);
-  transition: transform 0.2s;
-}
-.float-bar:hover { transform: scale(1.02); }
+/* EMPTY */
+.empty-cart{text-align:center;padding:30px 0;color:var(--mut);font-size:14px}
+.no-results{text-align:center;padding:40px;color:var(--mut);font-size:14px;display:none}
 
 /* TOAST */
-.toast {
-  position: fixed;
-  bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--text);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 2000;
-  opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 32px 16px 100px;
-  color: var(--muted);
-  font-size: 12px;
-}
-footer strong { color: var(--primary-dark); }
-.powered { margin-top: 8px; font-size: 11px; opacity: 0.6; }
-
-/* HIDDEN */
-.hidden { display: none !important; }
-
-@media (min-width: 600px) {
-  .products-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-  .cart-panel { max-width: 480px; left: 50%; right: auto; transform: translateX(-50%) translateY(100%); border-radius: 24px 24px 0 0; }
-  .cart-panel.open { transform: translateX(-50%) translateY(0); }
-  .float-bar { max-width: 480px; left: 50%; right: auto; transform: translateX(-50%); }
+@media(min-width:600px){
+  .brand-products.open{grid-template-columns:repeat(3,1fr)}
+  .cat-section{margin:0 24px 24px}
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
-  <div class="header-top">
+  <div class="hdr-top">
     <div class="logo-area">
       <div class="logo-icon">🏪</div>
       <div class="logo-text">
@@ -385,1284 +126,256 @@ footer strong { color: var(--primary-dark); }
         <span>📍 Salta Capital · Pedidos por WhatsApp</span>
       </div>
     </div>
-    <a href="#" class="cart-btn" id="cartBtnHeader" onclick="toggleCart(); return false;">
-      🛒 <span id="cartCountHeader">0</span>
-    </a>
+    <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
   </div>
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Buscar producto, marca..." oninput="filterProducts(this.value)" />
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." oninput="buscar(this.value)">
   </div>
 </header>
 
-<!-- CATEGORY NAV -->
+<!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav">
-  <a href="#sec-bebidas" class="active"><span class="icon">🥤</span>Bebidas</a>
-  <a href="#sec-panales"><span class="icon">👶</span>Pañales</a>
-  <a href="#sec-comestibles"><span class="icon">🥫</span>Comestibles</a>
-  <a href="#sec-verduras"><span class="icon">🥬</span>Verdulería</a>
-  <a href="#sec-golosinas"><span class="icon">🍬</span>Golosinas</a>
-  <a href="#sec-limpieza"><span class="icon">🧹</span>Limpieza</a>
-  <a href="#sec-lacteos"><span class="icon">🥛</span>Lácteos</a>
-  <a href="#sec-libreria"><span class="icon">📚</span>Librería</a>
+  {% for cat in cats %}
+  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}">
+    <span class="icon">{{ cat_icon(cat) }}</span>{{ cat }}
+  </a>
+  {% endfor %}
 </nav>
 
-<main id="mainContent">
-
-  <!-- BANNER -->
-  <div class="hero-banner">
-    <div class="hero-banner-icon">🛒</div>
-    <div>
-      <h2>¡Pedí fácil y rápido!</h2>
-      <p>Elegí por marca y variante · Armá tu carrito · Recibí tu presupuesto por WhatsApp al instante.</p>
-    </div>
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div style="font-size:36px;margin-bottom:6px">🛒</div>
+    <h2>¡Hacé tu pedido fácil!</h2>
+    <p>Elegí tus productos, armá tu carrito y enviá el pedido por WhatsApp al instante.</p>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       BEBIDAS
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-bebidas">
-    <div class="section-header">
-      <span class="section-icon">🥤</span>
-      <span class="section-title">Bebidas</span>
-      <span class="section-count">4 marcas</span>
-    </div>
+  <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
 
-    <!-- Coca-Cola -->
-    <div class="brand-block open" id="brand-cocacola">
-      <div class="brand-header" onclick="toggleBrand('brand-cocacola')">
-        <div class="brand-logo">🥤</div>
-        <div class="brand-name">Coca-Cola</div>
-        <div class="brand-count">5 variantes</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="coca cola bebidas">
-            <div class="product-img">🥤</div>
-            <div class="product-body">
-              <div class="product-code">BEB-001</div>
-              <div class="product-name">Coca-Cola 500ml</div>
-              <div class="product-desc">Personal, bien fría</div>
-              <div class="product-footer">
-                <div class="product-price">$850<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-001','Coca-Cola 500ml',850,'🥤'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="coca cola bebidas">
-            <div class="product-img">🥤</div>
-            <div class="product-body">
-              <div class="product-code">BEB-002</div>
-              <div class="product-name">Coca-Cola 1.5L</div>
-              <div class="product-desc">Mediana, familiar</div>
-              <div class="product-footer">
-                <div class="product-price">$1.400<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-002','Coca-Cola 1.5L',1400,'🥤'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="coca cola bebidas">
-            <div class="product-img">🥤</div>
-            <div class="product-body">
-              <div class="product-code">BEB-003</div>
-              <div class="product-name">Coca-Cola 2.25L</div>
-              <div class="product-desc">Grande, para la familia</div>
-              <div class="product-footer">
-                <div class="product-price">$1.800<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-003','Coca-Cola 2.25L',1800,'🥤'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="coca cola zero bebidas">
-            <div class="product-img">🖤</div>
-            <div class="product-body">
-              <div class="product-code">BEB-004</div>
-              <div class="product-name">Coca-Cola Zero 1.5L</div>
-              <div class="product-desc">Sin azúcar, mismo sabor</div>
-              <div class="product-footer">
-                <div class="product-price">$1.450<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-004','Coca-Cola Zero 1.5L',1450,'🖤'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="coca cola light bebidas">
-            <div class="product-img">🔵</div>
-            <div class="product-body">
-              <div class="product-code">BEB-005</div>
-              <div class="product-name">Coca-Cola Light 1.5L</div>
-              <div class="product-desc">Light, baja en calorías</div>
-              <div class="product-footer">
-                <div class="product-price">$1.450<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-005','Coca-Cola Light 1.5L',1450,'🔵'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- CATEGORÍAS -->
+  {% for cat, marcas in cats.items() %}
+  {% set total = namespace(n=0) %}
+  {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
+  <section class="cat-section" id="sec-{{ loop.index }}">
+    <div class="cat-header">
+      <span class="cat-emoji">{{ cat_icon(cat) }}</span>
+      <div>
+        <h2>{{ cat }}</h2>
+        <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
       </div>
     </div>
 
-    <!-- Sprite -->
-    <div class="brand-block" id="brand-sprite">
-      <div class="brand-header" onclick="toggleBrand('brand-sprite')">
-        <div class="brand-logo">🍋</div>
-        <div class="brand-name">Sprite</div>
-        <div class="brand-count">3 variantes</div>
-        <div class="brand-arrow">▼</div>
-      </div>
+    {% for marca, productos in marcas.items() %}
+    <div class="brand-block">
+      <button class="brand-header" onclick="toggleBrand(this)">
+        <div class="brand-left">
+          <div class="brand-icon">{{ marca[0] }}</div>
+          <div>
+            <div>{{ marca }}</div>
+            <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ productos|length }} variante{{ 's' if productos|length != 1 else '' }}</div>
+          </div>
+        </div>
+        <span class="chevron">▼</span>
+      </button>
       <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="sprite bebidas">
-            <div class="product-img">🍋</div>
-            <div class="product-body">
-              <div class="product-code">BEB-010</div>
-              <div class="product-name">Sprite 500ml</div>
-              <div class="product-desc">Lima-limón refrescante</div>
-              <div class="product-footer">
-                <div class="product-price">$800<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-010','Sprite 500ml',800,'🍋'); return false;">+</a>
-              </div>
-            </div>
+        {% for p in productos %}
+        <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}">
+          <div class="prod-img">
+            {% if p.foto %}
+            <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy">
+            {% else %}
+            {{ cat_icon(p.categoria) }}
+            {% endif %}
           </div>
-          <div class="product-card" data-search="sprite bebidas">
-            <div class="product-img">🍋</div>
-            <div class="product-body">
-              <div class="product-code">BEB-011</div>
-              <div class="product-name">Sprite 1.5L</div>
-              <div class="product-desc">Lima-limón, tamaño familiar</div>
-              <div class="product-footer">
-                <div class="product-price">$1.350<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-011','Sprite 1.5L',1350,'🍋'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="sprite bebidas">
-            <div class="product-img">🍋</div>
-            <div class="product-body">
-              <div class="product-code">BEB-012</div>
-              <div class="product-name">Sprite 2.25L</div>
-              <div class="product-desc">Lima-limón, gran formato</div>
-              <div class="product-footer">
-                <div class="product-price">$1.750<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-012','Sprite 2.25L',1750,'🍋'); return false;">+</a>
-              </div>
+          <div class="prod-body">
+            <div class="prod-code">COD: {{ p.codigo }}</div>
+            <div class="prod-name">{{ p.nombre }}</div>
+            {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
+            <div class="prod-footer">
+              <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
+              <button class="add-btn" onclick="addToCart('{{ p.codigo }}','{{ p.nombre }}',{{ p.precio }},'{{ cat_icon(p.categoria) }}')">+</button>
             </div>
           </div>
         </div>
+        {% endfor %}
       </div>
     </div>
-
-    <!-- Villavicencio -->
-    <div class="brand-block" id="brand-villa">
-      <div class="brand-header" onclick="toggleBrand('brand-villa')">
-        <div class="brand-logo">💧</div>
-        <div class="brand-name">Villavicencio</div>
-        <div class="brand-count">3 variantes</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="agua villavicencio bebidas">
-            <div class="product-img">💧</div>
-            <div class="product-body">
-              <div class="product-code">BEB-020</div>
-              <div class="product-name">Villavicencio 500ml</div>
-              <div class="product-desc">Agua mineral natural</div>
-              <div class="product-footer">
-                <div class="product-price">$600<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-020','Villavicencio 500ml',600,'💧'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="agua villavicencio bebidas">
-            <div class="product-img">💧</div>
-            <div class="product-body">
-              <div class="product-code">BEB-021</div>
-              <div class="product-name">Villavicencio 1.5L</div>
-              <div class="product-desc">Agua mineral familiar</div>
-              <div class="product-footer">
-                <div class="product-price">$950<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-021','Villavicencio 1.5L',950,'💧'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="agua villavicencio con gas bebidas">
-            <div class="product-img">🫧</div>
-            <div class="product-body">
-              <div class="product-code">BEB-022</div>
-              <div class="product-name">Villavicencio con Gas 1L</div>
-              <div class="product-desc">Agua mineral con gas</div>
-              <div class="product-footer">
-                <div class="product-price">$880<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-022','Villavicencio con Gas 1L',880,'🫧'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Manaos -->
-    <div class="brand-block" id="brand-manaos">
-      <div class="brand-header" onclick="toggleBrand('brand-manaos')">
-        <div class="brand-logo">🟡</div>
-        <div class="brand-name">Manaos</div>
-        <div class="brand-count">4 variantes</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="manaos cola bebidas">
-            <div class="product-img">🟡</div>
-            <div class="product-body">
-              <div class="product-code">BEB-030</div>
-              <div class="product-name">Manaos Cola 2.25L</div>
-              <div class="product-desc">Sabor cola económica</div>
-              <div class="product-footer">
-                <div class="product-price">$1.100<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-030','Manaos Cola 2.25L',1100,'🟡'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="manaos naranja bebidas">
-            <div class="product-img">🟠</div>
-            <div class="product-body">
-              <div class="product-code">BEB-031</div>
-              <div class="product-name">Manaos Naranja 2.25L</div>
-              <div class="product-desc">Sabor naranja refrescante</div>
-              <div class="product-footer">
-                <div class="product-price">$1.050<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-031','Manaos Naranja 2.25L',1050,'🟠'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="manaos pomelo bebidas">
-            <div class="product-img">🍊</div>
-            <div class="product-body">
-              <div class="product-code">BEB-032</div>
-              <div class="product-name">Manaos Pomelo 2.25L</div>
-              <div class="product-desc">Sabor pomelo rosado</div>
-              <div class="product-footer">
-                <div class="product-price">$1.050<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-032','Manaos Pomelo 2.25L',1050,'🍊'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="manaos lima limon bebidas">
-            <div class="product-img">💚</div>
-            <div class="product-body">
-              <div class="product-code">BEB-033</div>
-              <div class="product-name">Manaos Lima-Limón 2.25L</div>
-              <div class="product-desc">Sabor lima-limón</div>
-              <div class="product-footer">
-                <div class="product-price">$1.050<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('BEB-033','Manaos Lima-Limón 2.25L',1050,'💚'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% endfor %}
   </section>
-
-  <!-- ══════════════════════════════════════════
-       PAÑALES
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-panales">
-    <div class="section-header">
-      <span class="section-icon">👶</span>
-      <span class="section-title">Pañales</span>
-      <span class="section-count">3 marcas</span>
-    </div>
-
-    <!-- Pampers -->
-    <div class="brand-block open" id="brand-pampers">
-      <div class="brand-header" onclick="toggleBrand('brand-pampers')">
-        <div class="brand-logo">💛</div>
-        <div class="brand-name">Pampers</div>
-        <div class="brand-count">5 talles</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="pampers panales recien nacido">
-            <div class="product-img">👶</div>
-            <div class="product-body">
-              <div class="product-code">PAN-001</div>
-              <div class="product-name">Pampers RN</div>
-              <div class="product-desc">Recién Nacido · hasta 4 kg · x28 u</div>
-              <div class="product-footer">
-                <div class="product-price">$4.800<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-001','Pampers RN x28',4800,'👶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="pampers panales talle chico pequeno">
-            <div class="product-img">👶</div>
-            <div class="product-body">
-              <div class="product-code">PAN-002</div>
-              <div class="product-name">Pampers Talle S</div>
-              <div class="product-desc">Chico · 4 a 8 kg · x36 u</div>
-              <div class="product-footer">
-                <div class="product-price">$5.500<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-002','Pampers Talle S x36',5500,'👶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="pampers panales talle mediano">
-            <div class="product-img">👶</div>
-            <div class="product-body">
-              <div class="product-code">PAN-003</div>
-              <div class="product-name">Pampers Talle M</div>
-              <div class="product-desc">Mediano · 6 a 10 kg · x32 u</div>
-              <div class="product-footer">
-                <div class="product-price">$5.800<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-003','Pampers Talle M x32',5800,'👶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="pampers panales talle grande">
-            <div class="product-img">👶</div>
-            <div class="product-body">
-              <div class="product-code">PAN-004</div>
-              <div class="product-name">Pampers Talle G</div>
-              <div class="product-desc">Grande · 9 a 14 kg · x28 u</div>
-              <div class="product-footer">
-                <div class="product-price">$6.200<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-004','Pampers Talle G x28',6200,'👶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="pampers panales talle extra grande xg">
-            <div class="product-img">👶</div>
-            <div class="product-body">
-              <div class="product-code">PAN-005</div>
-              <div class="product-name">Pampers Talle XG</div>
-              <div class="product-desc">Extra Grande · +13 kg · x24 u</div>
-              <div class="product-footer">
-                <div class="product-price">$6.500<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-005','Pampers Talle XG x24',6500,'👶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Huggies -->
-    <div class="brand-block" id="brand-huggies">
-      <div class="brand-header" onclick="toggleBrand('brand-huggies')">
-        <div class="brand-logo">🟢</div>
-        <div class="brand-name">Huggies</div>
-        <div class="brand-count">4 talles</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="huggies panales chico">
-            <div class="product-img">🍃</div>
-            <div class="product-body">
-              <div class="product-code">PAN-010</div>
-              <div class="product-name">Huggies Talle S</div>
-              <div class="product-desc">Chico · 4 a 7 kg · x32 u</div>
-              <div class="product-footer">
-                <div class="product-price">$5.200<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-010','Huggies Talle S x32',5200,'🍃'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="huggies panales mediano">
-            <div class="product-img">🍃</div>
-            <div class="product-body">
-              <div class="product-code">PAN-011</div>
-              <div class="product-name">Huggies Talle M</div>
-              <div class="product-desc">Mediano · 6 a 9 kg · x30 u</div>
-              <div class="product-footer">
-                <div class="product-price">$5.500<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-011','Huggies Talle M x30',5500,'🍃'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="huggies panales grande">
-            <div class="product-img">🍃</div>
-            <div class="product-body">
-              <div class="product-code">PAN-012</div>
-              <div class="product-name">Huggies Talle G</div>
-              <div class="product-desc">Grande · 8 a 13 kg · x26 u</div>
-              <div class="product-footer">
-                <div class="product-price">$5.900<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-012','Huggies Talle G x26',5900,'🍃'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="huggies panales extra grande xg">
-            <div class="product-img">🍃</div>
-            <div class="product-body">
-              <div class="product-code">PAN-013</div>
-              <div class="product-name">Huggies Talle XG</div>
-              <div class="product-desc">Extra Grande · +12 kg · x22 u</div>
-              <div class="product-footer">
-                <div class="product-price">$6.200<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-013','Huggies Talle XG x22',6200,'🍃'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MamiBebé -->
-    <div class="brand-block" id="brand-mamibebe">
-      <div class="brand-header" onclick="toggleBrand('brand-mamibebe')">
-        <div class="brand-logo">🩷</div>
-        <div class="brand-name">MamiBebé</div>
-        <div class="brand-count">4 talles · Económica</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="mamibebe panales chico economico">
-            <div class="product-img">🩷</div>
-            <div class="product-body">
-              <div class="product-code">PAN-020</div>
-              <div class="product-name">MamiBebé Talle S</div>
-              <div class="product-desc">Chico · 3 a 6 kg · x40 u</div>
-              <div class="product-footer">
-                <div class="product-price">$3.900<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-020','MamiBebé Talle S x40',3900,'🩷'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="mamibebe panales mediano economico">
-            <div class="product-img">🩷</div>
-            <div class="product-body">
-              <div class="product-code">PAN-021</div>
-              <div class="product-name">MamiBebé Talle M</div>
-              <div class="product-desc">Mediano · 5 a 9 kg · x36 u</div>
-              <div class="product-footer">
-                <div class="product-price">$4.200<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-021','MamiBebé Talle M x36',4200,'🩷'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="mamibebe panales grande economico">
-            <div class="product-img">🩷</div>
-            <div class="product-body">
-              <div class="product-code">PAN-022</div>
-              <div class="product-name">MamiBebé Talle G</div>
-              <div class="product-desc">Grande · 8 a 13 kg · x32 u</div>
-              <div class="product-footer">
-                <div class="product-price">$4.500<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-022','MamiBebé Talle G x32',4500,'🩷'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="mamibebe panales extra grande economico">
-            <div class="product-img">🩷</div>
-            <div class="product-body">
-              <div class="product-code">PAN-023</div>
-              <div class="product-name">MamiBebé Talle XG</div>
-              <div class="product-desc">Extra Grande · +12 kg · x28 u</div>
-              <div class="product-footer">
-                <div class="product-price">$4.800<small>paquete</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('PAN-023','MamiBebé Talle XG x28',4800,'🩷'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       COMESTIBLES
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-comestibles">
-    <div class="section-header">
-      <span class="section-icon">🥫</span>
-      <span class="section-title">Comestibles</span>
-      <span class="section-count">3 categorías</span>
-    </div>
-
-    <!-- Secos -->
-    <div class="brand-block open" id="brand-secos">
-      <div class="brand-header" onclick="toggleBrand('brand-secos')">
-        <div class="brand-logo">🌾</div>
-        <div class="brand-name">Secos y Graneles</div>
-        <div class="brand-count">4 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="arroz comestibles secos">
-            <div class="product-img">🌾</div>
-            <div class="product-body">
-              <div class="product-code">COM-001</div>
-              <div class="product-name">Arroz Largo Fino 1kg</div>
-              <div class="product-desc">Grano suelto, primera calidad</div>
-              <div class="product-footer">
-                <div class="product-price">$1.200<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-001','Arroz Largo Fino 1kg',1200,'🌾'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="fideos pasta comestibles secos">
-            <div class="product-img">🍝</div>
-            <div class="product-body">
-              <div class="product-code">COM-002</div>
-              <div class="product-name">Fideos Spaghetti 500g</div>
-              <div class="product-desc">Pasta seca de trigo</div>
-              <div class="product-footer">
-                <div class="product-price">$950<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-002','Fideos Spaghetti 500g',950,'🍝'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="harina comestibles secos">
-            <div class="product-img">⚪</div>
-            <div class="product-body">
-              <div class="product-code">COM-003</div>
-              <div class="product-name">Harina 0000 1kg</div>
-              <div class="product-desc">Extra fina, ideal para repostería</div>
-              <div class="product-footer">
-                <div class="product-price">$800<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-003','Harina 0000 1kg',800,'⚪'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="azucar comestibles secos">
-            <div class="product-img">🍚</div>
-            <div class="product-body">
-              <div class="product-code">COM-004</div>
-              <div class="product-name">Azúcar Blanca 1kg</div>
-              <div class="product-desc">Refinada, primera calidad</div>
-              <div class="product-footer">
-                <div class="product-price">$1.100<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-004','Azúcar Blanca 1kg',1100,'🍚'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Aceites y Conservas -->
-    <div class="brand-block" id="brand-aceites">
-      <div class="brand-header" onclick="toggleBrand('brand-aceites')">
-        <div class="brand-logo">🫙</div>
-        <div class="brand-name">Aceites y Conservas</div>
-        <div class="brand-count">3 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="aceite girasol comestibles">
-            <div class="product-img">🌻</div>
-            <div class="product-body">
-              <div class="product-code">COM-010</div>
-              <div class="product-name">Aceite Girasol 900ml</div>
-              <div class="product-desc">Cocinero, primera calidad</div>
-              <div class="product-footer">
-                <div class="product-price">$2.800<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-010','Aceite Girasol 900ml',2800,'🌻'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="aceite oliva comestibles">
-            <div class="product-img">🫒</div>
-            <div class="product-body">
-              <div class="product-code">COM-011</div>
-              <div class="product-name">Aceite de Oliva 500ml</div>
-              <div class="product-desc">Extra virgen, ideal para ensaladas</div>
-              <div class="product-footer">
-                <div class="product-price">$5.200<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-011','Aceite de Oliva 500ml',5200,'🫒'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="tomate triturado comestibles conserva">
-            <div class="product-img">🍅</div>
-            <div class="product-body">
-              <div class="product-code">COM-012</div>
-              <div class="product-name">Tomate Triturado 400g</div>
-              <div class="product-desc">Arcor, lata, natural</div>
-              <div class="product-footer">
-                <div class="product-price">$750<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('COM-012','Tomate Triturado 400g',750,'🍅'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       VERDULERÍA
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-verduras">
-    <div class="section-header">
-      <span class="section-icon">🥬</span>
-      <span class="section-title">Verdulería</span>
-      <span class="section-count">2 grupos</span>
-    </div>
-
-    <div class="brand-block open" id="brand-verduras">
-      <div class="brand-header" onclick="toggleBrand('brand-verduras')">
-        <div class="brand-logo">🥦</div>
-        <div class="brand-name">Verduras de estación</div>
-        <div class="brand-count">4 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="papa verdura kilo">
-            <div class="product-img">🥔</div>
-            <div class="product-body">
-              <div class="product-code">VER-001</div>
-              <div class="product-name">Papa Blanca</div>
-              <div class="product-desc">Por kilogramo, fresca</div>
-              <div class="product-footer">
-                <div class="product-price">$800<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-001','Papa Blanca 1kg',800,'🥔'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="cebolla verdura kilo">
-            <div class="product-img">🧅</div>
-            <div class="product-body">
-              <div class="product-code">VER-002</div>
-              <div class="product-name">Cebolla</div>
-              <div class="product-desc">Por kilogramo</div>
-              <div class="product-footer">
-                <div class="product-price">$650<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-002','Cebolla 1kg',650,'🧅'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="tomate verdura kilo">
-            <div class="product-img">🍅</div>
-            <div class="product-body">
-              <div class="product-code">VER-003</div>
-              <div class="product-name">Tomate Redondo</div>
-              <div class="product-desc">Por kilogramo, maduro</div>
-              <div class="product-footer">
-                <div class="product-price">$900<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-003','Tomate Redondo 1kg',900,'🍅'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="zanahoria verdura kilo">
-            <div class="product-img">🥕</div>
-            <div class="product-body">
-              <div class="product-code">VER-004</div>
-              <div class="product-name">Zanahoria</div>
-              <div class="product-desc">Por kilogramo</div>
-              <div class="product-footer">
-                <div class="product-price">$550<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-004','Zanahoria 1kg',550,'🥕'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="brand-block" id="brand-frutas">
-      <div class="brand-header" onclick="toggleBrand('brand-frutas')">
-        <div class="brand-logo">🍎</div>
-        <div class="brand-name">Frutas</div>
-        <div class="brand-count">3 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="manzana fruta verduleria">
-            <div class="product-img">🍎</div>
-            <div class="product-body">
-              <div class="product-code">VER-010</div>
-              <div class="product-name">Manzana Roja</div>
-              <div class="product-desc">Por kilogramo</div>
-              <div class="product-footer">
-                <div class="product-price">$1.200<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-010','Manzana Roja 1kg',1200,'🍎'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="banana fruta verduleria">
-            <div class="product-img">🍌</div>
-            <div class="product-body">
-              <div class="product-code">VER-011</div>
-              <div class="product-name">Banana</div>
-              <div class="product-desc">Por kilogramo</div>
-              <div class="product-footer">
-                <div class="product-price">$700<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-011','Banana 1kg',700,'🍌'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="naranja fruta verduleria">
-            <div class="product-img">🍊</div>
-            <div class="product-body">
-              <div class="product-code">VER-012</div>
-              <div class="product-name">Naranja</div>
-              <div class="product-desc">Por kilogramo, dulce</div>
-              <div class="product-footer">
-                <div class="product-price">$650<small>/kg</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('VER-012','Naranja 1kg',650,'🍊'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       GOLOSINAS
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-golosinas">
-    <div class="section-header">
-      <span class="section-icon">🍬</span>
-      <span class="section-title">Golosinas</span>
-      <span class="section-count">2 marcas</span>
-    </div>
-
-    <div class="brand-block open" id="brand-arcor">
-      <div class="brand-header" onclick="toggleBrand('brand-arcor')">
-        <div class="brand-logo">🍫</div>
-        <div class="brand-name">Arcor</div>
-        <div class="brand-count">3 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="arcor chocolate golosinas">
-            <div class="product-img">🍫</div>
-            <div class="product-body">
-              <div class="product-code">GOL-001</div>
-              <div class="product-name">Chocolate con Leche 25g</div>
-              <div class="product-desc">Barra individual</div>
-              <div class="product-footer">
-                <div class="product-price">$350<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('GOL-001','Arcor Chocolate 25g',350,'🍫'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="arcor caramelos golosinas">
-            <div class="product-img">🍬</div>
-            <div class="product-body">
-              <div class="product-code">GOL-002</div>
-              <div class="product-name">Caramelos Masticables x20</div>
-              <div class="product-desc">Surtido de sabores</div>
-              <div class="product-footer">
-                <div class="product-price">$280<small>bolsa</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('GOL-002','Arcor Caramelos x20',280,'🍬'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="arcor paleta golosinas">
-            <div class="product-img">🍭</div>
-            <div class="product-body">
-              <div class="product-code">GOL-003</div>
-              <div class="product-name">Paleta Cream Toffee</div>
-              <div class="product-desc">Sabor caramelo</div>
-              <div class="product-footer">
-                <div class="product-price">$180<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('GOL-003','Paleta Cream Toffee',180,'🍭'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="brand-block" id="brand-bagley">
-      <div class="brand-header" onclick="toggleBrand('brand-bagley')">
-        <div class="brand-logo">🍪</div>
-        <div class="brand-name">Bagley</div>
-        <div class="brand-count">2 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="bagley maravilla golosinas galletas">
-            <div class="product-img">🍪</div>
-            <div class="product-body">
-              <div class="product-code">GOL-010</div>
-              <div class="product-name">Maravilla Chocolate 200g</div>
-              <div class="product-desc">Galletitas rellenas</div>
-              <div class="product-footer">
-                <div class="product-price">$950<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('GOL-010','Bagley Maravilla 200g',950,'🍪'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="bagley lincoln golosinas galletas">
-            <div class="product-img">🫙</div>
-            <div class="product-body">
-              <div class="product-code">GOL-011</div>
-              <div class="product-name">Lincoln 200g</div>
-              <div class="product-desc">Galletitas de agua</div>
-              <div class="product-footer">
-                <div class="product-price">$750<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('GOL-011','Bagley Lincoln 200g',750,'🫙'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       LIMPIEZA
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-limpieza">
-    <div class="section-header">
-      <span class="section-icon">🧹</span>
-      <span class="section-title">Limpieza</span>
-      <span class="section-count">2 marcas</span>
-    </div>
-
-    <div class="brand-block open" id="brand-ala">
-      <div class="brand-header" onclick="toggleBrand('brand-ala')">
-        <div class="brand-logo">🌊</div>
-        <div class="brand-name">Ala — Detergente y Ropa</div>
-        <div class="brand-count">3 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="ala detergente limpieza">
-            <div class="product-img">🌊</div>
-            <div class="product-body">
-              <div class="product-code">LIM-001</div>
-              <div class="product-name">Ala Detergente 750ml</div>
-              <div class="product-desc">Limón, vajilla</div>
-              <div class="product-footer">
-                <div class="product-price">$1.100<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIM-001','Ala Detergente 750ml',1100,'🌊'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="ala jabon ropa limpieza">
-            <div class="product-img">🧺</div>
-            <div class="product-body">
-              <div class="product-code">LIM-002</div>
-              <div class="product-name">Ala Jabón en Polvo 800g</div>
-              <div class="product-desc">Para ropa blanca y color</div>
-              <div class="product-footer">
-                <div class="product-price">$2.400<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIM-002','Ala Jabón en Polvo 800g',2400,'🧺'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="ala jabon ropa limpieza 3kg">
-            <div class="product-img">🧺</div>
-            <div class="product-body">
-              <div class="product-code">LIM-003</div>
-              <div class="product-name">Ala Jabón en Polvo 3kg</div>
-              <div class="product-desc">Formato familiar</div>
-              <div class="product-footer">
-                <div class="product-price">$7.500<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIM-003','Ala Jabón en Polvo 3kg',7500,'🧺'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="brand-block" id="brand-pinesol">
-      <div class="brand-header" onclick="toggleBrand('brand-pinesol')">
-        <div class="brand-logo">🟣</div>
-        <div class="brand-name">Pino Sol — Pisos y Baños</div>
-        <div class="brand-count">2 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="pino sol lavanda limpieza piso">
-            <div class="product-img">🟣</div>
-            <div class="product-body">
-              <div class="product-code">LIM-010</div>
-              <div class="product-name">Pino Sol Lavanda 900ml</div>
-              <div class="product-desc">Para pisos, desinfectante</div>
-              <div class="product-footer">
-                <div class="product-price">$1.600<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIM-010','Pino Sol Lavanda 900ml',1600,'🟣'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="pino sol citrus limpieza piso">
-            <div class="product-img">🟡</div>
-            <div class="product-body">
-              <div class="product-code">LIM-011</div>
-              <div class="product-name">Pino Sol Citrus 900ml</div>
-              <div class="product-desc">Para pisos, aroma cítrico</div>
-              <div class="product-footer">
-                <div class="product-price">$1.600<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIM-011','Pino Sol Citrus 900ml',1600,'🟡'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       LÁCTEOS
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-lacteos">
-    <div class="section-header">
-      <span class="section-icon">🥛</span>
-      <span class="section-title">Lácteos</span>
-      <span class="section-count">2 marcas</span>
-    </div>
-
-    <div class="brand-block open" id="brand-sancor">
-      <div class="brand-header" onclick="toggleBrand('brand-sancor')">
-        <div class="brand-logo">🐮</div>
-        <div class="brand-name">SanCor</div>
-        <div class="brand-count">3 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="sancor leche lacteos">
-            <div class="product-img">🥛</div>
-            <div class="product-body">
-              <div class="product-code">LAC-001</div>
-              <div class="product-name">Leche Entera 1L</div>
-              <div class="product-desc">Sachet, larga vida</div>
-              <div class="product-footer">
-                <div class="product-price">$1.050<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LAC-001','SanCor Leche Entera 1L',1050,'🥛'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="sancor yogur lacteos">
-            <div class="product-img">🍶</div>
-            <div class="product-body">
-              <div class="product-code">LAC-002</div>
-              <div class="product-name">Yogur Bebible 1L</div>
-              <div class="product-desc">Frutilla o durazno</div>
-              <div class="product-footer">
-                <div class="product-price">$1.900<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LAC-002','SanCor Yogur Bebible 1L',1900,'🍶'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="sancor crema lacteos">
-            <div class="product-img">🧈</div>
-            <div class="product-body">
-              <div class="product-code">LAC-003</div>
-              <div class="product-name">Crema de Leche 200g</div>
-              <div class="product-desc">Para cocina y repostería</div>
-              <div class="product-footer">
-                <div class="product-price">$1.400<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LAC-003','SanCor Crema de Leche 200g',1400,'🧈'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       LIBRERÍA
-  ══════════════════════════════════════════ -->
-  <section class="section" id="sec-libreria">
-    <div class="section-header">
-      <span class="section-icon">📚</span>
-      <span class="section-title">Librería</span>
-      <span class="section-count">2 grupos</span>
-    </div>
-
-    <div class="brand-block open" id="brand-escolar">
-      <div class="brand-header" onclick="toggleBrand('brand-escolar')">
-        <div class="brand-logo">✏️</div>
-        <div class="brand-name">Útiles Escolares</div>
-        <div class="brand-count">4 productos</div>
-        <div class="brand-arrow">▼</div>
-      </div>
-      <div class="brand-products">
-        <div class="products-grid">
-          <div class="product-card" data-search="cuaderno libreria escolar">
-            <div class="product-img">📓</div>
-            <div class="product-body">
-              <div class="product-code">LIB-001</div>
-              <div class="product-name">Cuaderno Rivadavia 48h</div>
-              <div class="product-desc">Araña, tapa dura, rayado</div>
-              <div class="product-footer">
-                <div class="product-price">$1.800<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIB-001','Cuaderno Rivadavia 48h',1800,'📓'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="cuaderno libreria escolar 96">
-            <div class="product-img">📔</div>
-            <div class="product-body">
-              <div class="product-code">LIB-002</div>
-              <div class="product-name">Cuaderno Rivadavia 96h</div>
-              <div class="product-desc">Araña, tapa dura, rayado</div>
-              <div class="product-footer">
-                <div class="product-price">$3.200<small>c/u</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIB-002','Cuaderno Rivadavia 96h',3200,'📔'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="lapiz faber castell libreria">
-            <div class="product-img">✏️</div>
-            <div class="product-body">
-              <div class="product-code">LIB-003</div>
-              <div class="product-name">Lápiz Faber Castell N°2</div>
-              <div class="product-desc">HB, con goma, x12 u</div>
-              <div class="product-footer">
-                <div class="product-price">$1.200<small>caja</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIB-003','Lápiz Faber Castell N2 x12',1200,'✏️'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-          <div class="product-card" data-search="boligrafo biro lapicera libreria">
-            <div class="product-img">🖊️</div>
-            <div class="product-body">
-              <div class="product-code">LIB-004</div>
-              <div class="product-name">Bic Cristal x10</div>
-              <div class="product-desc">Negro y azul, punta media</div>
-              <div class="product-footer">
-                <div class="product-price">$1.500<small>pack</small></div>
-                <a href="#" class="add-btn" onclick="addToCart('LIB-004','Bic Cristal x10',1500,'🖊️'); return false;">+</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  {% endfor %}
 </main>
 
-<footer>
-  <strong>Almacén Don Jorge</strong> · Pedidos por WhatsApp 📱<br>
-  <div class="powered">⚡ Catálogo Digital · Tecnología MiCatálogo</div>
-</footer>
+<!-- FLOAT CART -->
+<button class="float-cart" id="floatCart" onclick="toggleCart()">
+  🛒 Ver pedido · <span id="floatTotal">$0</span>
+</button>
 
-<!-- CART OVERLAY -->
+<!-- OVERLAY -->
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 
-<!-- CART PANEL -->
-<div class="cart-panel" id="cartPanel">
-  <div class="cart-handle"></div>
-  <div class="cart-header">
-    <h3>🛒 Tu pedido</h3>
-  </div>
-  <div class="cart-items" id="cartItems">
-    <div class="cart-empty">Todavía no agregaste productos.</div>
-  </div>
-  <div class="cart-footer" id="cartFooter" style="display:none">
-    <div class="cart-subtotal">
-      <span>Total estimado</span>
-      <strong id="cartTotal">$0</strong>
-    </div>
+<!-- CARRITO MODAL -->
+<div class="cart-modal" id="cartModal">
+  <h3>🛒 Tu pedido</h3>
+  <div id="cartItems"><div class="empty-cart">Todavía no agregaste productos 😊</div></div>
+  <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
 
-    <div class="name-input-wrap">
-      <label>Tu nombre (para el presupuesto)</label>
-      <input type="text" id="customerName" placeholder="Ej: María González" />
-    </div>
-
-    <div class="pay-label">Forma de pago</div>
-    <div class="pay-options">
+  <div id="cartForm" style="display:none">
+    <input class="nombre-input" type="text" id="clienteNombre" placeholder="Tu nombre (opcional)">
+    <div class="pay-title">¿Cómo vas a pagar?</div>
+    <div class="pay-opts">
       <div class="pay-opt" onclick="selectPay(this,'Efectivo')">💵 Efectivo</div>
       <div class="pay-opt" onclick="selectPay(this,'Transferencia')">🏦 Transferencia</div>
-      <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📲 Mercado Pago</div>
+      <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📱 Mercado Pago</div>
     </div>
-
-    <a href="#" class="wpp-btn" id="wppBtn" onclick="sendWhatsApp(); return false;">
-      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <button class="wpp-btn" onclick="sendWhatsApp()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Enviar pedido por WhatsApp
-    </a>
+    </button>
   </div>
+  <button class="close-btn" onclick="toggleCart()">Cerrar</button>
 </div>
 
-<!-- FLOAT BAR -->
-<div class="float-bar" id="floatBar" onclick="toggleCart()">
-  🛒 Ver pedido · <span id="floatTotal">$0</span>
-</div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 var cart = {};
-var selectedPay = '';
-var WPP_NUMBER = '5493872101274';
-
-function toggleBrand(id) {
-  var block = document.getElementById(id);
-  block.classList.toggle('open');
-}
+var payMethod = '';
+var WPP = '5493870000000';
 
 function addToCart(code, name, price, icon) {
-  if (cart[code]) {
-    cart[code].qty += 1;
-  } else {
-    cart[code] = { name: name, price: price, icon: icon, qty: 1 };
-  }
-  updateCartUI();
+  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
+  else cart[code].qty++;
+  updateUI();
   showToast('✅ ' + name + ' agregado');
-  var card = document.querySelector('[onclick*="' + code + '"]');
-  if (card) card.closest('.product-card').classList.add('added');
 }
 
 function changeQty(code, delta) {
   if (!cart[code]) return;
   cart[code].qty += delta;
-  if (cart[code].qty <= 0) {
-    delete cart[code];
-    var card = document.querySelector('[onclick*="' + code + '"]');
-    if (card) card.closest('.product-card').classList.remove('added');
-  }
-  updateCartUI();
+  if (cart[code].qty <= 0) delete cart[code];
+  updateUI();
 }
 
-function updateCartUI() {
-  var items = Object.keys(cart);
+function updateUI() {
+  var keys = Object.keys(cart);
   var total = 0;
   var count = 0;
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; count += cart[k].qty; });
 
-  items.forEach(function(code) {
-    total += cart[code].price * cart[code].qty;
-    count += cart[code].qty;
-  });
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('floatTotal').textContent = '$' + formatNum(total);
+  document.getElementById('floatCart').classList.toggle('visible', count > 0);
 
-  document.getElementById('cartCountHeader').textContent = count;
-  document.getElementById('cartTotal').textContent = formatPrice(total);
-  document.getElementById('floatTotal').textContent = formatPrice(total);
+  var itemsEl = document.getElementById('cartItems');
+  var totalEl = document.getElementById('cartTotal');
+  var formEl  = document.getElementById('cartForm');
 
-  var cartItemsEl = document.getElementById('cartItems');
-  var cartFooter = document.getElementById('cartFooter');
-
-  if (items.length === 0) {
-    cartItemsEl.innerHTML = '<div class="cart-empty">Todavía no agregaste productos.</div>';
-    cartFooter.style.display = 'none';
-    document.getElementById('floatBar').style.display = 'none';
+  if (keys.length === 0) {
+    itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊</div>';
+    totalEl.style.display = 'none';
+    formEl.style.display  = 'none';
     return;
   }
 
-  document.getElementById('floatBar').style.display = 'block';
-  cartFooter.style.display = 'block';
-
   var html = '';
-  items.forEach(function(code) {
-    var item = cart[code];
-    var subtotal = formatPrice(item.price * item.qty);
-    html += '<div class="cart-item">' +
-      '<div class="cart-item-icon">' + item.icon + '</div>' +
-      '<div class="cart-item-info">' +
-        '<div class="cart-item-name">' + item.name + '</div>' +
-        '<div class="cart-item-price">' + formatPrice(item.price) + ' c/u · Total: ' + subtotal + '</div>' +
-      '</div>' +
-      '<div class="cart-qty">' +
-        '<button class="qty-btn" onclick="changeQty(\'' + code + '\',-1)">−</button>' +
-        '<span class="qty-num">' + item.qty + '</span>' +
-        '<button class="qty-btn" onclick="changeQty(\'' + code + '\',1)">+</button>' +
-      '</div>' +
-    '</div>';
+  keys.forEach(function(k){
+    var it = cart[k];
+    html += '<div class="cart-item">';
+    html += '<div class="cart-item-name">' + it.icon + ' ' + it.name + '</div>';
+    html += '<div class="cart-item-price">$' + formatNum(it.price * it.qty) + '</div>';
+    html += '<div class="qty-ctrl">';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',-1)">−</button>';
+    html += '<span class="qty-val">' + it.qty + '</span>';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',1)">+</button>';
+    html += '</div></div>';
   });
-  cartItemsEl.innerHTML = html;
+  itemsEl.innerHTML = html;
+  document.getElementById('totalAmt').textContent = '$' + formatNum(total);
+  totalEl.style.display = 'block';
+  formEl.style.display  = 'block';
 }
 
 function toggleCart() {
-  var panel = document.getElementById('cartPanel');
-  var overlay = document.getElementById('cartOverlay');
-  panel.classList.toggle('open');
-  overlay.classList.toggle('open');
-  document.body.style.overflow = panel.classList.contains('open') ? 'hidden' : '';
+  document.getElementById('cartOverlay').classList.toggle('open');
+  document.getElementById('cartModal').classList.toggle('open');
 }
 
 function selectPay(el, method) {
-  selectedPay = method;
-  document.querySelectorAll('.pay-opt').forEach(function(o) { o.classList.remove('selected'); });
+  payMethod = method;
+  document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
   el.classList.add('selected');
 }
 
 function sendWhatsApp() {
-  var items = Object.keys(cart);
-  if (items.length === 0) { showToast('⚠️ Tu carrito está vacío'); return; }
-  var name = document.getElementById('customerName').value.trim() || 'Cliente';
-  var pay = selectedPay || 'No especificada';
+  var keys = Object.keys(cart);
+  if (keys.length === 0) { showToast('Agregá productos primero'); return; }
+  var nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
   var total = 0;
-  var lines = '🛒 *PEDIDO — Almacén Don Jorge*\n\n';
-  lines += '👤 *Cliente:* ' + name + '\n\n';
-  lines += '📋 *Detalle:*\n';
-  items.forEach(function(code) {
-    var item = cart[code];
-    var sub = item.price * item.qty;
-    total += sub;
-    lines += '  • ' + item.icon + ' ' + item.name + ' x' + item.qty + ' = ' + formatPrice(sub) + '\n';
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; });
+
+  var msg = '🛒 *NUEVO PEDIDO — Almacén Don Jorge*\n';
+  msg += '👤 Cliente: ' + nombre + '\n';
+  msg += '─────────────────\n';
+  keys.forEach(function(k){
+    var it = cart[k];
+    msg += it.icon + ' ' + it.name + '\n';
+    msg += '   x' + it.qty + ' = $' + formatNum(it.price * it.qty) + '\n';
   });
-  lines += '\n💰 *TOTAL: ' + formatPrice(total) + '*\n';
-  lines += '💳 *Pago:* ' + pay + '\n\n';
-  lines += '¡Gracias por su pedido! 🙏';
-  var url = 'https://wa.me/' + WPP_NUMBER + '?text=' + encodeURIComponent(lines);
-  window.open(url, '_blank');
+  msg += '─────────────────\n';
+  msg += '💰 *TOTAL: $' + formatNum(total) + '*\n';
+  if (payMethod) msg += '💳 Pago: ' + payMethod + '\n';
+  msg += '\n¡Gracias por tu pedido! 😊';
+
+  window.open('https://wa.me/' + WPP + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
-function filterProducts(query) {
-  var q = query.toLowerCase().trim();
+function buscar(q) {
+  q = q.toLowerCase().trim();
   var cards = document.querySelectorAll('.product-card');
-  cards.forEach(function(card) {
-    var name = (card.dataset.name || card.querySelector('.product-name').textContent).toLowerCase();
-    var search = (card.dataset.search || '').toLowerCase();
-    var match = !q || name.includes(q) || search.includes(q);
-    card.style.display = match ? '' : 'none';
+  var visible = 0;
+  cards.forEach(function(c){
+    var match = !q || c.dataset.name.indexOf(q) !== -1;
+    c.dataset.hidden = match ? 'false' : 'true';
+    if (match) visible++;
+    // Si hay búsqueda, abrir los brand-products que tengan resultados
+    if (q) {
+      var bp = c.closest('.brand-products');
+      if (bp && match) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
+    }
   });
-  if (q) {
-    document.querySelectorAll('.brand-block').forEach(function(block) {
-      var visible = block.querySelectorAll('.product-card[style=""],.product-card:not([style])');
-      var hasVisible = false;
-      block.querySelectorAll('.product-card').forEach(function(c) {
-        if (c.style.display !== 'none') hasVisible = true;
-      });
-      block.style.display = hasVisible ? '' : 'none';
-      if (hasVisible) block.classList.add('open');
-    });
-  } else {
-    document.querySelectorAll('.brand-block').forEach(function(block) {
-      block.style.display = '';
-    });
-  }
+  document.getElementById('noResults').style.display = (q && visible === 0) ? 'block' : 'none';
+}
+
+function toggleBrand(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
 }
 
 function showToast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2200);
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
 }
 
-function formatPrice(n) {
-  return '$' + n.toLocaleString('es-AR');
+function formatNum(n) {
+  return Math.round(n).toLocaleString('es-AR');
 }
 
-// Scroll activo en nav
-var sections = document.querySelectorAll('section[id]');
+// Nav activo en scroll
+var sections = document.querySelectorAll('.cat-section');
 var navLinks = document.querySelectorAll('.cat-nav a');
-window.addEventListener('scroll', function() {
-  var scrollY = window.scrollY + 200;
-  sections.forEach(function(sec) {
-    if (scrollY >= sec.offsetTop && scrollY < sec.offsetTop + sec.offsetHeight) {
+window.addEventListener('scroll', function(){
+  var y = window.scrollY + 200;
+  sections.forEach(function(sec){
+    if (y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight) {
       var id = sec.id;
-      navLinks.forEach(function(link) {
-        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      navLinks.forEach(function(l){
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
       });
     }
   });
-}, { passive: true });
+}, {passive:true});
 </script>
-
 </body>
 </html>
