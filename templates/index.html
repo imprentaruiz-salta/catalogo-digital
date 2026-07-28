@@ -1,1 +1,381 @@
-<!-- index -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Catálogo Digital — Pedí por WhatsApp">
+<title>Almacén Don Jorge</title>
+<style>
+:root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* HEADER */
+header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:28px}
+.logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.logo-text span{font-size:11px;opacity:.85}
+.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}
+.cart-btn:hover{background:rgba(255,255,255,.35)}
+.search-bar{padding:0 16px 12px}
+.search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
+/* CAT NAV */
+.cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:0 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100}
+.cat-nav::-webkit-scrollbar{display:none}
+.cat-nav a{display:inline-block;padding:12px 14px;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;border-bottom:3px solid transparent;transition:.2s}
+.cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-bottom-color:var(--g)}
+.cat-nav a .icon{margin-right:4px;font-size:15px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
+.hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
+.hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
+.hero p{font-size:13px;color:var(--mut)}
+
+/* SECCIONES */
+.cat-section{margin:0 12px 24px}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.cat-header .cat-emoji{font-size:28px}
+.cat-header h2{font-size:18px;font-weight:800;color:var(--txt)}
+.cat-header .cat-count{font-size:12px;color:var(--mut);margin-top:2px}
+
+/* MARCA ACCORDION */
+.brand-block{margin-bottom:12px;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.07)}
+.brand-header{background:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:none;width:100%;text-align:left;font-size:15px;font-weight:700;color:var(--txt);border-left:4px solid var(--g)}
+.brand-header:hover{background:#f9fffe}
+.brand-header .brand-left{display:flex;align-items:center;gap:10px}
+.brand-header .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800}
+.brand-header .chevron{font-size:12px;color:var(--mut);transition:.3s}
+.brand-header.open .chevron{transform:rotate(180deg)}
+.brand-products{display:none;background:#fafafa;padding:12px}
+.brand-products.open{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+
+/* PRODUCTO CARD */
+.product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);transition:.2s}
+.product-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
+.product-card[data-hidden="true"]{display:none}
+.prod-img{width:100%;height:110px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-body{padding:10px}
+.prod-code{font-size:10px;color:var(--mut);font-family:monospace;margin-bottom:3px}
+.prod-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
+.prod-footer{display:flex;align-items:center;justify-content:space-between}
+.prod-price{font-size:15px;font-weight:800;color:var(--gd)}
+.prod-price small{font-size:9px;color:var(--mut);display:block;font-weight:400}
+.add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}
+.add-btn:hover{transform:scale(1.15)}
+
+/* FLOAT CART */
+.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}
+.float-cart.visible{display:flex}
+
+/* CARRITO MODAL */
+.cart-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
+.cart-overlay.open{display:block}
+.cart-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:80vh;overflow-y:auto;z-index:500;transform:translateY(100%);transition:.35s cubic-bezier(.4,0,.2,1)}
+.cart-modal.open{transform:translateY(0)}
+.cart-modal h3{font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--brd)}
+.cart-item-name{font-size:13px;font-weight:600;flex:1}
+.cart-item-price{font-size:13px;color:var(--gd);font-weight:700;margin:0 10px}
+.qty-ctrl{display:flex;align-items:center;gap:8px}
+.qty-btn{background:var(--bg);border:1px solid var(--brd);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-val{font-size:14px;font-weight:700;min-width:20px;text-align:center}
+.cart-total{font-size:17px;font-weight:800;color:var(--gd);padding:14px 0 6px;text-align:right}
+
+/* PAGO */
+.pay-title{font-size:13px;font-weight:700;color:var(--txt);margin:12px 0 8px}
+.pay-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pay-opt{padding:8px 14px;border:2px solid var(--brd);border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.pay-opt.selected,.pay-opt:hover{border-color:var(--g);background:#e8f5e9;color:var(--gd)}
+
+/* NOMBRE */
+.nombre-input{width:100%;padding:12px 16px;border:2px solid var(--brd);border-radius:50px;font-size:14px;margin-bottom:14px;outline:none}
+.nombre-input:focus{border-color:var(--g)}
+
+/* BTN WPP */
+.wpp-btn{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.close-btn{width:100%;background:var(--bg);border:none;padding:12px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer}
+
+/* EMPTY */
+.empty-cart{text-align:center;padding:30px 0;color:var(--mut);font-size:14px}
+.no-results{text-align:center;padding:40px;color:var(--mut);font-size:14px;display:none}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(min-width:600px){
+  .brand-products.open{grid-template-columns:repeat(3,1fr)}
+  .cat-section{margin:0 24px 24px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <div class="logo-area">
+      <div class="logo-icon">🏪</div>
+      <div class="logo-text">
+        <h1>Almacén Don Jorge</h1>
+        <span>📍 Salta Capital · Pedidos por WhatsApp</span>
+      </div>
+    </div>
+    <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." oninput="buscar(this.value)">
+  </div>
+</header>
+
+<!-- NAV CATEGORÍAS -->
+<nav class="cat-nav" id="catNav">
+  {% for cat in cats %}
+  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}">
+    <span class="icon">{{ cat_icon(cat) }}</span>{{ cat }}
+  </a>
+  {% endfor %}
+</nav>
+
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div style="font-size:36px;margin-bottom:6px">🛒</div>
+    <h2>¡Hacé tu pedido fácil!</h2>
+    <p>Elegí tus productos, armá tu carrito y enviá el pedido por WhatsApp al instante.</p>
+  </div>
+
+  <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
+
+  <!-- CATEGORÍAS -->
+  {% for cat, marcas in cats.items() %}
+  {% set total = namespace(n=0) %}
+  {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
+  <section class="cat-section" id="sec-{{ loop.index }}">
+    <div class="cat-header">
+      <span class="cat-emoji">{{ cat_icon(cat) }}</span>
+      <div>
+        <h2>{{ cat }}</h2>
+        <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
+      </div>
+    </div>
+
+    {% for marca, productos in marcas.items() %}
+    <div class="brand-block">
+      <button class="brand-header" onclick="toggleBrand(this)">
+        <div class="brand-left">
+          <div class="brand-icon">{{ marca[0] }}</div>
+          <div>
+            <div>{{ marca }}</div>
+            <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ productos|length }} variante{{ 's' if productos|length != 1 else '' }}</div>
+          </div>
+        </div>
+        <span class="chevron">▼</span>
+      </button>
+      <div class="brand-products">
+        {% for p in productos %}
+        <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}">
+          <div class="prod-img">
+            {% if p.foto %}
+            <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy">
+            {% else %}
+            {{ cat_icon(p.categoria) }}
+            {% endif %}
+          </div>
+          <div class="prod-body">
+            <div class="prod-code">COD: {{ p.codigo }}</div>
+            <div class="prod-name">{{ p.nombre }}</div>
+            {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
+            <div class="prod-footer">
+              <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
+              <button class="add-btn" onclick="addToCart('{{ p.codigo }}','{{ p.nombre }}',{{ p.precio }},'{{ cat_icon(p.categoria) }}')">+</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</main>
+
+<!-- FLOAT CART -->
+<button class="float-cart" id="floatCart" onclick="toggleCart()">
+  🛒 Ver pedido · <span id="floatTotal">$0</span>
+</button>
+
+<!-- OVERLAY -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+<!-- CARRITO MODAL -->
+<div class="cart-modal" id="cartModal">
+  <h3>🛒 Tu pedido</h3>
+  <div id="cartItems"><div class="empty-cart">Todavía no agregaste productos 😊</div></div>
+  <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
+
+  <div id="cartForm" style="display:none">
+    <input class="nombre-input" type="text" id="clienteNombre" placeholder="Tu nombre (opcional)">
+    <div class="pay-title">¿Cómo vas a pagar?</div>
+    <div class="pay-opts">
+      <div class="pay-opt" onclick="selectPay(this,'Efectivo')">💵 Efectivo</div>
+      <div class="pay-opt" onclick="selectPay(this,'Transferencia')">🏦 Transferencia</div>
+      <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📱 Mercado Pago</div>
+    </div>
+    <button class="wpp-btn" onclick="sendWhatsApp()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar pedido por WhatsApp
+    </button>
+  </div>
+  <button class="close-btn" onclick="toggleCart()">Cerrar</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var cart = {};
+var payMethod = '';
+var WPP = '5493870000000';
+
+function addToCart(code, name, price, icon) {
+  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
+  else cart[code].qty++;
+  updateUI();
+  showToast('✅ ' + name + ' agregado');
+}
+
+function changeQty(code, delta) {
+  if (!cart[code]) return;
+  cart[code].qty += delta;
+  if (cart[code].qty <= 0) delete cart[code];
+  updateUI();
+}
+
+function updateUI() {
+  var keys = Object.keys(cart);
+  var total = 0;
+  var count = 0;
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; count += cart[k].qty; });
+
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('floatTotal').textContent = '$' + formatNum(total);
+  document.getElementById('floatCart').classList.toggle('visible', count > 0);
+
+  var itemsEl = document.getElementById('cartItems');
+  var totalEl = document.getElementById('cartTotal');
+  var formEl  = document.getElementById('cartForm');
+
+  if (keys.length === 0) {
+    itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊</div>';
+    totalEl.style.display = 'none';
+    formEl.style.display  = 'none';
+    return;
+  }
+
+  var html = '';
+  keys.forEach(function(k){
+    var it = cart[k];
+    html += '<div class="cart-item">';
+    html += '<div class="cart-item-name">' + it.icon + ' ' + it.name + '</div>';
+    html += '<div class="cart-item-price">$' + formatNum(it.price * it.qty) + '</div>';
+    html += '<div class="qty-ctrl">';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',-1)">−</button>';
+    html += '<span class="qty-val">' + it.qty + '</span>';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',1)">+</button>';
+    html += '</div></div>';
+  });
+  itemsEl.innerHTML = html;
+  document.getElementById('totalAmt').textContent = '$' + formatNum(total);
+  totalEl.style.display = 'block';
+  formEl.style.display  = 'block';
+}
+
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+  document.getElementById('cartModal').classList.toggle('open');
+}
+
+function selectPay(el, method) {
+  payMethod = method;
+  document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function sendWhatsApp() {
+  var keys = Object.keys(cart);
+  if (keys.length === 0) { showToast('Agregá productos primero'); return; }
+  var nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
+  var total = 0;
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; });
+
+  var msg = '🛒 *NUEVO PEDIDO — Almacén Don Jorge*\n';
+  msg += '👤 Cliente: ' + nombre + '\n';
+  msg += '─────────────────\n';
+  keys.forEach(function(k){
+    var it = cart[k];
+    msg += it.icon + ' ' + it.name + '\n';
+    msg += '   x' + it.qty + ' = $' + formatNum(it.price * it.qty) + '\n';
+  });
+  msg += '─────────────────\n';
+  msg += '💰 *TOTAL: $' + formatNum(total) + '*\n';
+  if (payMethod) msg += '💳 Pago: ' + payMethod + '\n';
+  msg += '\n¡Gracias por tu pedido! 😊';
+
+  window.open('https://wa.me/' + WPP + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function buscar(q) {
+  q = q.toLowerCase().trim();
+  var cards = document.querySelectorAll('.product-card');
+  var visible = 0;
+  cards.forEach(function(c){
+    var match = !q || c.dataset.name.indexOf(q) !== -1;
+    c.dataset.hidden = match ? 'false' : 'true';
+    if (match) visible++;
+    // Si hay búsqueda, abrir los brand-products que tengan resultados
+    if (q) {
+      var bp = c.closest('.brand-products');
+      if (bp && match) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
+    }
+  });
+  document.getElementById('noResults').style.display = (q && visible === 0) ? 'block' : 'none';
+}
+
+function toggleBrand(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+function formatNum(n) {
+  return Math.round(n).toLocaleString('es-AR');
+}
+
+// Nav activo en scroll
+var sections = document.querySelectorAll('.cat-section');
+var navLinks = document.querySelectorAll('.cat-nav a');
+window.addEventListener('scroll', function(){
+  var y = window.scrollY + 200;
+  sections.forEach(function(sec){
+    if (y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight) {
+      var id = sec.id;
+      navLinks.forEach(function(l){
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, {passive:true});
+</script>
+</body>
+</html>
