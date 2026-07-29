@@ -135,6 +135,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
 }
 
+
+/* INFORMACIÓN DEL NEGOCIO */
+.business-info{margin:8px 10px 86px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.business-info h2{padding:16px 16px 8px;font-size:18px}.business-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 14px 16px}.info-card{background:#f8fafb;border:1px solid var(--brd);border-radius:12px;padding:12px;font-size:12px;line-height:1.45}.info-card strong{display:block;font-size:13px;margin-bottom:3px;color:var(--txt)}.info-card a{color:var(--gd);font-weight:700;text-decoration:none}.payment-strip{border-top:1px solid var(--brd);padding:14px 16px 16px}.payment-strip h3{font-size:13px;margin-bottom:8px}.payment-tags{display:flex;flex-wrap:wrap;gap:7px}.payment-tag{background:#e8f5e9;color:#128C7E;border-radius:20px;padding:7px 10px;font-size:11px;font-weight:700}
+@media(max-width:599px){.business-info{margin:8px 8px 78px}.business-grid{gap:7px;padding:8px 10px 12px}.info-card{padding:10px;font-size:11px}.info-card strong{font-size:12px}.payment-strip{padding:12px}}
+
 @media(min-width:600px){
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
@@ -237,6 +243,21 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </section>
   {% endfor %}
 </main>
+
+<!-- INFORMACIÓN DEL NEGOCIO -->
+<section class="business-info" aria-label="Información del negocio">
+  <h2>📍 Encontranos y elegí cómo pagar</h2>
+  <div class="business-grid">
+    <div class="info-card"><strong>📍 Dirección</strong>Chacabuco 470, Salta Capital</div>
+    <div class="info-card"><strong>📞 Atención</strong><a href="tel:+543872101274">387 210-1274</a></div>
+    <div class="info-card"><strong>💬 Pedidos</strong><a href="https://wa.me/5493872101274" target="_blank" rel="noopener">WhatsApp</a></div>
+    <div class="info-card"><strong>🚚 Entrega</strong>Retiro en el local o envío a domicilio</div>
+  </div>
+  <div class="payment-strip">
+    <h3>Medios de pago aceptados</h3>
+    <div class="payment-tags"><span class="payment-tag">💵 Efectivo</span><span class="payment-tag">🏦 Transferencia</span><span class="payment-tag">📱 Mercado Pago</span></div>
+  </div>
+</section>
 
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
