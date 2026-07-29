@@ -105,6 +105,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .empty-cart{text-align:center;padding:30px 0;color:var(--mut);font-size:14px}
 .no-results{text-align:center;padding:40px;color:var(--mut);font-size:14px;display:none}
 
+/* BOTÓN FLOTANTE WHATSAPP */
+.float-whatsapp{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 5px 18px rgba(18,140,126,.45);z-index:350;transition:transform .2s,box-shadow .2s;animation:waPulse 2.5s infinite}
+.float-whatsapp:hover{transform:scale(1.08);box-shadow:0 7px 24px rgba(18,140,126,.6)}
+.float-whatsapp svg{width:31px;height:31px;fill:currentColor}
+.float-whatsapp .wa-label{position:absolute;right:68px;white-space:nowrap;background:#fff;color:var(--txt);font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);opacity:0;transform:translateX(6px);pointer-events:none;transition:.2s}
+.float-whatsapp:hover .wa-label{opacity:1;transform:translateX(0)}
+@keyframes waPulse{0%,70%,100%{box-shadow:0 5px 18px rgba(18,140,126,.45)}35%{box-shadow:0 5px 0 9px rgba(37,211,102,.12),0 5px 22px rgba(18,140,126,.55)}}
+
 /* TOAST */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -141,6 +149,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </a>
   {% endfor %}
 </nav>
+
+<!-- Contacto rápido por WhatsApp -->
+<a class="float-whatsapp" href="https://wa.me/5493872101274?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp">
+  <span class="wa-label">¿Necesitás ayuda?</span>
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>
+</a>
 
 <main>
   <!-- HERO -->
@@ -220,7 +234,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
 
   <div id="cartForm" style="display:none">
-    <input class="nombre-input" type="text" id="clienteNombre" placeholder="Tu nombre (opcional)">
+    <input class="nombre-input" type="text" id="clienteNombre" placeholder="Tu nombre *" required>
+    <select class="nombre-input" id="tipoEntrega" onchange="toggleDireccion()"><option value="Retiro en el local">🏪 Retiro en el local</option><option value="Envío a domicilio">🛵 Envío a domicilio</option></select>
+    <input class="nombre-input" type="text" id="direccion" placeholder="Dirección para el envío" style="display:none">
     <div class="pay-title">¿Cómo vas a pagar?</div>
     <div class="pay-opts">
       <div class="pay-opt" onclick="selectPay(this,'Efectivo')">💵 Efectivo</div>
@@ -240,7 +256,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <script>
 var cart = {};
 var payMethod = '';
-var WPP = '5493870000000';
+var WPP = '5493872101274';
 
 function addToCart(code, name, price, icon) {
   if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
@@ -300,6 +316,8 @@ function toggleCart() {
   document.getElementById('cartModal').classList.toggle('open');
 }
 
+function toggleDireccion() { document.getElementById("direccion").style.display = document.getElementById("tipoEntrega").value === "Envío a domicilio" ? "block" : "none"; }
+
 function selectPay(el, method) {
   payMethod = method;
   document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
@@ -309,12 +327,18 @@ function selectPay(el, method) {
 function sendWhatsApp() {
   var keys = Object.keys(cart);
   if (keys.length === 0) { showToast('Agregá productos primero'); return; }
-  var nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
+  var nombre = document.getElementById('clienteNombre').value.trim();
+  if (!nombre) { document.getElementById('clienteNombre').focus(); showToast('Escribí tu nombre'); return; }
+  var entrega = document.getElementById('tipoEntrega').value;
+  var direccion = document.getElementById('direccion').value.trim();
+  if (entrega === 'Envío a domicilio' && !direccion) { document.getElementById('direccion').focus(); showToast('Escribí la dirección'); return; }
   var total = 0;
   keys.forEach(function(k){ total += cart[k].price * cart[k].qty; });
 
   var msg = '🛒 *NUEVO PEDIDO — Almacén Don Jorge*\n';
   msg += '👤 Cliente: ' + nombre + '\n';
+  msg += '📦 Entrega: ' + entrega + '\n';
+  if (direccion) msg += '📍 Dirección: ' + direccion + '\n';
   msg += '─────────────────\n';
   keys.forEach(function(k){
     var it = cart[k];
