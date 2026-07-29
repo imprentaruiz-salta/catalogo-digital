@@ -117,6 +117,24 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* AJUSTES ESPECIALES PARA CELULAR */
+@media(max-width:599px){
+  body{font-size:14px;overflow-x:hidden;padding-bottom:8px}
+  header{position:sticky;top:0}
+  .hdr-top{padding:10px 12px;min-height:58px}
+  .logo-area{gap:7px;min-width:0}.logo-icon{font-size:24px}.logo-text{min-width:0}.logo-text h1{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logo-text span{font-size:10px}
+  .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
+  .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
+  .cat-nav{top:0;padding:0 4px;position:sticky}.cat-nav a{padding:11px 12px;font-size:12px}
+  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}
+  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:24px}.cat-header h2{font-size:17px}
+  .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
+  .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
+  .product-card{min-width:0;border-radius:11px}.prod-img{height:92px;font-size:34px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:12px;min-height:31px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:14px}.add-btn{width:34px;height:34px;font-size:21px}
+  .float-cart{bottom:14px;padding:12px 20px;font-size:14px;max-width:calc(100% - 130px);overflow:hidden;text-overflow:ellipsis}.float-whatsapp{right:12px;bottom:14px;width:50px;height:50px}.float-whatsapp svg{width:27px;height:27px}.float-whatsapp .wa-label{display:none}
+  .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
+}
+
 @media(min-width:600px){
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
