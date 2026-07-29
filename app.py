@@ -52,10 +52,16 @@ def init_db():
                 categoria TEXT NOT NULL,
                 marca     TEXT NOT NULL,
                 foto      TEXT DEFAULT '',
-                activo    INTEGER DEFAULT 1
+                activo    INTEGER DEFAULT 1,
+                stock     INTEGER DEFAULT 1
             )
         """)
         db.commit()
+        try:
+            db.execute("ALTER TABLE productos ADD COLUMN stock INTEGER DEFAULT 1")
+            db.commit()
+        except sqlite3.OperationalError:
+            pass
         count = db.execute("SELECT COUNT(*) FROM productos").fetchone()[0]
         if count == 0:
             seed_data = [
@@ -214,6 +220,7 @@ def _guardar_producto(pid):
     precio  = float(f.get("precio",0) or 0)
     marca   = f.get("marca","").strip()
     activo  = 1 if f.get("activo") else 0
+    stock   = 1 if f.get("stock") else 0
     foto_name = ""
     file = request.files.get("foto")
     if file and file.filename and allowed_file(file.filename):
@@ -227,13 +234,13 @@ def _guardar_producto(pid):
                 foto_name = existing['foto'] or ''
             db.execute("""
                 UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,
-                categoria=?,marca=?,foto=?,activo=? WHERE id=?
-            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,pid))
+                categoria=?,marca=?,foto=?,activo=?,stock=? WHERE id=?
+            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,pid))
         else:
             db.execute("""
-                INSERT INTO productos (codigo,nombre,desc_,precio,categoria,marca,foto,activo)
-                VALUES (?,?,?,?,?,?,?,?)
-            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo))
+                INSERT INTO productos (codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock)
+                VALUES (?,?,?,?,?,?,?,?,?)
+            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock))
         db.commit()
     return redirect(url_for('admin_index'))
 

@@ -84,6 +84,9 @@ tr:hover td{background:#f9fffe}
         <td>{{ p['marca'] }}</td>
         <td style="font-weight:700;color:#128C7E">${{ "{:,.0f}".format(p['precio']).replace(",",".") }}</td>
         <td>
+          {% if p['stock'] %}<span class="badge badge-on">Disponible</span>{% else %}<span class="badge badge-off">Agotado</span>{% endif %}
+        </td>
+        <td>
           {% if p['activo'] %}
           <span class="badge badge-on">Activo</span>
           {% else %}
