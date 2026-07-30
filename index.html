@@ -187,7 +187,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
     <h2 style="color:#9a6700">📣 ¿Qué producto necesitás?</h2>
     <p>Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.</p>
     <div style="display:flex;gap:8px;max-width:520px;margin:12px auto 0"><input id="suggestProduct" class="nombre-input" style="margin:0" placeholder="Ej: cinta adhesiva ancha"><button class="add-btn" style="border-radius:50%;flex:none" onclick="enviarSugerencia()">➤</button></div>
-    <input id="suggestName" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="Tu nombre (opcional)"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
+    <div style="display:flex;gap:8px;max-width:520px;margin:8px auto 0"><input id="suggestQty" type="number" min="1" value="1" class="nombre-input" style="margin:0;max-width:100px" title="Cantidad"><input id="suggestName" class="nombre-input" style="margin:0" placeholder="Tu nombre (opcional)"></div><input id="suggestComment" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="Tamaño, marca o detalle (opcional)"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
   </div>
 
   <!-- CATEGORÍAS -->
@@ -282,7 +282,7 @@ var cart = {};
 var payMethod = '';
 var WPP = '{{ catalogo.whatsapp }}';
 
-function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
+function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),q=document.getElementById('suggestQty').value,c=document.getElementById('suggestComment').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,cantidad:q,comentario:c,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
 
 function addToCart(code, name, price, icon) {
   if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};

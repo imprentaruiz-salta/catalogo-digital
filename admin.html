@@ -66,7 +66,7 @@ tr:hover td{background:#f9fffe}
 {% if sugerencias %}
 <div style="margin:0 16px 18px;background:#fff8e1;border:1px solid #ffe082;padding:16px;border-radius:14px">
   <h2 style="font-size:17px;color:#9a6700;margin-bottom:10px">📣 Productos más pedidos por la gente</h2>
-  {% for s in sugerencias %}<div style="padding:9px 0;border-bottom:1px solid #f0d98a"><strong>{{ s.producto }}</strong> — <b>{{ s.votos }} pedido{{ 's' if s.votos != 1 else '' }}</b>{% if s.nombres %}<span style="font-size:12px;color:#777"> · {{ s.nombres }}</span>{% endif %}</div>{% endfor %}
+  {% for s in sugerencias %}<div style="padding:9px 0;border-bottom:1px solid #f0d98a"><strong>{{ s.producto }}</strong> — <b>{{ s.votos }} pedido{{ 's' if s.votos != 1 else '' }}</b><span style="font-size:12px;color:#777"> · necesitan {{ s.unidades }} unidad{{ 'es' if s.unidades != 1 else '' }}</span>{% if s.estado %}<span style="font-size:12px;color:#128C7E"> · {{ s.estado }}</span>{% endif %}{% if s.nombres %}<span style="font-size:12px;color:#777"> · {{ s.nombres }}</span>{% endif %}{% if s.comentarios %}<div style="font-size:12px;color:#777">💬 {{ s.comentarios }}</div>{% endif %}</div>{% endfor %}
 </div>
 {% endif %}
 

@@ -88,16 +88,18 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
       <input type="text" name="nueva_categoria" placeholder="Ej: Lácteos">
     </div>
 
-    <div class="form-group">
-      <label>Descripción</label>
-      <textarea name="descripcion" placeholder="Ej: Botella retornable 2.25 litros">{{ producto['desc_'] if producto else '' }}</textarea>
+    <div class="row2">
+      <div class="form-group"><label>Stock actual</label><input type="number" name="stock_actual" min="0" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}"></div>
+      <div class="form-group"><label>Stock mínimo</label><input type="number" name="stock_minimo" min="0" value="{{ producto['stock_minimo'] if producto and producto['stock_minimo'] is defined else 0 }}"></div>
+    </div>
+    <div class="row2">
+      <div class="form-group"><label>Costo de compra</label><input type="number" name="costo" min="0" step="1" value="{{ producto['costo'] if producto and producto['costo'] is defined else 0 }}"></div>
+      <div class="form-group"><label>Proveedor</label><input type="text" name="proveedor" value="{{ producto['proveedor'] if producto and producto['proveedor'] is defined else '' }}" placeholder="Librería Lerma"></div>
     </div>
 
     <div class="form-group">
-      <div class="toggle-row">
-        <span class="toggle-label">Stock disponible para la venta</span>
-        <input type="checkbox" name="stock" {{ 'checked' if not producto or producto['stock'] else '' }}>
-      </div>
+      <label>Descripción</label>
+      <textarea name="descripcion" placeholder="Ej: Botella retornable 2.25 litros">{{ producto['desc_'] if producto else '' }}</textarea>
     </div>
 
     <div class="form-group">
