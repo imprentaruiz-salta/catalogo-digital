@@ -27,7 +27,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .cat-nav::-webkit-scrollbar{display:none}
 .cat-nav a{display:inline-block;padding:12px 14px;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;border-bottom:3px solid transparent;transition:.2s}
 .cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-bottom-color:var(--g)}
-.cat-nav a .icon{margin-right:4px;font-size:15px}
+.cat-nav a .icon{margin-right:4px;font-size:15px}.cat-nav a .cat-thumb{width:28px;height:28px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}
 
 /* HERO */
 .hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
@@ -163,7 +163,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <nav class="cat-nav" id="catNav">
   {% for cat in cats %}
   <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}">
-    <span class="icon">{{ cat_icon(cat) }}</span>{{ cat }}
+    {% if cat|lower == 'papel higiénico' or cat|lower == 'papel higienico' %}<img class="cat-thumb" src="/static/category_papel_higienico.svg" alt="Papel higiénico">{% else %}<span class="icon">{{ cat_icon(cat) }}</span>{% endif %}{{ cat }}
   </a>
   {% endfor %}
 </nav>
