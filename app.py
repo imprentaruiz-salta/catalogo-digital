@@ -119,6 +119,16 @@ def init_db():
                 seed_data
             )
             db.commit()
+        # Multi-catálogo: cada producto pertenece a un catálogo independiente.
+        db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY, nombre TEXT NOT NULL, subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones', logo TEXT DEFAULT '', whatsapp TEXT DEFAULT '5493872101274', activo INTEGER DEFAULT 1)")
+        try:
+            db.execute("ALTER TABLE productos ADD COLUMN catalogo_slug TEXT DEFAULT 'libreria-ruiz'")
+        except sqlite3.OperationalError:
+            pass
+        db.execute("INSERT OR IGNORE INTO catalogos (slug,nombre,subtitulo,logo,whatsapp) VALUES (?,?,?,?,?)", ('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274'))
+        db.execute("UPDATE productos SET catalogo_slug='libreria-ruiz' WHERE catalogo_slug IS NULL OR catalogo_slug=''")
+        db.execute("CREATE TABLE IF NOT EXISTS sugerencias (id INTEGER PRIMARY KEY AUTOINCREMENT, catalogo_slug TEXT NOT NULL, producto TEXT NOT NULL, nombre TEXT DEFAULT '', cantidad INTEGER DEFAULT 1, creado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        db.commit()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
@@ -132,30 +142,52 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-def get_catalogo():
+def get_catalogo_config(slug):
     with get_db() as db:
-        rows = db.execute(
-            "SELECT * FROM productos WHERE activo=1 ORDER BY categoria, marca, nombre"
-        ).fetchall()
+        row=db.execute('SELECT * FROM catalogos WHERE slug=? AND activo=1',(slug,)).fetchone()
+    return dict(row) if row else None
+
+def get_catalogo(slug='libreria-ruiz'):
+    with get_db() as db:
+        rows = db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()
     cats = {}
     for row in rows:
-        cat   = row['categoria']
-        marca = row['marca']
-        if cat not in cats:
-            cats[cat] = {}
-        if marca not in cats[cat]:
-            cats[cat][marca] = []
-        cats[cat][marca].append(dict(row))
-    return cats
+        cat, marca = row['categoria'], row['marca']
+        cats.setdefault(cat, {}).setdefault(marca, []).append(dict(row))
+    prioridad = ['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']
+    orden = {nombre:i for i,nombre in enumerate(prioridad)}
+    return dict(sorted(cats.items(), key=lambda item:(orden.get(item[0],100),item[0].lower())))
 
-@app.route("/")
+def current_slug():
+    return session.get('catalogo_slug','libreria-ruiz')
+
+def current_config():
+    return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
+
+@app.route('/')
 def index():
-    cats = get_catalogo()
-    return render_template("index.html", cats=cats)
+    cfg=current_config()
+    return render_template('index.html', cats=get_catalogo(current_slug()), catalogo=cfg)
 
-@app.route("/static/uploads/<path:filename>")
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+@app.route('/c/<slug>')
+def catalogo_publico(slug):
+    cfg=get_catalogo_config(slug)
+    if not cfg: return redirect(url_for('index'))
+    return render_template('index.html', cats=get_catalogo(slug), catalogo=cfg)
+
+@app.route('/api/sugerencia', methods=['POST'])
+def api_sugerencia():
+    data=request.get_json(silent=True) or request.form
+    producto=(data.get('producto') or '').strip()[:120]
+    nombre=(data.get('nombre') or '').strip()[:80]
+    slug=(data.get('catalogo_slug') or 'libreria-ruiz').strip()
+    if not producto: return jsonify(ok=False, error='Escribí un producto')
+    with get_db() as db:
+        row=db.execute('SELECT id FROM sugerencias WHERE catalogo_slug=? AND lower(producto)=lower(?)',(slug,producto)).fetchone()
+        if row: db.execute('UPDATE sugerencias SET cantidad=cantidad+1, nombre=? WHERE id=?',(nombre,row['id']))
+        else: db.execute('INSERT INTO sugerencias(catalogo_slug,producto,nombre) VALUES(?,?,?)',(slug,producto,nombre))
+        db.commit()
+    return jsonify(ok=True)
 
 @app.route("/admin/login", methods=["GET","POST"])
 def admin_login():
@@ -176,11 +208,32 @@ def admin_logout():
 @app.route("/admin/")
 @login_required
 def admin_index():
+    slug=current_slug()
     with get_db() as db:
-        productos = db.execute(
-            "SELECT * FROM productos ORDER BY categoria, marca, nombre"
-        ).fetchall()
-    return render_template("admin.html", productos=[dict(p) for p in productos])
+        productos=db.execute("SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria, marca, nombre",(slug,)).fetchall()
+        catalogos=db.execute("SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre").fetchall()
+    with get_db() as db:
+        sugerencias=db.execute('SELECT producto, SUM(cantidad) AS votos, GROUP_CONCAT(DISTINCT nombre) AS nombres FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC, producto',(slug,)).fetchall()
+    return render_template("admin.html", productos=[dict(p) for p in productos], catalogos=[dict(c) for c in catalogos], catalogo=current_config(), sugerencias=[dict(s) for s in sugerencias])
+
+@app.route('/admin/catalogo/seleccionar', methods=['POST'])
+@login_required
+def seleccionar_catalogo():
+    slug=request.form.get('slug','libreria-ruiz')
+    if get_catalogo_config(slug): session['catalogo_slug']=slug
+    return redirect(url_for('admin_index'))
+
+@app.route('/admin/catalogo/nuevo', methods=['POST'])
+@login_required
+def nuevo_catalogo():
+    slug=secure_filename(request.form.get('slug','')).lower().replace('_','-')
+    nombre=request.form.get('nombre','').strip()
+    if slug and nombre:
+        with get_db() as db:
+            db.execute('INSERT OR IGNORE INTO catalogos (slug,nombre,subtitulo,logo,whatsapp) VALUES (?,?,?,?,?)',(slug,nombre,request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp','5493872101274')))
+            db.commit()
+        session['catalogo_slug']=slug
+    return redirect(url_for('admin_index'))
 
 def get_categorias():
     with get_db() as db:
@@ -196,7 +249,7 @@ def get_categorias():
 def admin_nuevo():
     if request.method == "POST":
         return _guardar_producto(None)
-    return render_template("producto_form.html", producto=None, categorias=get_categorias())
+    return render_template("producto_form.html", producto=None, categorias=get_categorias(), catalogo=current_config())
 
 @app.route("/admin/producto/<int:pid>/editar", methods=["GET","POST"])
 @login_required
@@ -207,7 +260,7 @@ def admin_editar(pid):
         return redirect(url_for('admin_index'))
     if request.method == "POST":
         return _guardar_producto(pid)
-    return render_template("producto_form.html", producto=dict(prod), categorias=get_categorias())
+    return render_template("producto_form.html", producto=dict(prod), categorias=get_categorias(), catalogo=current_config())
 
 def _guardar_producto(pid):
     f = request.form
@@ -234,13 +287,13 @@ def _guardar_producto(pid):
                 foto_name = existing['foto'] or ''
             db.execute("""
                 UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,
-                categoria=?,marca=?,foto=?,activo=?,stock=? WHERE id=?
-            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,pid))
+                categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=? WHERE id=?
+            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),pid))
         else:
             db.execute("""
-                INSERT INTO productos (codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock)
-                VALUES (?,?,?,?,?,?,?,?,?)
-            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock))
+                INSERT INTO productos (codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
+            """, (codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug()))
         db.commit()
     return redirect(url_for('admin_index'))
 

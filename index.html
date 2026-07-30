@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Catálogo Digital — Pedí por WhatsApp">
-<title>Almacén Don Jorge</title>
+<meta name="description" content="{{ catalogo.subtitulo }} — Catálogo digital y pedidos por WhatsApp">
+<title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -61,7 +61,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .prod-img img{width:100%;height:100%;object-fit:cover}
 .prod-body{padding:10px}
 .prod-code{font-size:10px;color:var(--mut);font-family:monospace;margin-bottom:3px}
-.stock-badge{display:inline-block;font-size:10px;font-weight:700;margin:2px 0 5px}.in-stock{color:#128C7E}.out-stock{color:#dc2626}.add-btn:disabled{background:#d1d5db;cursor:not-allowed;transform:none!important}.prod-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.prod-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
 .prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
 .prod-footer{display:flex;align-items:center;justify-content:space-between}
 .prod-price{font-size:15px;font-weight:800;color:var(--gd)}
@@ -135,17 +135,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
 }
 
-
-/* INFORMACIÓN DEL NEGOCIO */
-.business-info{margin:8px 10px 86px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.business-info h2{padding:16px 16px 8px;font-size:18px}.business-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 14px 16px}.info-card{background:#f8fafb;border:1px solid var(--brd);border-radius:12px;padding:12px;font-size:12px;line-height:1.45}.info-card strong{display:block;font-size:13px;margin-bottom:3px;color:var(--txt)}.info-card a{color:var(--gd);font-weight:700;text-decoration:none}.payment-strip{border-top:1px solid var(--brd);padding:14px 16px 16px}.payment-strip h3{font-size:13px;margin-bottom:8px}.payment-tags{display:flex;flex-wrap:wrap;gap:7px}.payment-tag{background:#e8f5e9;color:#128C7E;border-radius:20px;padding:7px 10px;font-size:11px;font-weight:700}
-@media(max-width:599px){.business-info{margin:8px 8px 78px}.business-grid{gap:7px;padding:8px 10px 12px}.info-card{padding:10px;font-size:11px}.info-card strong{font-size:12px}.payment-strip{padding:12px}}
-
-
-/* PROMOCIÓN DEL SERVICIO */
-.catalog-service{margin:0 12px 16px;background:linear-gradient(120deg,#075e54,#128c7e);color:#fff;border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(7,94,84,.22)}.catalog-service h3{font-size:15px;margin:0 0 4px}.catalog-service p{font-size:11px;margin:0;opacity:.9}.catalog-service a{flex-shrink:0;background:#fff;color:#075e54;text-decoration:none;border-radius:22px;padding:10px 13px;font-size:11px;font-weight:800}.catalog-service a:hover{transform:scale(1.03)}
-@media(max-width:599px){.catalog-service{margin:0 10px 14px;padding:13px 12px}.catalog-service h3{font-size:13px}.catalog-service p{font-size:10px}.catalog-service a{padding:9px 10px;font-size:10px}}
-
 @media(min-width:600px){
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
@@ -157,10 +146,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <header>
   <div class="hdr-top">
     <div class="logo-area">
-      <div class="logo-icon">🏪</div>
+      <img src="{{ catalogo.logo or 'https://share.zapia.com/lw6ro8nz7tp7k487va08fu' }}" alt="{{ catalogo.nombre }}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;background:#111">
       <div class="logo-text">
-        <h1>Almacén Don Jorge</h1>
-        <span>📍 Salta Capital · Pedidos por WhatsApp</span>
+        <h1>{{ catalogo.nombre }}</h1>
+        <span>{{ catalogo.subtitulo }}</span>
       </div>
     </div>
     <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
@@ -188,17 +177,18 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <main>
   <!-- HERO -->
   <div class="hero">
-    <div style="font-size:36px;margin-bottom:6px">🛒</div>
-    <h2>¡Hacé tu pedido fácil!</h2>
-    <p>Elegí tus productos, armá tu carrito y enviá el pedido por WhatsApp al instante.</p>
-  </div>
-
-  <div class="catalog-service">
-    <div><h3>¿Querés un catálogo así para tu negocio?</h3><p>Mostrá tus productos y recibí pedidos por WhatsApp.</p></div>
-    <a href="https://site.zapia.com/c13mikfy" target="_blank" rel="noopener">Conocé el servicio →</a>
+    <div style="font-size:36px;margin-bottom:6px">📚📸</div>
+    <h2>Catálogo digital · Librería Ruiz</h2>
+    <p>Elegí útiles, fotos y productos disponibles. Armá tu pedido y envialo por WhatsApp.</p>
   </div>
 
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
+  <div class="hero" style="background:#fff8e1;border:1px solid #ffe082">
+    <h2 style="color:#9a6700">📣 ¿Qué producto necesitás?</h2>
+    <p>Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.</p>
+    <div style="display:flex;gap:8px;max-width:520px;margin:12px auto 0"><input id="suggestProduct" class="nombre-input" style="margin:0" placeholder="Ej: cinta adhesiva ancha"><button class="add-btn" style="border-radius:50%;flex:none" onclick="enviarSugerencia()">➤</button></div>
+    <input id="suggestName" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="Tu nombre (opcional)"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
+  </div>
 
   <!-- CATEGORÍAS -->
   {% for cat, marcas in cats.items() %}
@@ -238,11 +228,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
           <div class="prod-body">
             <div class="prod-code">COD: {{ p.codigo }}</div>
             <div class="prod-name">{{ p.nombre }}</div>
-            <div class="stock-badge {{ 'in-stock' if p.stock else 'out-stock' }}">{{ '✓ Disponible' if p.stock else '✕ Agotado' }}</div>
             {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
             <div class="prod-footer">
               <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
-              <button class="add-btn" {{ 'disabled' if not p.stock else '' }} onclick="addToCart('{{ p.codigo }}','{{ p.nombre }}',{{ p.precio }},'{{ cat_icon(p.categoria) }}')">{{ '+' if p.stock else '—' }}</button>
+              <button class="add-btn" onclick="addToCart('{{ p.codigo }}','{{ p.nombre }}',{{ p.precio }},'{{ cat_icon(p.categoria) }}')">+</button>
             </div>
           </div>
         </div>
@@ -253,21 +242,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </section>
   {% endfor %}
 </main>
-
-<!-- INFORMACIÓN DEL NEGOCIO -->
-<section class="business-info" aria-label="Información del negocio">
-  <h2>📍 Encontranos y elegí cómo pagar</h2>
-  <div class="business-grid">
-    <div class="info-card"><strong>📍 Dirección</strong>Chacabuco 470, Salta Capital</div>
-    <div class="info-card"><strong>📞 Atención</strong><a href="tel:+543872101274">387 210-1274</a></div>
-    <div class="info-card"><strong>💬 Pedidos</strong><a href="https://wa.me/5493872101274" target="_blank" rel="noopener">WhatsApp</a></div>
-    <div class="info-card"><strong>🚚 Entrega</strong>Retiro en el local o envío a domicilio</div>
-  </div>
-  <div class="payment-strip">
-    <h3>Medios de pago aceptados</h3>
-    <div class="payment-tags"><span class="payment-tag">💵 Efectivo</span><span class="payment-tag">🏦 Transferencia</span><span class="payment-tag">📱 Mercado Pago</span></div>
-  </div>
-</section>
 
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
@@ -306,7 +280,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <script>
 var cart = {};
 var payMethod = '';
-var WPP = '5493872101274';
+var WPP = '{{ catalogo.whatsapp }}';
+
+function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
 
 function addToCart(code, name, price, icon) {
   if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
@@ -385,7 +361,7 @@ function sendWhatsApp() {
   var total = 0;
   keys.forEach(function(k){ total += cart[k].price * cart[k].qty; });
 
-  var msg = '🛒 *NUEVO PEDIDO — Almacén Don Jorge*\n';
+  var msg = '🛒 *NUEVO PEDIDO — {{ catalogo.nombre }}*\n';
   msg += '👤 Cliente: ' + nombre + '\n';
   msg += '📦 Entrega: ' + entrega + '\n';
   if (direccion) msg += '📍 Dirección: ' + direccion + '\n';

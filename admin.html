@@ -44,6 +44,32 @@ tr:hover td{background:#f9fffe}
   </div>
 </header>
 
+<div style="margin:16px;background:#fff;padding:14px;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.08)">
+  <strong>Catálogo activo:</strong> {{ catalogo.nombre if catalogo else 'Librería Ruiz' }}
+  <form method="POST" action="/admin/catalogo/seleccionar" style="display:inline;margin-left:10px">
+    <select name="slug" onchange="this.form.submit()" style="padding:8px;border-radius:8px;border:1px solid #ddd">
+      {% for c in catalogos %}<option value="{{ c.slug }}" {{ 'selected' if catalogo and c.slug==catalogo.slug else '' }}>{{ c.nombre }}</option>{% endfor %}
+    </select>
+  </form>
+  <details style="margin-top:12px"><summary style="cursor:pointer;color:#128C7E;font-weight:700">+ Crear otro catálogo</summary>
+    <form method="POST" action="/admin/catalogo/nuevo" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <input name="nombre" placeholder="Nombre del negocio" required style="padding:9px;border:1px solid #ddd;border-radius:8px">
+      <input name="slug" placeholder="enlace-corto" required style="padding:9px;border:1px solid #ddd;border-radius:8px">
+      <input name="subtitulo" placeholder="Rubro o subtítulo" style="padding:9px;border:1px solid #ddd;border-radius:8px">
+      <input name="whatsapp" placeholder="WhatsApp sin +" value="5493872101274" style="padding:9px;border:1px solid #ddd;border-radius:8px">
+      <input name="logo" placeholder="URL del logo (opcional)" style="padding:9px;border:1px solid #ddd;border-radius:8px">
+      <button class="btn-new" type="submit" style="border:0">Crear</button>
+    </form>
+  </details>
+</div>
+
+{% if sugerencias %}
+<div style="margin:0 16px 18px;background:#fff8e1;border:1px solid #ffe082;padding:16px;border-radius:14px">
+  <h2 style="font-size:17px;color:#9a6700;margin-bottom:10px">📣 Productos más pedidos por la gente</h2>
+  {% for s in sugerencias %}<div style="padding:9px 0;border-bottom:1px solid #f0d98a"><strong>{{ s.producto }}</strong> — <b>{{ s.votos }} pedido{{ 's' if s.votos != 1 else '' }}</b>{% if s.nombres %}<span style="font-size:12px;color:#777"> · {{ s.nombres }}</span>{% endif %}</div>{% endfor %}
+</div>
+{% endif %}
+
 <div class="toolbar">
   <input class="search" type="text" placeholder="🔍 Buscar producto..." id="searchInput" oninput="filtrar(this.value)">
   <a class="btn-new" href="/admin/producto/nuevo">+ Agregar producto</a>
@@ -83,9 +109,6 @@ tr:hover td{background:#f9fffe}
         <td>{{ p['categoria'] }}</td>
         <td>{{ p['marca'] }}</td>
         <td style="font-weight:700;color:#128C7E">${{ "{:,.0f}".format(p['precio']).replace(",",".") }}</td>
-        <td>
-          {% if p['stock'] %}<span class="badge badge-on">Disponible</span>{% else %}<span class="badge badge-off">Agotado</span>{% endif %}
-        </td>
         <td>
           {% if p['activo'] %}
           <span class="badge badge-on">Activo</span>
