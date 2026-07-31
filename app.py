@@ -3,9 +3,11 @@ from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
 from werkzeug.utils import secure_filename
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
 app.secret_key = "catalogo_ruiz_2026_secret_x7k"
+app.config['MAX_CONTENT_LENGTH']=12*1024*1024
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -19,6 +21,8 @@ os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=Tru
 _OLD_DB=os.path.join(BASE_DIR,"catalogo.db")
 if not os.path.exists(DB_PATH) and os.path.exists(_OLD_DB): shutil.copy2(_OLD_DB,DB_PATH)
 ALLOWED_EXT={"png","jpg","jpeg","webp","gif"}
+MAX_IMAGE_SIDE=1600
+MAX_IMAGE_BYTES=12*1024*1024
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={
  "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienico":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️"}
@@ -76,6 +80,29 @@ def log_change(tipo, slug='', detalle=''):
     except Exception: pass
 
 def allowed_file(filename): return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXT
+
+def save_optimized_image(file):
+    """Normalize product photos so catalog growth does not fill the disk."""
+    raw=file.read(MAX_IMAGE_BYTES+1)
+    if len(raw)>MAX_IMAGE_BYTES: raise ValueError('La imagen supera el límite de 12 MB')
+    try:
+        with Image.open(io.BytesIO(raw)) as original:
+            image=ImageOps.exif_transpose(original)
+            image.thumbnail((MAX_IMAGE_SIDE,MAX_IMAGE_SIDE),Image.Resampling.LANCZOS)
+            has_alpha='A' in image.getbands() or ('transparency' in image.info)
+            image=image.convert('RGBA' if has_alpha else 'RGB')
+            output=io.BytesIO()
+            image.save(output,format='WEBP',quality=82,method=6)
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValueError('El archivo no contiene una imagen válida') from exc
+    filename=f'{uuid.uuid4().hex}.webp'
+    with open(os.path.join(UPLOAD_FOLDER,filename),'wb') as destination:
+        destination.write(output.getvalue())
+    return filename
+
+@app.errorhandler(413)
+def too_large(_error):
+    return 'La imagen es demasiado grande. El límite es de 12 MB antes de comprimirla.',400
 def login_required(f):
     from functools import wraps
     @wraps(f)
@@ -188,12 +215,18 @@ def _guardar_producto(pid):
     proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
     if not codigo or not nombre or not cat or not marca:
         return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Completá código, nombre, categoría y marca.')
-    if file and file.filename and allowed_file(file.filename): ext=file.filename.rsplit('.',1)[1].lower(); foto_name=f'{uuid.uuid4().hex}.{ext}'; file.save(os.path.join(UPLOAD_FOLDER,foto_name))
+    if file and file.filename:
+        if not allowed_file(file.filename): return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Formato de imagen no permitido.')
     with get_db() as db:
         duplicate=db.execute('SELECT id FROM productos WHERE codigo=? AND id!=?',(codigo,pid or 0)).fetchone()
         if duplicate:
             prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
             return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=f'El código {codigo} ya existe. Elegí otro para no pisar productos.')
+        if file and file.filename:
+            try: foto_name=save_optimized_image(file)
+            except ValueError as exc:
+                prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
+                return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=str(exc))
         if pid:
             existing=db.execute('SELECT foto FROM productos WHERE id=?',(pid,)).fetchone(); foto_name=foto_name or (existing['foto'] if existing else '')
             db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
@@ -283,7 +316,8 @@ def admin_foto_rapida(pid):
     file=request.files.get('foto')
     if not file or not file.filename: return jsonify(ok=False,error='No se recibio archivo')
     if not allowed_file(file.filename): return jsonify(ok=False,error='Formato no permitido')
-    ext=file.filename.rsplit('.',1)[1].lower(); fname=f'{uuid.uuid4().hex}.{ext}'; file.save(os.path.join(UPLOAD_FOLDER,fname))
+    try: fname=save_optimized_image(file)
+    except ValueError as exc: return jsonify(ok=False,error=str(exc)),400
     with get_db() as db: db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
     log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
