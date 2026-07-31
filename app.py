@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib
 from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
@@ -25,6 +25,13 @@ CAT_ICONS={
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
 app.jinja_env.globals['cat_icon']=cat_icon
+def storage_status():
+    # Render Free uses an ephemeral filesystem. A mounted DATA_DIR is the only
+    # mode in which live catalog data can survive a deploy/restart.
+    configured=bool(os.environ.get("CATALOGO_DATA_DIR"))
+    writable=os.access(DATA_DIR,os.W_OK)
+    return {"mode":"persistent" if configured and writable else "ephemeral", "data_dir":DATA_DIR, "database":os.path.exists(DB_PATH), "uploads":os.path.isdir(UPLOAD_FOLDER), "backups":os.path.isdir(BACKUP_FOLDER)}
+
 def get_db():
     db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; return db
 
@@ -201,6 +208,16 @@ def admin_eliminar(pid):
     with get_db() as db: db.execute('UPDATE productos SET activo=0 WHERE id=?',(pid,)); db.commit()
     log_change('ocultar-producto',current_slug(),str(pid))
     return redirect(url_for('admin_index'))
+@app.route('/admin/estado-datos')
+@login_required
+def admin_estado_datos():
+    status=storage_status()
+    with get_db() as db:
+        status["catalogos"]=db.execute('SELECT COUNT(*) FROM catalogos').fetchone()[0]
+        status["productos"]=db.execute('SELECT COUNT(*) FROM productos').fetchone()[0]
+        status["fotos"]=db.execute("SELECT COUNT(*) FROM productos WHERE foto IS NOT NULL AND foto!=''").fetchone()[0]
+    return jsonify(status)
+
 @app.route('/admin/backup')
 @login_required
 def admin_backup():
@@ -218,7 +235,12 @@ def admin_exportar():
         if path: z.write(path,'base/catalogo.sqlite3')
         for root,_,files in os.walk(UPLOAD_FOLDER):
             for name in files: z.write(os.path.join(root,name),os.path.join('imagenes',name))
+        manifest={"version":1,"created_utc":datetime.utcnow().isoformat()+"Z","database":"base/catalogo.sqlite3","images":[]}
+        for info in z.infolist():
+            if info.filename.startswith('imagenes/') and not info.is_dir():
+                data=z.read(info.filename); manifest["images"].append({"file":info.filename,"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data)})
         z.writestr('README.txt','Exportación del catálogo. La base SQLite contiene catálogos, productos, sugerencias y configuraciones.\n')
+        z.writestr('manifest.json',json.dumps(manifest,ensure_ascii=False,indent=2))
     mem.seek(0)
     return send_file(mem,as_attachment=True,download_name='exportacion-catalogos.zip',mimetype='application/zip')
 
@@ -233,7 +255,11 @@ def admin_importar():
         uploaded.save(os.path.join(td,'import.zip'))
         with zipfile.ZipFile(os.path.join(td,'import.zip')) as z:
             names=z.namelist()
+            if any(n.startswith('/') or '..' in n.split('/') for n in names): return 'El ZIP contiene rutas inseguras',400
             if 'base/catalogo.sqlite3' not in names: return 'El ZIP no contiene una base válida',400
+            if 'manifest.json' in names:
+                try: json.loads(z.read('manifest.json').decode('utf-8'))
+                except Exception: return 'La copia tiene un manifiesto inválido',400
             z.extract('base/catalogo.sqlite3',td)
             imported=os.path.join(td,'base','catalogo.sqlite3')
             test=sqlite3.connect(imported)

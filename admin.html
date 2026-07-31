@@ -89,6 +89,7 @@ tr:hover td{background:#f9fffe}
 
 <div style="margin:0 16px 18px;background:#eefbf7;border:1px solid #b7ead8;padding:14px;border-radius:14px">
   <strong style="color:#128C7E">💾 Seguridad de datos</strong>
+  <div id="storageStatus" style="margin-top:8px;font-size:12px;color:#92400e">🔎 Verificando almacenamiento…</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
     <a href="/admin/exportar" class="btn-edit" style="background:#d1fae5">⬇️ Exportar catálogo y fotos</a>
     <a href="/admin/backup" class="btn-edit">⬇️ Copia de base de datos</a>
@@ -167,6 +168,11 @@ tr:hover td{background:#f9fffe}
 <div id="uploadMsg" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 22px;border-radius:50px;font-size:13px;display:none;z-index:999"></div>
 
 <script>
+fetch('/admin/estado-datos').then(function(r){return r.json()}).then(function(d){
+  var el=document.getElementById('storageStatus');
+  if(d.mode==='persistent') el.textContent='✅ Almacenamiento persistente activo · '+d.catalogos+' catálogo(s) · '+d.productos+' producto(s) · '+d.fotos+' foto(s)';
+  else el.textContent='⚠️ Almacenamiento temporal: hace falta conectar un disco/base persistente antes de cargar datos reales.';
+}).catch(function(){document.getElementById('storageStatus').textContent='⚠️ No se pudo verificar el almacenamiento.'});
 function filtrar(q) {
   q = q.toLowerCase();
   document.querySelectorAll('#prodTable tbody tr').forEach(function(tr){
