@@ -179,8 +179,14 @@ def _guardar_producto(pid):
     try: stock_actual=max(0,int(f.get('stock_actual',0) or 0)); stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
     except ValueError: stock_actual=stock_minimo=0; costo=0
     proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
+    if not codigo or not nombre or not cat or not marca:
+        return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Completá código, nombre, categoría y marca.')
     if file and file.filename and allowed_file(file.filename): ext=file.filename.rsplit('.',1)[1].lower(); foto_name=f'{uuid.uuid4().hex}.{ext}'; file.save(os.path.join(UPLOAD_FOLDER,foto_name))
     with get_db() as db:
+        duplicate=db.execute('SELECT id FROM productos WHERE codigo=? AND id!=?',(codigo,pid or 0)).fetchone()
+        if duplicate:
+            prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
+            return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=f'El código {codigo} ya existe. Elegí otro para no pisar productos.')
         if pid:
             existing=db.execute('SELECT foto FROM productos WHERE id=?',(pid,)).fetchone(); foto_name=foto_name or (existing['foto'] if existing else '')
             db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
@@ -228,7 +234,11 @@ def admin_importar():
             if 'base/catalogo.sqlite3' not in names: return 'El ZIP no contiene una base válida',400
             z.extract('base/catalogo.sqlite3',td)
             imported=os.path.join(td,'base','catalogo.sqlite3')
-            test=sqlite3.connect(imported); test.execute('PRAGMA integrity_check').fetchone(); test.close()
+            test=sqlite3.connect(imported)
+            integrity=test.execute('PRAGMA integrity_check').fetchone()[0]
+            tables={r[0] for r in test.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            test.close()
+            if integrity != 'ok' or not {'productos','catalogos'}.issubset(tables): return 'El ZIP no contiene una base de catálogo válida',400
             os.replace(imported,DB_PATH)
             os.makedirs(UPLOAD_FOLDER,exist_ok=True)
             for n in names:

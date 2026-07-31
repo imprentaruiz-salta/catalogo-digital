@@ -34,6 +34,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
 </header>
 
 <form method="POST" enctype="multipart/form-data">
+  {% if error %}<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:10px;margin-bottom:14px">⚠️ {{ error }}</div>{% endif %}
   <div class="form-card">
 
     <!-- Foto -->
