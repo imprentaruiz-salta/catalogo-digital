@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="{{ catalogo.subtitulo }} — Catálogo digital y pedidos por WhatsApp">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta property="og:description" content="{{ catalogo.subtitulo }} — Mirá los productos y hacé tu pedido fácilmente.">
+<meta property="og:url" content="{{ request.url }}">
+{% if catalogo.banner %}<meta property="og:image" content="{{ catalogo.banner }}">{% elif catalogo.logo %}<meta property="og:image" content="{{ catalogo.logo }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta name="twitter:description" content="{{ catalogo.subtitulo }} — Mirá los productos y hacé tu pedido fácilmente.">
+{% if catalogo.banner %}<meta name="twitter:image" content="{{ catalogo.banner }}">{% elif catalogo.logo %}<meta name="twitter:image" content="{{ catalogo.logo }}">{% endif %}
 <title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
