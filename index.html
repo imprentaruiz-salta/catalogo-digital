@@ -27,7 +27,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .cat-nav::-webkit-scrollbar{display:none}.cat-nav{scroll-snap-type:x proximity}.cat-nav a{scroll-snap-align:start}.cat-nav a:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 .cat-nav a{display:inline-flex;flex:0 0 auto;min-width:74px;min-height:62px;padding:7px 9px;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:1.05;font-weight:700;color:var(--mut);text-decoration:none;border:2px solid transparent;border-radius:13px;transition:.2s}
 .cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-color:var(--g);background:#effcf3}
-.cat-nav a .icon{font-size:29px;line-height:1;margin:0}.cat-nav a .cat-thumb{width:32px;height:32px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}.cat-nav a .cat-visual{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;border:1px solid #dbeafe}
+.cat-nav a .icon{font-size:29px;line-height:1;margin:0}.cat-nav a .cat-thumb{width:32px;height:32px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}.cat-nav a .cat-visual{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;border:1px solid #dbeafe}.cat-svg{display:inline-block;vertical-align:middle}.cat-svg.nav{width:34px;height:34px}.cat-svg.header{width:58px;height:58px;flex:none}
 
 /* HERO */
 .hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
@@ -156,9 +156,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .logo-area{gap:7px;min-width:0}.logo-icon{font-size:24px}.logo-text{min-width:0}.logo-text h1{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logo-text span{font-size:10px}
   .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
   .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
-  .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb,.cat-nav a .cat-visual{width:30px;height:30px}
+  .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb,.cat-nav a .cat-visual{width:30px;height:30px}.cat-svg.nav{width:30px;height:30px}
   .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}.hero-banner{margin:-7px -4px 12px;min-height:130px}.hero-banner img{height:160px}.hero-step{padding:6px 8px;font-size:10px}
-  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header .cat-visual{width:50px;height:50px}.cat-header h2{font-size:18px}
+  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header .cat-visual{width:50px;height:50px}.cat-svg.header{width:50px;height:50px}.cat-header h2{font-size:18px}
   .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
   .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
   .product-card{min-width:0;border-radius:11px}.prod-img{height:126px;font-size:40px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:13px;min-height:34px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:16px}.add-btn{width:34px;height:34px;font-size:21px}
@@ -174,6 +174,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 </style>
 </head>
 <body>
+{% macro cat_visual(cat, size='nav') -%}
+  {% set n = cat|lower %}
+  {% if n == 'papel higiénico' or n == 'papel higienico' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 120 120" role="img" aria-label="Papel higiénico"><rect x="8" y="8" width="104" height="104" rx="24" fill="#fff8e8"/><ellipse cx="60" cy="42" rx="34" ry="18" fill="#fff" stroke="#bd7b2c" stroke-width="4"/><path d="M26 42v36c0 20 68 20 68 0V42" fill="#f6c66b" stroke="#bd7b2c" stroke-width="4"/><ellipse cx="60" cy="42" rx="12" ry="6" fill="#f2b95b" stroke="#bd7b2c" stroke-width="3"/><path d="M42 67c12 8 24 8 36 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>
+  {% elif n == 'pañuelitos' or n == 'panuelitos' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 120 120" role="img" aria-label="Pañuelitos"><rect x="8" y="8" width="104" height="104" rx="24" fill="#eaf8ff"/><rect x="19" y="30" width="82" height="62" rx="14" fill="#66bce8" stroke="#287eae" stroke-width="4"/><path d="M38 42c8-16 18-16 25-3 7 12 15 10 22-2 7-12 14-9 20 5l-4 22H42z" fill="#fff" stroke="#9bd8f5" stroke-width="3"/><path d="M35 72h50" stroke="#287eae" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="82" r="4" fill="#fff"/></svg>
+  {% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
+{%- endmacro %}
 
 <header>
   <div class="hdr-top">
@@ -195,7 +203,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <nav class="cat-nav" id="catNav">
   {% for cat in cats %}
   <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Ver categoría {{ cat }}" title="Ver {{ cat }}">
-    {% if cat|lower == 'papel higiénico' or cat|lower == 'papel higienico' %}<img class="cat-visual" src="/static/category_papel_higienico.svg" alt="Papel higiénico">{% elif cat|lower == 'pañuelitos' or cat|lower == 'panuelitos' %}<img class="cat-visual" src="/static/category_panuelitos.svg" alt="Pañuelitos">{% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}{{ cat }}
+    {{ cat_visual(cat, 'nav') }}{{ cat }}
   </a>
   {% endfor %}
 </nav>
@@ -255,7 +263,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
   <section class="cat-section" id="sec-{{ loop.index }}">
     <div class="cat-header">
-      {% if cat|lower == 'papel higiénico' or cat|lower == 'papel higienico' %}<img class="cat-visual" src="/static/category_papel_higienico.svg" alt="Papel higiénico">{% elif cat|lower == 'pañuelitos' or cat|lower == 'panuelitos' %}<img class="cat-visual" src="/static/category_panuelitos.svg" alt="Pañuelitos">{% else %}<span class="cat-emoji" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
+      {{ cat_visual(cat, 'header') }}
       <div>
         <h2>{{ cat }}</h2>
         <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
