@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error
 from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
@@ -17,6 +17,71 @@ DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
 UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
 BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
 os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True)
+
+# Optional durable cloud snapshot. Render Free can restart at any time, so the
+# local SQLite database and optimized images are mirrored to Supabase Storage.
+# The public catalog remains exactly the same; this only changes where data lives.
+SUPABASE_URL=os.environ.get("SUPABASE_URL","").rstrip("/")
+SUPABASE_SERVICE_KEY=os.environ.get("SUPABASE_SERVICE_KEY","")
+SUPABASE_BUCKET=os.environ.get("SUPABASE_BUCKET","product-images")
+SUPABASE_SNAPSHOT="system/catalogo-live.zip"
+
+def cloud_enabled():
+    return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
+
+def cloud_endpoint(path):
+    return f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{path.lstrip('/')}"
+
+def cloud_request(path, method="GET", data=None, content_type="application/octet-stream"):
+    req=urllib.request.Request(cloud_endpoint(path), data=data, method=method, headers={
+        "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}",
+        "apikey":SUPABASE_SERVICE_KEY,
+        "Content-Type":content_type,
+        "x-upsert":"true"})
+    return urllib.request.urlopen(req, timeout=30)
+
+def cloud_sync():
+    """Upload one atomic catalog snapshot after a successful local change."""
+    if not cloud_enabled() or not os.path.exists(DB_PATH): return False
+    mem=io.BytesIO()
+    with zipfile.ZipFile(mem,"w",zipfile.ZIP_DEFLATED) as z:
+        z.write(DB_PATH,"base/catalogo.sqlite3")
+        for root,_,files in os.walk(UPLOAD_FOLDER):
+            for name in files:
+                z.write(os.path.join(root,name),os.path.join("imagenes",name))
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip") as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception("No se pudo guardar la copia persistente")
+        return False
+
+def restore_from_cloud():
+    """Restore the last snapshot before database initialization on a new container."""
+    if not cloud_enabled(): return False
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT,"GET") as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            names=z.namelist()
+            if "base/catalogo.sqlite3" not in names: return False
+            z.extract("base/catalogo.sqlite3",DATA_DIR)
+            restored=os.path.join(DATA_DIR,"base","catalogo.sqlite3")
+            if os.path.exists(DB_PATH): os.replace(restored,DB_PATH)
+            else: os.replace(restored,DB_PATH)
+            shutil.rmtree(os.path.join(DATA_DIR,"base"),ignore_errors=True)
+            for name in names:
+                if name.startswith("imagenes/") and not name.endswith("/"):
+                    target=os.path.join(UPLOAD_FOLDER,os.path.basename(name))
+                    with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
+        return True
+    except urllib.error.HTTPError as exc:
+        if exc.code != 404: app.logger.warning("No se pudo restaurar la copia persistente: %s",exc)
+        return False
+    except Exception:
+        app.logger.exception("No se pudo restaurar la copia persistente")
+        return False
 # Migrate a legacy local database once, if this installation had one.
 _OLD_DB=os.path.join(BASE_DIR,"catalogo.db")
 if not os.path.exists(DB_PATH) and os.path.exists(_OLD_DB): shutil.copy2(_OLD_DB,DB_PATH)
@@ -34,7 +99,8 @@ def storage_status():
     # mode in which live catalog data can survive a deploy/restart.
     configured=bool(os.environ.get("CATALOGO_DATA_DIR"))
     writable=os.access(DATA_DIR,os.W_OK)
-    return {"mode":"persistent" if configured and writable else "ephemeral", "data_dir":DATA_DIR, "database":os.path.exists(DB_PATH), "uploads":os.path.isdir(UPLOAD_FOLDER), "backups":os.path.isdir(BACKUP_FOLDER)}
+    durable=cloud_enabled() or (configured and writable)
+    return {"mode":"persistent" if durable else "ephemeral", "data_dir":DATA_DIR, "database":os.path.exists(DB_PATH), "uploads":os.path.isdir(UPLOAD_FOLDER), "backups":os.path.isdir(BACKUP_FOLDER), "cloud":"supabase" if cloud_enabled() else "local"}
 
 def get_db():
     db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; return db
@@ -174,6 +240,7 @@ def api_sugerencia():
         if row: db.execute('UPDATE sugerencias SET cantidad=cantidad+1,cantidad_necesita=cantidad_necesita+?,nombre=?,comentario=? WHERE id=?',(cantidad,nombre,comentario,row['id']))
         else: db.execute('INSERT INTO sugerencias(catalogo_slug,producto,nombre,cantidad_necesita,comentario) VALUES(?,?,?,?,?)',(slug,producto,nombre,cantidad,comentario))
         db.commit()
+    cloud_sync()
     return jsonify(ok=True)
 
 @app.route('/admin/login',methods=['GET','POST'])
@@ -216,6 +283,7 @@ def nuevo_catalogo():
     slug=secure_filename(request.form.get('slug','')).lower().replace('_','-'); nombre=request.form.get('nombre','').strip()
     if slug and nombre:
         with get_db() as db: db.execute('INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)',(slug,nombre,request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp','5493872101274'),request.form.get('telegram',''),request.form.get('banner',''))); db.commit()
+        cloud_sync()
         session['catalogo_slug']=slug
     return redirect(url_for('admin_index'))
 def get_categorias():
@@ -258,6 +326,7 @@ def _guardar_producto(pid):
             db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
         else: db.execute('INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
         db.commit()
+    cloud_sync()
     log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
     return redirect(url_for('admin_index'))
 @app.route('/admin/producto/<int:pid>/eliminar',methods=['POST'])
@@ -265,6 +334,7 @@ def _guardar_producto(pid):
 def admin_eliminar(pid):
     backup_db('antes-eliminar-producto')
     with get_db() as db: db.execute('UPDATE productos SET activo=0 WHERE id=?',(pid,)); db.commit()
+    cloud_sync()
     log_change('ocultar-producto',current_slug(),str(pid))
     return redirect(url_for('admin_index'))
 @app.route('/admin/estado-datos')
@@ -332,7 +402,7 @@ def admin_importar():
                 if n.startswith('imagenes/') and not n.endswith('/'):
                     target=os.path.join(UPLOAD_FOLDER,os.path.basename(n))
                     with z.open(n) as src, open(target,'wb') as dst: shutil.copyfileobj(src,dst)
-    init_db(); log_change('importacion','*',uploaded.filename)
+    init_db(); cloud_sync(); log_change('importacion','*',uploaded.filename)
     return redirect(url_for('admin_index'))
 
 @app.route('/admin/producto/<int:pid>/foto',methods=['POST'])
@@ -345,7 +415,10 @@ def admin_foto_rapida(pid):
     try: fname=save_optimized_image(file)
     except ValueError as exc: return jsonify(ok=False,error=str(exc)),400
     with get_db() as db: db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
+    cloud_sync()
     log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
+restore_from_cloud()
 init_db()
+cloud_sync()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
