@@ -4,15 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="{{ catalogo.subtitulo }} — Catálogo digital y pedidos por WhatsApp">
-<meta property="og:type" content="website">
-<meta property="og:title" content="{{ catalogo.nombre }} — Catálogo digital">
-<meta property="og:description" content="{{ catalogo.subtitulo }} — Mirá los productos y hacé tu pedido fácilmente.">
-<meta property="og:url" content="{{ request.url }}">
-{% if catalogo.banner %}<meta property="og:image" content="{{ catalogo.banner }}">{% elif catalogo.logo %}<meta property="og:image" content="{{ catalogo.logo }}">{% endif %}
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
-<meta name="twitter:description" content="{{ catalogo.subtitulo }} — Mirá los productos y hacé tu pedido fácilmente.">
-{% if catalogo.banner %}<meta name="twitter:image" content="{{ catalogo.banner }}">{% elif catalogo.logo %}<meta name="twitter:image" content="{{ catalogo.logo }}">{% endif %}
 <title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
@@ -179,7 +170,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
 }
-.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
+.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:16px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto}.quick-category{flex:1 0 120px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.quick-category .cat-svg.nav{width:38px;height:38px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body>
@@ -259,6 +250,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </div>
 
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
+  {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
+    <div class="quick-categories-title">👇 Elegí qué querés ver</div>
+    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{{ cat }}</span></a>{% endfor %}</div>
+  </div>{% endif %}
   <div class="hero" style="background:#fff8e1;border:1px solid #ffe082">
     <h2 style="color:#9a6700">📣 ¿Qué producto necesitás?</h2>
     <p>Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.</p>
