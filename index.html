@@ -231,7 +231,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
   <!-- HERO -->
   <div class="hero">
-    {% if catalogo.banner %}<div class="hero-banner"><img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
+    {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+    {% if banner_url %}<div class="hero-banner"><img src="{{ banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
     <div class="hero-copy">
       <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
       <h2>{{ catalogo.nombre }}</h2>
