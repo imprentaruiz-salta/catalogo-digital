@@ -23,11 +23,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 
 /* CAT NAV */
-.cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:0 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100}
+.cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:7px 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100;display:flex;gap:7px}
 .cat-nav::-webkit-scrollbar{display:none}
-.cat-nav a{display:inline-block;padding:12px 14px;font-size:13px;font-weight:600;color:var(--mut);text-decoration:none;border-bottom:3px solid transparent;transition:.2s}
-.cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-bottom-color:var(--g)}
-.cat-nav a .icon{margin-right:4px;font-size:15px}.cat-nav a .cat-thumb{width:28px;height:28px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}
+.cat-nav a{display:inline-flex;flex:0 0 auto;min-width:74px;min-height:62px;padding:7px 9px;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:1.05;font-weight:700;color:var(--mut);text-decoration:none;border:2px solid transparent;border-radius:13px;transition:.2s}
+.cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-color:var(--g);background:#effcf3}
+.cat-nav a .icon{font-size:29px;line-height:1;margin:0}.cat-nav a .cat-thumb{width:32px;height:32px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}
 
 /* HERO */
 .hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
@@ -38,8 +38,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 /* SECCIONES */
 .cat-section{margin:0 12px 24px}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
-.cat-header .cat-emoji{font-size:28px}
-.cat-header h2{font-size:18px;font-weight:800;color:var(--txt)}
+.cat-header .cat-emoji{font-size:42px;line-height:1;filter:saturate(1.12)}
+.cat-header h2{font-size:20px;font-weight:800;color:var(--txt);letter-spacing:-.2px}
 .cat-header .cat-count{font-size:12px;color:var(--mut);margin-top:2px}
 
 /* MARCA ACCORDION */
@@ -51,20 +51,20 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .brand-header .chevron{font-size:12px;color:var(--mut);transition:.3s}
 .brand-header.open .chevron{transform:rotate(180deg)}
 .brand-products{display:none;background:#fafafa;padding:12px}
-.brand-products.open{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.brand-products.open{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 
 /* PRODUCTO CARD */
-.product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);transition:.2s}
+.product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);transition:.2s;min-height:245px}
 .product-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
 .product-card[data-hidden="true"]{display:none}
-.prod-img{width:100%;height:110px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
+.prod-img{width:100%;height:150px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
 .prod-img img{width:100%;height:100%;object-fit:contain;background:#fff}
 .prod-body{padding:10px}
-.prod-code{font-size:10px;color:var(--mut);font-family:monospace;margin-bottom:3px}
-.prod-name{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.prod-code{font-size:9px;color:#94a3b8;font-family:monospace;margin-bottom:3px;opacity:.8}
+.prod-name{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
 .prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
 .prod-footer{display:flex;align-items:center;justify-content:space-between}
-.prod-price{font-size:15px;font-weight:800;color:var(--gd)}
+.prod-price{font-size:17px;font-weight:800;color:var(--gd)}
 .prod-price small{font-size:9px;color:var(--mut);display:block;font-weight:400}
 .add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}
 .add-btn:hover{transform:scale(1.15)}
@@ -125,12 +125,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .logo-area{gap:7px;min-width:0}.logo-icon{font-size:24px}.logo-text{min-width:0}.logo-text h1{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logo-text span{font-size:10px}
   .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
   .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
-  .cat-nav{top:0;padding:0 4px;position:sticky}.cat-nav a{padding:11px 12px;font-size:12px}
+  .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb{width:30px;height:30px}
   .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}
-  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:24px}.cat-header h2{font-size:17px}
+  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header h2{font-size:18px}
   .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
   .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
-  .product-card{min-width:0;border-radius:11px}.prod-img{height:92px;font-size:34px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:12px;min-height:31px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:14px}.add-btn{width:34px;height:34px;font-size:21px}
+  .product-card{min-width:0;border-radius:11px}.prod-img{height:126px;font-size:40px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:13px;min-height:34px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:16px}.add-btn{width:34px;height:34px;font-size:21px}
   .float-cart{bottom:14px;padding:12px 20px;font-size:14px;max-width:calc(100% - 130px);overflow:hidden;text-overflow:ellipsis}.float-whatsapp{right:12px;bottom:14px;width:50px;height:50px}.float-whatsapp svg{width:27px;height:27px}.float-whatsapp .wa-label{display:none}
   .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
 }
@@ -163,8 +163,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav">
   {% for cat in cats %}
-  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}">
-    {% if cat|lower == 'papel higiénico' or cat|lower == 'papel higienico' %}<img class="cat-thumb" src="/static/category_papel_higienico.svg" alt="Papel higiénico">{% else %}<span class="icon">{{ cat_icon(cat) }}</span>{% endif %}{{ cat }}
+  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Ver categoría {{ cat }}" title="Ver {{ cat }}">
+    {% if cat|lower == 'papel higiénico' or cat|lower == 'papel higienico' %}<img class="cat-thumb" src="/static/category_papel_higienico.svg" alt="Papel higiénico">{% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}{{ cat }}
   </a>
   {% endfor %}
 </nav>
@@ -178,10 +178,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <main>
   <!-- HERO -->
   <div class="hero">
-    {% if catalogo.banner %}<img src="{{ catalogo.banner }}" alt="{{ catalogo.nombre }}" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:12px">{% endif %}
+    {% if catalogo.banner %}<img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:12px">{% endif %}
     <div style="font-size:36px;margin-bottom:6px">📚📸</div>
     <h2>Catálogo digital · {{ catalogo.nombre }}</h2>
-    <p>Elegí productos disponibles. Armá tu pedido y envialo por WhatsApp o Telegram.</p>
+    <p>Elegí por imagen, marca o categoría. Tocá <b>+</b> y armá tu pedido.</p>
   </div>
 
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
@@ -198,7 +198,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
   <section class="cat-section" id="sec-{{ loop.index }}">
     <div class="cat-header">
-      <span class="cat-emoji">{{ cat_icon(cat) }}</span>
+      <span class="cat-emoji" aria-hidden="true">{{ cat_icon(cat) }}</span>
       <div>
         <h2>{{ cat }}</h2>
         <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
@@ -222,14 +222,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
         <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
           <div class="prod-img">
             {% if p.foto %}
-            <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy">
+            <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">
             {% else %}
             {{ cat_icon(p.categoria) }}
             {% endif %}
           </div>
           <div class="prod-body">
-            <div class="prod-code">COD: {{ p.codigo }}</div>
-            <div class="prod-name">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
+            <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
+            <div class="prod-name" title="{{ p.nombre }}">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
             {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
             <div class="prod-footer">
               <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
