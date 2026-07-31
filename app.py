@@ -120,6 +120,32 @@ def get_catalogo(slug='libreria-ruiz'):
     for row in rows: cats.setdefault(row['categoria'],{}).setdefault(row['marca'],[]).append(dict(row))
     prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}
     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
+def get_showcase(slug='libreria-ruiz'):
+    # Curated visual shelves are derived from the catalog until explicit merchandising fields are added.
+    with get_db() as db:
+        rows=[dict(r) for r in db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY id DESC',(slug,)).fetchall()]
+        requests=db.execute('SELECT lower(producto) AS producto,SUM(cantidad) AS votos FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC',(slug,)).fetchall()
+    def unique(items, limit=8):
+        out=[]; seen=set()
+        for item in items:
+            if item['id'] not in seen:
+                out.append(item); seen.add(item['id'])
+            if len(out)>=limit: break
+        return out
+    featured=unique([p for p in rows if p.get('foto')] + rows)
+    newest=unique(rows)
+    economy=[p for p in rows if (p.get('nivel_precio') or '')=='Económico']
+    offers=unique(sorted(economy,key=lambda p:(float(p.get('precio') or 0),p['nombre'])) + sorted(rows,key=lambda p:(float(p.get('precio') or 0),p['nombre'])))
+    recommendations=[]; seen_categories=set()
+    for p in reversed(rows):
+        if p['categoria'] not in seen_categories:
+            recommendations.append(p); seen_categories.add(p['categoria'])
+    by_name={str(p['nombre']).strip().lower():p for p in rows}
+    requested=[]
+    for r in requests:
+        product=by_name.get(r['producto'].strip().lower())
+        if product: requested.append(product)
+    return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'total':len(rows)}
 def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
 
@@ -130,12 +156,12 @@ def uploaded_file(filename):
 
 @app.route('/')
 def index():
-    cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),catalogo=cfg)
+    cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
-    return render_template('index.html',cats=get_catalogo(slug),catalogo=cfg)
+    return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
 @app.route('/api/sugerencia',methods=['POST'])
 def api_sugerencia():
     data=request.get_json(silent=True) or request.form

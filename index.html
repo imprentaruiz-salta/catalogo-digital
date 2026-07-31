@@ -45,6 +45,27 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .hero-step{padding:7px 10px;border-radius:50px;background:rgba(255,255,255,.82);color:var(--gd);font-size:11px;font-weight:800;box-shadow:0 1px 5px rgba(0,0,0,.06)}
 @media (prefers-reduced-motion:reduce){.hero-banner img{transition:none}.hero-banner:hover img{transform:none}}
 
+/* VIDRIERA VISUAL */
+.showcase-wrap{margin:0 12px 24px}
+.showcase-section{margin:0 0 18px;padding:14px 12px 16px;background:#fff;border-radius:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden}
+.showcase-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.showcase-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:850;letter-spacing:-.2px}
+.showcase-title .showcase-icon{font-size:25px}
+.showcase-note{font-size:11px;color:var(--mut);white-space:nowrap}
+.showcase-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(156px,42%);gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.showcase-card{scroll-snap-align:start;min-width:0;background:#fbfffc;border:1px solid #e5eee8;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative}
+.showcase-card .showcase-img{height:132px;background:#f4f7f5;display:flex;align-items:center;justify-content:center;font-size:42px}
+.showcase-card .showcase-img img{width:100%;height:100%;object-fit:contain;background:#fff}
+.showcase-card-body{padding:9px}
+.showcase-card-name{font-size:13px;font-weight:800;line-height:1.25;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.showcase-brand{font-size:10px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
+.showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
+.showcase-add{width:32px;height:32px;flex:none}
+.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}
+.showcase-empty{padding:14px;color:var(--mut);font-size:12px;background:#f8faf9;border-radius:12px}
+@media(max-width:599px){.showcase-wrap{margin:0 8px 20px}.showcase-section{padding:12px 9px 13px}.showcase-title{font-size:16px}.showcase-title .showcase-icon{font-size:22px}.showcase-note{font-size:10px}.showcase-rail{grid-auto-columns:minmax(145px,47%)}.showcase-card .showcase-img{height:122px}}
+
 /* SECCIONES */
 .cat-section{margin:0 12px 24px}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
@@ -186,9 +207,32 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 </a>
 
 <main>
+  {% macro showcase_card(p, tag='') -%}
+  <article class="showcase-card">
+    {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
+    <div class="showcase-img">
+      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+    </div>
+    <div class="showcase-card-body">
+      <div class="showcase-card-name">{{ p.nombre }}</div>
+      <div class="showcase-brand">{{ p.marca }} · {{ p.categoria }}</div>
+      <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+    </div>
+  </article>
+  {%- endmacro %}
+
+  {% if showcase.total %}
+  <section class="showcase-wrap" aria-label="Vidriera visual">
+    {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">✨</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🆕</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🏷️</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">💡</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🔥</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+  </section>
+  {% endif %}
   <!-- HERO -->
   <div class="hero">
-    {% if catalogo.banner %}<div class="hero-banner"><img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"></div>{% endif %}
+    {% if catalogo.banner %}<div class="hero-banner"><img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
     <div class="hero-copy">
       <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
       <h2>{{ catalogo.nombre }}</h2>
