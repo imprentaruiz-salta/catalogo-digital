@@ -43,6 +43,16 @@ def cloud_request(path, method="GET", data=None, content_type="application/octet
 def cloud_sync():
     """Upload one atomic catalog snapshot after a successful local change."""
     if not cloud_enabled() or not os.path.exists(DB_PATH): return False
+    # Never replace a valid cloud snapshot with an empty database. This protects
+    # the catalog during Render restarts or a simultaneous worker startup.
+    try:
+        with get_db() as check_db:
+            product_count=check_db.execute('SELECT COUNT(*) FROM productos WHERE activo=1').fetchone()[0]
+        if product_count == 0:
+            app.logger.warning('No se sube una copia vacía a la nube; se conserva el snapshot anterior')
+            return False
+    except Exception:
+        return False
     mem=io.BytesIO()
     with zipfile.ZipFile(mem,"w",zipfile.ZIP_DEFLATED) as z:
         z.write(DB_PATH,"base/catalogo.sqlite3")
@@ -118,8 +128,6 @@ def init_db():
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
         db.execute("UPDATE productos SET catalogo_slug='libreria-ruiz' WHERE catalogo_slug IS NULL OR catalogo_slug=''")
-        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('limpieza-abigail','Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://catalogo-app-zm3w.onrender.com/static/banner_abigail.jpg'))
-        db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,whatsapp=?,activo=1 WHERE slug='limpieza-abigail'",('Artículos de limpieza Abigail','Limpieza del hogar','5493874572787'))
         db.execute("UPDATE catalogos SET banner=? WHERE slug='limpieza-abigail' AND (banner IS NULL OR banner='')",('https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',))
         db.execute("""CREATE TABLE IF NOT EXISTS sugerencias (id INTEGER PRIMARY KEY AUTOINCREMENT,catalogo_slug TEXT NOT NULL,producto TEXT NOT NULL,nombre TEXT DEFAULT '',cantidad INTEGER DEFAULT 1,cantidad_necesita INTEGER DEFAULT 1,comentario TEXT DEFAULT '',estado TEXT DEFAULT 'pendiente',creado TEXT DEFAULT CURRENT_TIMESTAMP)""")
         for col,definition in [('cantidad_necesita','INTEGER DEFAULT 1'),('comentario',"TEXT DEFAULT ''"),('estado',"TEXT DEFAULT 'pendiente'")]:
@@ -509,7 +517,8 @@ def admin_foto_rapida(pid):
     cloud_sync()
     log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
+# Restore the cloud snapshot at startup, but never upload at startup.
+# Uploading here could overwrite a valid catalog while Render is starting.
 restore_from_cloud()
 init_db()
-cloud_sync()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
