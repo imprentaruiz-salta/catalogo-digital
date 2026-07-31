@@ -170,7 +170,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
 }
-.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto}.quick-category{flex:1 0 120px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.quick-category .cat-svg.nav{width:38px;height:38px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
+.catalog-section-title{text-align:center;font-size:18px;font-weight:900;color:#128c7e;margin:14px 12px 10px;padding:10px;border-bottom:3px solid #25d366}.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto}.quick-category{flex:1 0 120px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.quick-category .cat-svg.nav{width:38px;height:38px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body>
@@ -250,12 +250,13 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </div>
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
-    <div class="quick-categories-title">👇 Productos disponibles — elegí una categoría</div>
+    <div class="quick-categories-title">👇 ELEGÍ UNA CATEGORÍA</div>
     <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico'] %}Papel higiénico{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
   </div>{% endif %}
 
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
   <!-- CATEGORÍAS -->
+  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
   {% for cat, marcas in cats.items() %}
   {% set total = namespace(n=0) %}
   {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
