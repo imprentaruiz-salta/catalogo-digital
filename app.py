@@ -220,6 +220,11 @@ def uploaded_file(filename):
     # Product photos live in DATA_DIR, not inside the deployable code folder.
     return send_from_directory(UPLOAD_FOLDER, filename)
 
+@app.route('/static/<path:filename>')
+def static_asset(filename):
+    # Visual category illustrations are part of the deployable design assets.
+    return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
+
 @app.route('/')
 def index():
     cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
