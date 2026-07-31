@@ -229,15 +229,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </article>
   {%- endmacro %}
 
-  {% if showcase.total %}
-  <section class="showcase-wrap" aria-label="Vidriera visual">
-    {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">✨</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
-    {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🆕</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
-    {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🏷️</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
-    {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">💡</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div></div>{% endif %}
-    {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🔥</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
-  </section>
-  {% endif %}
   <!-- HERO -->
   <div class="hero">
     {% if catalogo.banner %}<div class="hero-banner"><img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
@@ -254,6 +245,15 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
     <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico'] %}Papel higiénico{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
   </div>{% endif %}
 
+  {% if showcase.total %}
+  <section class="showcase-wrap" aria-label="Vidriera visual">
+    {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">✨</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🆕</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🏷️</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">💡</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div></div>{% endif %}
+    {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🔥</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div></div>{% endif %}
+  </section>
+  {% endif %}
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
   <!-- CATEGORÍAS -->
   {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
