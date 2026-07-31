@@ -24,7 +24,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
 /* CAT NAV */
 .cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:7px 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100;display:flex;gap:7px}
-.cat-nav::-webkit-scrollbar{display:none}
+.cat-nav::-webkit-scrollbar{display:none}.cat-nav{scroll-snap-type:x proximity}.cat-nav a{scroll-snap-align:start}.cat-nav a:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 .cat-nav a{display:inline-flex;flex:0 0 auto;min-width:74px;min-height:62px;padding:7px 9px;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:1.05;font-weight:700;color:var(--mut);text-decoration:none;border:2px solid transparent;border-radius:13px;transition:.2s}
 .cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-color:var(--g);background:#effcf3}
 .cat-nav a .icon{font-size:29px;line-height:1;margin:0}.cat-nav a .cat-thumb{width:32px;height:32px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}
@@ -34,6 +34,16 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
 .hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
 .hero p{font-size:13px;color:var(--mut)}
+.hero-banner{position:relative;overflow:hidden;border-radius:16px;margin:-8px -4px 14px;background:#dff7e8;min-height:150px;box-shadow:0 3px 14px rgba(0,0,0,.10)}
+.hero-banner img{display:block;width:100%;height:clamp(155px,30vw,250px);object-fit:cover;object-position:center;transition:transform .5s ease}
+.hero-banner:hover img{transform:scale(1.025)}
+.hero-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(0,0,0,.20));pointer-events:none}
+.hero-copy{display:flex;flex-direction:column;align-items:center;gap:7px}
+.hero-kicker{display:inline-flex;align-items:center;gap:6px;color:var(--gd);font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.hero-kicker span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;font-size:15px}
+.hero-steps{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:5px}
+.hero-step{padding:7px 10px;border-radius:50px;background:rgba(255,255,255,.82);color:var(--gd);font-size:11px;font-weight:800;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+@media (prefers-reduced-motion:reduce){.hero-banner img{transition:none}.hero-banner:hover img{transform:none}}
 
 /* SECCIONES */
 .cat-section{margin:0 12px 24px}
@@ -126,7 +136,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
   .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
   .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb{width:30px;height:30px}
-  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}
+  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}.hero-banner{margin:-7px -4px 12px;min-height:130px}.hero-banner img{height:160px}.hero-step{padding:6px 8px;font-size:10px}
   .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header h2{font-size:18px}
   .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
   .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
@@ -178,10 +188,13 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <main>
   <!-- HERO -->
   <div class="hero">
-    {% if catalogo.banner %}<img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:12px">{% endif %}
-    <div style="font-size:36px;margin-bottom:6px">📚📸</div>
-    <h2>Catálogo digital · {{ catalogo.nombre }}</h2>
-    <p>Elegí por imagen, marca o categoría. Tocá <b>+</b> y armá tu pedido.</p>
+    {% if catalogo.banner %}<div class="hero-banner"><img src="{{ catalogo.banner }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"></div>{% endif %}
+    <div class="hero-copy">
+      <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
+      <h2>{{ catalogo.nombre }}</h2>
+      <p>Todo se entiende de un vistazo: foto, marca y precio.</p>
+      <div class="hero-steps" aria-label="Pasos para hacer un pedido"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">🛒 Pedí</span></div>
+    </div>
   </div>
 
   <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
