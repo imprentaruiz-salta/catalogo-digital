@@ -159,7 +159,7 @@ def nuevo_catalogo():
         session['catalogo_slug']=slug
     return redirect(url_for('admin_index'))
 def get_categorias():
-    with get_db() as db: rows=db.execute('SELECT DISTINCT categoria FROM productos ORDER BY categoria').fetchall()
+    with get_db() as db: rows=db.execute('SELECT DISTINCT categoria FROM productos WHERE catalogo_slug=? ORDER BY categoria',(current_slug(),)).fetchall()
     return sorted(set([r['categoria'] for r in rows]+list(CAT_ICONS)))
 @app.route('/admin/producto/nuevo',methods=['GET','POST'])
 @login_required
@@ -192,12 +192,14 @@ def _guardar_producto(pid):
             db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
         else: db.execute('INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
         db.commit()
+    log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
     return redirect(url_for('admin_index'))
 @app.route('/admin/producto/<int:pid>/eliminar',methods=['POST'])
 @login_required
 def admin_eliminar(pid):
     backup_db('antes-eliminar-producto')
-    with get_db() as db: db.execute('DELETE FROM productos WHERE id=?',(pid,)); db.commit()
+    with get_db() as db: db.execute('UPDATE productos SET activo=0 WHERE id=?',(pid,)); db.commit()
+    log_change('ocultar-producto',current_slug(),str(pid))
     return redirect(url_for('admin_index'))
 @app.route('/admin/backup')
 @login_required
@@ -257,6 +259,7 @@ def admin_foto_rapida(pid):
     if not allowed_file(file.filename): return jsonify(ok=False,error='Formato no permitido')
     ext=file.filename.rsplit('.',1)[1].lower(); fname=f'{uuid.uuid4().hex}.{ext}'; file.save(os.path.join(UPLOAD_FOLDER,fname))
     with get_db() as db: db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
+    log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
 init_db()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
