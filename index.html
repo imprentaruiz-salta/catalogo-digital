@@ -419,9 +419,16 @@ function sendTelegram() {
   if(direccion)msg+='📍 Dirección: '+direccion+'\\n'; msg+='────────────\\n';
   keys.forEach(function(k){var it=cart[k];msg+='• '+it.name+' x'+it.qty+' = $'+formatNum(it.price*it.qty)+'\\n'});
   msg+='────────────\\n💰 TOTAL: $'+formatNum(total); if(payMethod)msg+='\\n💳 Pago: '+payMethod;
-  navigator.clipboard && navigator.clipboard.writeText(msg).catch(function(){});
-  showToast('Pedido copiado. Pegalo en Telegram');
-  setTimeout(function(){window.open('https://t.me/{{ catalogo.telegram|default("imprentaruizsalta_bot")|replace("@","") }}','_blank')},500);
+  var btn = document.querySelector('.wpp-btn[onclick="sendTelegram()"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando pedido…';}
+  fetch('/api/pedido-telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:msg})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});})
+    .then(function(result){
+      if(result.ok && result.data.ok){showToast('✅ Pedido enviado por Telegram');}
+      else {navigator.clipboard && navigator.clipboard.writeText(msg).catch(function(){});showToast('Telegram no está conectado. Pedido copiado para pegarlo.');}
+    })
+    .catch(function(){navigator.clipboard && navigator.clipboard.writeText(msg).catch(function(){});showToast('No se pudo enviar. Pedido copiado para pegarlo.');})
+    .finally(function(){if(btn){btn.disabled=false;btn.textContent='✈️ Enviar pedido por Telegram';}});
 }
 
 function sendWhatsApp() {

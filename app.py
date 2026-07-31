@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse
 from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
@@ -228,6 +228,29 @@ def catalogo_publico(slug):
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
+@app.route('/api/pedido-telegram',methods=['POST'])
+def api_pedido_telegram():
+    """Send a catalog order directly to the owner's Telegram bot chat."""
+    data=request.get_json(silent=True) or {}
+    token=os.environ.get('TELEGRAM_BOT_TOKEN','').strip()
+    chat_id=os.environ.get('TELEGRAM_CHAT_ID','8899404755').strip()
+    if not token:
+        return jsonify(ok=False,error='Telegram todavía no está conectado'),503
+    text=str(data.get('text','')).strip()
+    if not text or len(text)>3900:
+        return jsonify(ok=False,error='Pedido inválido'),400
+    payload=json.dumps({'chat_id':chat_id,'text':text}).encode('utf-8')
+    try:
+        req=urllib.request.Request('https://api.telegram.org/bot'+token+'/sendMessage',data=payload,method='POST',headers={'Content-Type':'application/json'})
+        with urllib.request.urlopen(req,timeout=15) as response:
+            result=json.loads(response.read().decode('utf-8'))
+        if not result.get('ok'):
+            return jsonify(ok=False,error='Telegram no aceptó el pedido'),502
+        return jsonify(ok=True)
+    except Exception:
+        app.logger.exception('No se pudo enviar el pedido por Telegram')
+        return jsonify(ok=False,error='No se pudo enviar el pedido por Telegram'),502
+
 @app.route('/api/sugerencia',methods=['POST'])
 def api_sugerencia():
     data=request.get_json(silent=True) or request.form
