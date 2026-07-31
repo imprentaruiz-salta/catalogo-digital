@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="{{ catalogo.subtitulo }} — Catálogo digital y pedidos por WhatsApp">
+{% set share_image = 'https://catalogo-app-zm3w.onrender.com/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+{% set share_description = catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.' %}
+<meta name="description" content="{{ share_description }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta property="og:description" content="{{ share_description }}">
+<meta property="og:url" content="{{ request.url }}">
+{% if share_image %}<meta property="og:image" content="{{ share_image }}">
+<meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta name="twitter:description" content="{{ share_description }}">
+{% if share_image %}<meta name="twitter:image" content="{{ share_image }}">{% endif %}
 <title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
@@ -35,7 +47,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
 .hero p{font-size:13px;color:var(--mut)}
 .hero-banner{position:relative;overflow:hidden;border-radius:16px;margin:-8px -4px 14px;background:#dff7e8;min-height:150px;box-shadow:0 3px 14px rgba(0,0,0,.10)}
-.hero-banner img{display:block;width:100%;height:auto;min-height:155px;max-height:360px;object-fit:contain;object-position:center;background:#dff7e8;transition:transform .5s ease}
+.hero-banner img{display:block;width:100%;height:auto;min-height:120px;max-height:260px;object-fit:contain;object-position:center;background:#dff7e8;transition:transform .5s ease}
 .hero-banner:hover img{transform:scale(1.025)}
 .hero-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(0,0,0,.20));pointer-events:none}
 .hero-copy{display:flex;flex-direction:column;align-items:center;gap:7px}
@@ -242,7 +254,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </div>
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
-    <div class="quick-categories-title">👇 ELEGÍ UNA CATEGORÍA</div>
+    <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
     <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico'] %}Papel higiénico{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
   </div>{% endif %}
 
