@@ -222,8 +222,13 @@ def uploaded_file(filename):
 
 @app.route('/static/<path:filename>')
 def static_asset(filename):
-    # Visual category illustrations are part of the deployable design assets.
-    return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
+    # Visual assets may live in static/ or at the repository root (kept deployable).
+    static_path=os.path.join(BASE_DIR,'static',filename)
+    if os.path.isfile(static_path):
+        return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
+    if filename.startswith('banner_'):
+        return send_from_directory(BASE_DIR, filename)
+    return ('',404)
 
 @app.route('/')
 def index():

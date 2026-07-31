@@ -35,7 +35,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
 .hero p{font-size:13px;color:var(--mut)}
 .hero-banner{position:relative;overflow:hidden;border-radius:16px;margin:-8px -4px 14px;background:#dff7e8;min-height:150px;box-shadow:0 3px 14px rgba(0,0,0,.10)}
-.hero-banner img{display:block;width:100%;height:clamp(155px,30vw,250px);object-fit:cover;object-position:center;transition:transform .5s ease}
+.hero-banner img{display:block;width:100%;height:auto;min-height:155px;max-height:360px;object-fit:contain;object-position:center;background:#dff7e8;transition:transform .5s ease}
 .hero-banner:hover img{transform:scale(1.025)}
 .hero-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(0,0,0,.20));pointer-events:none}
 .hero-copy{display:flex;flex-direction:column;align-items:center;gap:7px}
@@ -157,7 +157,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
   .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
   .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb,.cat-nav a .cat-visual{width:30px;height:30px}.cat-svg.nav{width:30px;height:30px}
-  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}.hero-banner{margin:-7px -4px 12px;min-height:130px}.hero-banner img{height:160px}.hero-step{padding:6px 8px;font-size:10px}
+  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}.hero-banner{margin:-7px -4px 12px;min-height:130px}.hero-banner img{height:auto;min-height:130px;max-height:none;object-fit:contain}.hero-step{padding:6px 8px;font-size:10px}
   .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header .cat-visual{width:50px;height:50px}.cat-svg.header{width:50px;height:50px}.cat-header h2{font-size:18px}
   .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
   .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
