@@ -405,6 +405,25 @@ def admin_importar():
     init_db(); cloud_sync(); log_change('importacion','*',uploaded.filename)
     return redirect(url_for('admin_index'))
 
+@app.route('/admin/prueba-foto',methods=['GET','POST'])
+@login_required
+def admin_prueba_foto():
+    """Temporary controlled image-persistence test; creates a small WebP in DATA_DIR."""
+    path=os.path.join(UPLOAD_FOLDER,'prueba-persistencia.webp')
+    im=Image.new('RGB',(900,700),'#25D366')
+    from PIL import ImageDraw
+    draw=ImageDraw.Draw(im)
+    draw.rounded_rectangle((60,60,840,640),radius=36,fill='white',outline='#128C7E',width=10)
+    draw.text((210,260),'PRUEBA FOTO',fill='#128C7E')
+    draw.text((210,350),'PERSISTENCIA OK',fill='#555')
+    im.save(path,'WEBP',quality=82,method=6)
+    with get_db() as db:
+        row=db.execute('SELECT id FROM productos WHERE catalogo_slug=? ORDER BY id LIMIT 1',(current_slug(),)).fetchone()
+        if not row: return jsonify(ok=False,error='No hay producto de prueba'),400
+        db.execute('UPDATE productos SET foto=? WHERE id=?',('prueba-persistencia.webp',row['id'])); db.commit()
+    cloud_sync(); log_change('foto-prueba',current_slug(),'prueba-persistencia.webp')
+    return jsonify(ok=True,foto='prueba-persistencia.webp')
+
 @app.route('/admin/producto/<int:pid>/foto',methods=['POST'])
 @login_required
 def admin_foto_rapida(pid):
