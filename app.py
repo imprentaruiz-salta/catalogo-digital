@@ -432,7 +432,7 @@ def admin_importar():
 @login_required
 def admin_cargar_abigail():
     slug='limpieza-abigail'
-    manifest_path=os.path.join(BASE_DIR,'seed_abigail_data','products.json')
+    manifest_path=os.path.join(BASE_DIR,'products.json')
     if not os.path.exists(manifest_path): return jsonify(ok=False,error='No está la planilla de Abigail'),500
     with open(manifest_path,encoding='utf-8') as fh: items=json.load(fh)
     backup_db('antes-carga-abigail')
@@ -441,7 +441,7 @@ def admin_cargar_abigail():
         db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=?,activo=1 WHERE slug=?",('Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',slug))
         count=0
         for item in items:
-            src=os.path.join(BASE_DIR,'seed_abigail_data',item['image'])
+            src=os.path.join(BASE_DIR,item['image'])
             if not os.path.exists(src): continue
             fname='abigail-'+item['code'].lower()+'.webp'; target=os.path.join(UPLOAD_FOLDER,fname)
             if not os.path.exists(target):
