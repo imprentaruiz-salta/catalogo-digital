@@ -433,8 +433,13 @@ def admin_importar():
 def admin_cargar_abigail():
     slug='limpieza-abigail'
     manifest_path=os.path.join(BASE_DIR,'products.json')
-    if not os.path.exists(manifest_path): return jsonify(ok=False,error='No está la planilla de Abigail'),500
-    with open(manifest_path,encoding='utf-8') as fh: items=json.load(fh)
+    seed_zip=os.path.join(BASE_DIR,'abigail_seed.zip')
+    if not os.path.exists(manifest_path) and not os.path.exists(seed_zip): return jsonify(ok=False,error='No está la planilla de Abigail'),500
+    seed_archive=zipfile.ZipFile(seed_zip) if os.path.exists(seed_zip) else None
+    if seed_archive:
+        items=json.loads(seed_archive.read('products.json').decode('utf-8'))
+    else:
+        with open(manifest_path,encoding='utf-8') as fh: items=json.load(fh)
     backup_db('antes-carga-abigail')
     with get_db() as db:
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",(slug,'Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j'))
@@ -442,10 +447,12 @@ def admin_cargar_abigail():
         count=0
         for item in items:
             src=os.path.join(BASE_DIR,item['image'])
-            if not os.path.exists(src): continue
             fname='abigail-'+item['code'].lower()+'.webp'; target=os.path.join(UPLOAD_FOLDER,fname)
+            if not os.path.exists(src) and not seed_archive: continue
             if not os.path.exists(target):
-                with Image.open(src) as im:
+                raw=seed_archive.read(item['image']) if seed_archive else None
+                source=io.BytesIO(raw) if raw else src
+                with Image.open(source) as im:
                     im=ImageOps.exif_transpose(im); im.thumbnail((1600,1600))
                     if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
                     im.save(target,'WEBP',quality=82,method=6)
@@ -454,6 +461,7 @@ def admin_cargar_abigail():
             db.execute("UPDATE productos SET nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=1,catalogo_slug=? WHERE codigo=?",(item['name'],item['description'],item['price'],cat,item['brand'],fname,slug,item['code']))
             count+=1
         db.commit()
+    if seed_archive: seed_archive.close()
     cloud_sync(); log_change('carga-abigail',slug,str(count)); session['catalogo_slug']=slug
     return jsonify(ok=True,catalogo=slug,productos=count)
 
