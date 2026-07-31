@@ -139,6 +139,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
 }
+.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body>
@@ -155,7 +156,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
     <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
   </div>
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." oninput="buscar(this.value)">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto o marca..." oninput="buscar(this.value)"><select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
   </div>
 </header>
 
@@ -218,7 +219,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
       </button>
       <div class="brand-products">
         {% for p in productos %}
-        <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}">
+        <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
           <div class="prod-img">
             {% if p.foto %}
             <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy">
@@ -228,7 +229,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
           </div>
           <div class="prod-body">
             <div class="prod-code">COD: {{ p.codigo }}</div>
-            <div class="prod-name">{{ p.nombre }}</div>
+            <div class="prod-name">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
             {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
             <div class="prod-footer">
               <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
@@ -396,20 +397,22 @@ function sendWhatsApp() {
 }
 
 function buscar(q) {
-  q = q.toLowerCase().trim();
+  q = (q || '').toLowerCase().trim();
+  var level = document.getElementById('priceFilter').value;
   var cards = document.querySelectorAll('.product-card');
   var visible = 0;
   cards.forEach(function(c){
-    var match = !q || c.dataset.name.indexOf(q) !== -1;
+    var matchText = !q || c.dataset.name.indexOf(q) !== -1;
+    var matchLevel = !level || c.dataset.level === level;
+    var match = matchText && matchLevel;
     c.dataset.hidden = match ? 'false' : 'true';
     if (match) visible++;
-    // Si hay búsqueda, abrir los brand-products que tengan resultados
-    if (q) {
+    if ((q || level) && match) {
       var bp = c.closest('.brand-products');
-      if (bp && match) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
+      if (bp) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
     }
   });
-  document.getElementById('noResults').style.display = (q && visible === 0) ? 'block' : 'none';
+  document.getElementById('noResults').style.display = ((q || level) && visible === 0) ? 'block' : 'none';
 }
 
 function toggleBrand(btn) {

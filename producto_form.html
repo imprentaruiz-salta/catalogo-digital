@@ -59,6 +59,14 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
         <label>Precio ($) *</label>
         <input type="number" name="precio" value="{{ producto['precio'] if producto else '' }}" required min="0" step="1" placeholder="1500">
       </div>
+      <div class="form-group">
+        <label>Nivel de precio</label>
+        <select name="nivel_precio">
+          <option value="Económico" {{ 'selected' if producto and producto['nivel_precio']=='Económico' else '' }}>🟢 Económico</option>
+          <option value="Estándar" {{ 'selected' if not producto or producto['nivel_precio']=='Estándar' else '' }}>🟡 Estándar</option>
+          <option value="Premium" {{ 'selected' if producto and producto['nivel_precio']=='Premium' else '' }}>🟣 Premium</option>
+        </select>
+      </div>
     </div>
 
     <div class="form-group">
