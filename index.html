@@ -177,6 +177,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <main>
   <!-- HERO -->
   <div class="hero">
+    {% if catalogo.banner %}<img src="{{ catalogo.banner }}" alt="{{ catalogo.nombre }}" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:12px">{% endif %}
     <div style="font-size:36px;margin-bottom:6px">📚📸</div>
     <h2>Catálogo digital · {{ catalogo.nombre }}</h2>
     <p>Elegí productos disponibles. Armá tu pedido y envialo por WhatsApp o Telegram.</p>
