@@ -428,6 +428,35 @@ def admin_importar():
     init_db(); cloud_sync(); log_change('importacion','*',uploaded.filename)
     return redirect(url_for('admin_index'))
 
+@app.route('/admin/cargar-abigail',methods=['GET','POST'])
+@login_required
+def admin_cargar_abigail():
+    slug='limpieza-abigail'
+    manifest_path=os.path.join(BASE_DIR,'seed_abigail_data','products.json')
+    if not os.path.exists(manifest_path): return jsonify(ok=False,error='No está la planilla de Abigail'),500
+    with open(manifest_path,encoding='utf-8') as fh: items=json.load(fh)
+    backup_db('antes-carga-abigail')
+    with get_db() as db:
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",(slug,'Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j'))
+        db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=?,activo=1 WHERE slug=?",('Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',slug))
+        count=0
+        for item in items:
+            src=os.path.join(BASE_DIR,'seed_abigail_data',item['image'])
+            if not os.path.exists(src): continue
+            fname='abigail-'+item['code'].lower()+'.webp'; target=os.path.join(UPLOAD_FOLDER,fname)
+            if not os.path.exists(target):
+                with Image.open(src) as im:
+                    im=ImageOps.exif_transpose(im); im.thumbnail((1600,1600))
+                    if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
+                    im.save(target,'WEBP',quality=82,method=6)
+            cat='papel higienico' if item['code'].startswith('AB-PH') else 'pañuelitos'
+            db.execute("INSERT OR IGNORE INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(item['code'],item['name'],item['description'],item['price'],cat,item['brand'],fname,1,1,slug,0,0,0,'','Estándar'))
+            db.execute("UPDATE productos SET nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=1,catalogo_slug=? WHERE codigo=?",(item['name'],item['description'],item['price'],cat,item['brand'],fname,slug,item['code']))
+            count+=1
+        db.commit()
+    cloud_sync(); log_change('carga-abigail',slug,str(count)); session['catalogo_slug']=slug
+    return jsonify(ok=True,catalogo=slug,productos=count)
+
 @app.route('/admin/prueba-foto',methods=['GET','POST'])
 @login_required
 def admin_prueba_foto():
