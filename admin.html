@@ -87,6 +87,19 @@ tr:hover td{background:#f9fffe}
   <a class="btn-new" href="/admin/producto/nuevo">+ Agregar producto</a>
 </div>
 
+<div style="margin:0 16px 18px;background:#eefbf7;border:1px solid #b7ead8;padding:14px;border-radius:14px">
+  <strong style="color:#128C7E">💾 Seguridad de datos</strong>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+    <a href="/admin/exportar" class="btn-edit" style="background:#d1fae5">⬇️ Exportar catálogo y fotos</a>
+    <a href="/admin/backup" class="btn-edit">⬇️ Copia de base de datos</a>
+    <form method="POST" action="/admin/importar" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center">
+      <input type="file" name="archivo" accept=".zip" required style="max-width:220px;font-size:12px">
+      <button type="submit" class="btn-edit" style="border:0;cursor:pointer" onclick="return confirm('¿Importar esta copia? Se guardará un respaldo antes de reemplazar los datos.')">⬆️ Importar copia</button>
+    </form>
+  </div>
+  <small style="display:block;margin-top:8px;color:#557">La exportación incluye los catálogos, productos, configuraciones, sugerencias y fotos.</small>
+</div>
+
 <div class="table-wrap">
   <table id="prodTable">
     <thead>

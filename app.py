@@ -1,15 +1,24 @@
-import os, sqlite3, uuid
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil
+from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
-                   url_for, session, jsonify, send_from_directory)
+                   url_for, session, jsonify, send_from_directory, send_file, flash)
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder=".")
+app = Flask(__name__, static_folder=None, template_folder=".")
 app.secret_key = "catalogo_ruiz_2026_secret_x7k"
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
-DB_PATH=os.path.join(BASE_DIR,"catalogo.db")
-UPLOAD_FOLDER=os.path.join(BASE_DIR,"static","uploads")
+# DATA_DIR can be mounted on a persistent disk in production. The application code
+# and the data are deliberately kept separate so deploys never replace user data.
+DATA_DIR=os.environ.get("CATALOGO_DATA_DIR",os.path.join(BASE_DIR,"data"))
+os.makedirs(DATA_DIR,exist_ok=True)
+DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
+UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
+BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
+os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True)
+# Migrate a legacy local database once, if this installation had one.
+_OLD_DB=os.path.join(BASE_DIR,"catalogo.db")
+if not os.path.exists(DB_PATH) and os.path.exists(_OLD_DB): shutil.copy2(_OLD_DB,DB_PATH)
 ALLOWED_EXT={"png","jpg","jpeg","webp","gif"}
-os.makedirs(UPLOAD_FOLDER,exist_ok=True)
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={"Bebidas":"🥤","Panales":"👶","Comestibles":"🥫","Golosinas":"🍬","Limpieza":"🧹","Verduleria":"🥬","Lacteos":"🥛","Libreria":"📚","Librería":"📚","Fotos":"📷","Fotografía":"📷","Carniceria":"🥩","Panaderia":"🍞","Ferreteria":"🔧","Farmacia":"💊"}
 def cat_icon(cat): return CAT_ICONS.get(cat,"📦")
@@ -25,6 +34,7 @@ def init_db():
             try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
         db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1)")
+        db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
@@ -36,6 +46,25 @@ def init_db():
             except sqlite3.OperationalError: pass
         # Keep the pre-existing product seed; the admin can replace it.
         db.commit()
+
+def backup_db(reason="manual"):
+    """Create a timestamped SQLite backup without interrupting the live DB."""
+    if not os.path.exists(DB_PATH): return None
+    stamp=datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    target=os.path.join(BACKUP_FOLDER,f"catalogo-{stamp}-{secure_filename(reason) or 'backup'}.sqlite3")
+    src=sqlite3.connect(DB_PATH); dst=sqlite3.connect(target)
+    try: src.backup(dst)
+    finally: dst.close(); src.close()
+    files=sorted([os.path.join(BACKUP_FOLDER,x) for x in os.listdir(BACKUP_FOLDER) if x.endswith('.sqlite3')])
+    for old in files[:-20]:
+        try: os.remove(old)
+        except OSError: pass
+    return target
+
+def log_change(tipo, slug='', detalle=''):
+    try:
+        with get_db() as db: db.execute('INSERT INTO cambios(tipo,catalogo_slug,detalle) VALUES(?,?,?)',(tipo,slug,detalle)); db.commit()
+    except Exception: pass
 
 def allowed_file(filename): return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXT
 def login_required(f):
@@ -57,6 +86,11 @@ def get_catalogo(slug='libreria-ruiz'):
     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
 def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
+
+@app.route('/static/uploads/<path:filename>')
+def uploaded_file(filename):
+    # Product photos live in DATA_DIR, not inside the deployable code folder.
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route('/')
 def index():
@@ -107,6 +141,7 @@ def seleccionar_catalogo():
 @app.route('/admin/catalogo/editar',methods=['POST'])
 @login_required
 def editar_catalogo():
+    backup_db('antes-editar-catalogo')
     slug=request.form.get('slug','')
     with get_db() as db:
         db.execute('UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=? WHERE slug=?',(request.form.get('nombre','').strip(),request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp',''),request.form.get('telegram','').lstrip('@'),request.form.get('banner',''),slug)); db.commit()
@@ -115,6 +150,7 @@ def editar_catalogo():
 @app.route('/admin/catalogo/nuevo',methods=['POST'])
 @login_required
 def nuevo_catalogo():
+    backup_db('antes-nuevo-catalogo')
     slug=secure_filename(request.form.get('slug','')).lower().replace('_','-'); nombre=request.form.get('nombre','').strip()
     if slug and nombre:
         with get_db() as db: db.execute('INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)',(slug,nombre,request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp','5493872101274'),request.form.get('telegram',''),request.form.get('banner',''))); db.commit()
@@ -136,6 +172,7 @@ def admin_editar(pid):
     if request.method=='POST': return _guardar_producto(pid)
     return render_template('producto_form.html',producto=dict(prod),categorias=get_categorias(),catalogo=current_config())
 def _guardar_producto(pid):
+    backup_db('antes-producto')
     f=request.form; cat=f.get('categoria',''); cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip(); precio=float(f.get('precio',0) or 0); marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
     try: stock_actual=max(0,int(f.get('stock_actual',0) or 0)); stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
     except ValueError: stock_actual=stock_minimo=0; costo=0
@@ -151,11 +188,58 @@ def _guardar_producto(pid):
 @app.route('/admin/producto/<int:pid>/eliminar',methods=['POST'])
 @login_required
 def admin_eliminar(pid):
+    backup_db('antes-eliminar-producto')
     with get_db() as db: db.execute('DELETE FROM productos WHERE id=?',(pid,)); db.commit()
     return redirect(url_for('admin_index'))
+@app.route('/admin/backup')
+@login_required
+def admin_backup():
+    path=backup_db('desde-panel')
+    if not path: return 'No hay datos para respaldar', 404
+    return send_file(path,as_attachment=True,download_name=os.path.basename(path))
+
+@app.route('/admin/exportar')
+@login_required
+def admin_exportar():
+    """Export all catalog data and product images into one portable ZIP."""
+    path=backup_db('exportacion')
+    mem=io.BytesIO()
+    with zipfile.ZipFile(mem,'w',zipfile.ZIP_DEFLATED) as z:
+        if path: z.write(path,'base/catalogo.sqlite3')
+        for root,_,files in os.walk(UPLOAD_FOLDER):
+            for name in files: z.write(os.path.join(root,name),os.path.join('imagenes',name))
+        z.writestr('README.txt','Exportación del catálogo. La base SQLite contiene catálogos, productos, sugerencias y configuraciones.\n')
+    mem.seek(0)
+    return send_file(mem,as_attachment=True,download_name='exportacion-catalogos.zip',mimetype='application/zip')
+
+@app.route('/admin/importar',methods=['POST'])
+@login_required
+def admin_importar():
+    """Restore a previously exported ZIP atomically, preserving the old DB as backup."""
+    uploaded=request.files.get('archivo')
+    if not uploaded or not uploaded.filename.lower().endswith('.zip'): return 'Elegí una exportación ZIP válida',400
+    backup_db('antes-importacion')
+    with tempfile.TemporaryDirectory() as td:
+        uploaded.save(os.path.join(td,'import.zip'))
+        with zipfile.ZipFile(os.path.join(td,'import.zip')) as z:
+            names=z.namelist()
+            if 'base/catalogo.sqlite3' not in names: return 'El ZIP no contiene una base válida',400
+            z.extract('base/catalogo.sqlite3',td)
+            imported=os.path.join(td,'base','catalogo.sqlite3')
+            test=sqlite3.connect(imported); test.execute('PRAGMA integrity_check').fetchone(); test.close()
+            os.replace(imported,DB_PATH)
+            os.makedirs(UPLOAD_FOLDER,exist_ok=True)
+            for n in names:
+                if n.startswith('imagenes/') and not n.endswith('/'):
+                    target=os.path.join(UPLOAD_FOLDER,os.path.basename(n))
+                    with z.open(n) as src, open(target,'wb') as dst: shutil.copyfileobj(src,dst)
+    init_db(); log_change('importacion','*',uploaded.filename)
+    return redirect(url_for('admin_index'))
+
 @app.route('/admin/producto/<int:pid>/foto',methods=['POST'])
 @login_required
 def admin_foto_rapida(pid):
+    backup_db('antes-foto')
     file=request.files.get('foto')
     if not file or not file.filename: return jsonify(ok=False,error='No se recibio archivo')
     if not allowed_file(file.filename): return jsonify(ok=False,error='Formato no permitido')
