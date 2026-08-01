@@ -106,11 +106,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .prod-code{font-size:9px;color:#94a3b8;font-family:monospace;margin-bottom:3px;opacity:.8}
 .prod-name{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
 .prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
-.prod-footer{display:flex;align-items:center;justify-content:space-between}
+.prod-footer{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .prod-price{font-size:17px;font-weight:800;color:var(--gd)}
 .prod-price small{font-size:9px;color:var(--mut);display:block;font-weight:400}
-.add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}
-.add-btn:hover{transform:scale(1.15)}
+.prod-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.buy-now-btn{background:#fff;border:1px solid var(--gd);color:var(--gd);border-radius:50px;padding:7px 9px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}.buy-now-btn:hover{background:#effcf3}.add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}.add-btn:hover{transform:scale(1.15)}
+.prod-img,.prod-name{cursor:pointer}.prod-img:focus-visible,.prod-name:focus-visible{outline:3px solid #86efac;outline-offset:2px}
+/* VENTANA AMPLIADA DEL PRODUCTO */
+.product-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.64);z-index:700;padding:18px;align-items:center;justify-content:center}.product-overlay.open{display:flex}.product-modal{position:relative;width:min(460px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.3);animation:modalIn .22s ease}.product-modal-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.92);font-size:24px;line-height:1;cursor:pointer;z-index:2}.modal-product-image{height:260px;border-radius:17px;background:#f5f8f6;display:flex;align-items:center;justify-content:center;font-size:70px;overflow:hidden;margin-bottom:14px}.modal-product-image img{width:100%;height:100%;object-fit:contain;background:#fff}.modal-product-code{font-size:10px;color:#94a3b8;font-family:monospace}.modal-product-name{font-size:23px;font-weight:850;line-height:1.2;margin:5px 0}.modal-product-brand{font-size:13px;color:var(--mut)}.modal-product-desc{font-size:14px;color:#475569;line-height:1.45;margin:12px 0;min-height:20px}.modal-product-price{font-size:25px;color:var(--gd);font-weight:900;margin:10px 0 14px}.modal-product-actions{display:flex;gap:8px}.modal-product-actions button{flex:1;border:0;border-radius:50px;padding:13px 10px;font-size:14px;font-weight:800;cursor:pointer}.modal-buy{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.modal-add{background:#effcf3;color:var(--gd);border:1px solid #b7ebc6!important}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}
+}
 
 /* FLOAT CART */
 .float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}
@@ -297,20 +300,16 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
       <div class="brand-products">
         {% for p in productos %}
         <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
-          <div class="prod-img">
-            {% if p.foto %}
-            <img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">
-            {% else %}
-            {{ cat_icon(p.categoria) }}
-            {% endif %}
+          <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ p.nombre }}" onclick='openProduct({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
           </div>
           <div class="prod-body">
             <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
-            <div class="prod-name" title="{{ p.nombre }}">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
+            <div class="prod-name" title="{{ p.nombre }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
             {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
             <div class="prod-footer">
               <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
-              <button class="add-btn" onclick="addToCart('{{ p.codigo }}','{{ p.nombre }}',{{ p.precio }},'{{ cat_icon(p.categoria) }}')">+</button>
+              <div class="prod-actions"><button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
             </div>
           </div>
         </div>
@@ -361,6 +360,20 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
     <button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>
   </div>
   <button class="close-btn" onclick="toggleCart()">Cerrar</button>
+</div>
+
+<!-- VENTANA AMPLIADA DEL PRODUCTO -->
+<div class="product-overlay" id="productOverlay" onclick="if(event.target===this)closeProduct()" role="dialog" aria-modal="true" aria-label="Detalle del producto">
+  <article class="product-modal">
+    <button class="product-modal-close" onclick="closeProduct()" aria-label="Cerrar">×</button>
+    <div class="modal-product-image" id="modalProductImage"></div>
+    <div class="modal-product-code" id="modalProductCode"></div>
+    <h2 class="modal-product-name" id="modalProductName"></h2>
+    <div class="modal-product-brand" id="modalProductBrand"></div>
+    <div class="modal-product-desc" id="modalProductDesc"></div>
+    <div class="modal-product-price" id="modalProductPrice"></div>
+    <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>
+  </article>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -537,6 +550,27 @@ function toggleBrand(btn) {
     timer=setInterval(step,5200);
   });
 })();
+
+var currentProduct = null;
+function openProduct(code,name,brand,category,price,desc,image,icon){
+  currentProduct={code:code,name:name,brand:brand,category:category,price:Number(price),desc:desc||'',image:image||'',icon:icon||'📦'};
+  var box=document.getElementById('modalProductImage');
+  box.innerHTML=currentProduct.image?'<img src="'+currentProduct.image+'" alt="'+name+'">':currentProduct.icon;
+  document.getElementById('modalProductCode').textContent='COD: '+code;
+  document.getElementById('modalProductName').textContent=name;
+  document.getElementById('modalProductBrand').textContent=brand+' · '+category;
+  document.getElementById('modalProductDesc').textContent=currentProduct.desc;
+  document.getElementById('modalProductPrice').textContent='$'+formatNum(currentProduct.price)+' c/u';
+  document.getElementById('modalBuyBtn').onclick=function(){buyNow(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon)};
+  document.getElementById('modalAddBtn').onclick=function(){addToCart(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon);closeProduct()};
+  document.getElementById('productOverlay').classList.add('open');document.body.style.overflow='hidden';
+  setTimeout(function(){document.querySelector('.product-modal-close').focus()},50);
+}
+function closeProduct(){document.getElementById('productOverlay').classList.remove('open');document.body.style.overflow='';}
+function buyNow(code,name,price,icon){
+  addToCart(code,name,price,icon);toggleCart();showToast('Producto agregado. Completá tus datos para comprar 😊');
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProduct()});
 
 function showToast(msg) {
   var t = document.getElementById('toast');
