@@ -244,10 +244,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   <article class="showcase-card">
     {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
     <div class="showcase-img">
-      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ display_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
     </div>
     <div class="showcase-card-body">
-      {% if p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-new">🆕 Nuevo</span>{% elif p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}
+      {% if p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if p.codigo in ['AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% elif p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}
       <div class="showcase-card-name">{{ p.nombre|product_name }}</div>
       <div class="showcase-brand">{{ p.marca }} · {{ 'rollo de cocina' if p.categoria|lower == 'pañuelitos' else p.categoria }}</div>
       <div class="stock-note">✅ Disponible</div>
@@ -327,7 +327,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
           {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
           {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
           <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
-            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ display_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
           </div>
           <div class="prod-body">
             <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
