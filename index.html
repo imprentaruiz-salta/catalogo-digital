@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">
 <link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
-{% set share_image = 'https://catalogo-app-zm3w.onrender.com/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+{% set share_image = 'https://catalogo-app-zm3w.onrender.com/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
 {% set share_description = catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.' %}
 <meta name="description" content="{{ share_description }}">
 <meta property="og:type" content="website">
