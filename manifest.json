@@ -1,7 +1,7 @@
 {
   "name": "{{ catalogo.nombre }} — Catálogo digital",
   "short_name": "{{ catalogo.nombre }}",
-  "start_url": "/c/{{ catalogo.slug }}",
+  "start_url": "/c/{{ manifest_slug or catalogo.slug }}",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f0f2f5",

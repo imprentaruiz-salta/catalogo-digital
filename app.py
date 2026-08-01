@@ -227,8 +227,12 @@ def current_config(): return get_catalogo_config(current_slug()) or get_catalogo
 
 @app.route('/manifest.json')
 def web_manifest():
-    cfg=get_catalogo_config(request.args.get('catalogo','limpieza-abigail')) or get_catalogo_config('libreria-ruiz')
-    body=render_template('manifest.json',catalogo=cfg)
+    slug=request.args.get('catalogo','libreria-ruiz').strip().lower()
+    cfg=get_catalogo_config(slug)
+    if not cfg:
+        cfg=get_catalogo_config('libreria-ruiz')
+    # Keep the install target tied to the catalog URL that the visitor opened.
+    body=render_template('manifest.json',catalogo=cfg,manifest_slug=slug)
     return app.response_class(body,mimetype='application/manifest+json')
 
 @app.route('/static/uploads/<path:filename>')
