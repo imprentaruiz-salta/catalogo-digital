@@ -225,6 +225,12 @@ def get_showcase(slug='libreria-ruiz'):
 def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
 
+@app.route('/manifest.json')
+def web_manifest():
+    cfg=get_catalogo_config(request.args.get('catalogo','limpieza-abigail')) or get_catalogo_config('libreria-ruiz')
+    body=render_template('manifest.json',catalogo=cfg)
+    return app.response_class(body,mimetype='application/manifest+json')
+
 @app.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
     # Product photos live in DATA_DIR, not inside the deployable code folder.

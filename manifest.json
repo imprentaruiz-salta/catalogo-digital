@@ -1,0 +1,13 @@
+{
+  "name": "{{ catalogo.nombre }} — Catálogo digital",
+  "short_name": "{{ catalogo.nombre }}",
+  "start_url": "/c/{{ catalogo.slug }}",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#128C7E",
+  "description": "{{ catalogo.subtitulo }} — catálogo digital",
+  "icons": [
+    {"src":"/static/banner_abigail.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any maskable"}
+  ]
+}
