@@ -198,7 +198,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 {% macro cat_visual(cat, size='nav') -%}
   {% set n = cat|lower %}
   {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
-  <img class="cat-thumb {{ size }}" src="/static/category_papel_neutro.svg" alt="Papel higiénico sin marca">
+  <img class="cat-thumb {{ size }}" src="/static/category_papel_real.jpg" alt="Papel higiénico">
   {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
   <img class="cat-thumb {{ size }}" src="/static/category_cocina_neutro.svg" alt="Rollo de cocina sin marca">
   {% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
