@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Papel higiénico sin marca">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eef8ff"/><stop offset="1" stop-color="#dff0fb"/></linearGradient><linearGradient id="roll" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#d9edf9"/></linearGradient></defs>
+<rect x="8" y="8" width="224" height="224" rx="46" fill="url(#bg)"/>
+<ellipse cx="120" cy="70" rx="72" ry="35" fill="#fff" stroke="#8ab8d5" stroke-width="5"/>
+<path d="M48 70v78c0 38 144 38 144 0V70" fill="url(#roll)" stroke="#8ab8d5" stroke-width="5"/>
+<ellipse cx="120" cy="70" rx="25" ry="12" fill="#c4dfef" stroke="#6e9fbe" stroke-width="4"/>
+<ellipse cx="120" cy="70" rx="12" ry="5" fill="#f8fdff" stroke="#6e9fbe" stroke-width="3"/>
+<path d="M76 111c27 15 61 15 88 0M72 130c29 15 67 15 96 0M78 150c25 13 59 13 84 0" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="3 5"/>
+<path d="M65 177c35 15 75 15 110 0" fill="none" stroke="#a7cfe5" stroke-width="4" stroke-linecap="round"/>
+</svg>
