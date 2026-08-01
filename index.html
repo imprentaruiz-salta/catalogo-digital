@@ -80,7 +80,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
 .showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
 .showcase-add{width:32px;height:32px;flex:none}
-.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}
+.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}.price-note{font-size:10px;color:#6b7280;font-weight:700;margin:2px 0 6px}.info-strip{margin:0 12px 16px;padding:12px 14px;background:#fff;border:2px solid #b7ebc6;border-radius:15px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:12px;color:#14532d}.info-strip strong{display:block;color:#128c7e;font-size:14px;margin-bottom:5px}.combo-grid{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px}.combo-card{min-width:210px;background:linear-gradient(135deg,#fff7ed,#fffbeb);border:2px solid #fed7aa;border-radius:14px;padding:12px}.combo-card h3{font-size:14px;color:#9a3412;margin-bottom:4px}.combo-card p{font-size:11px;color:#7c2d12;margin-bottom:8px}.combo-card button{border:0;border-radius:20px;background:#f97316;color:#fff;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer}
 .showcase-empty{padding:14px;color:var(--mut);font-size:12px;background:#f8faf9;border-radius:12px}
 @media(max-width:599px){.showcase-wrap{margin:0 8px 20px}.showcase-section{padding:12px 9px 13px}.showcase-title{font-size:16px}.showcase-title .showcase-icon{font-size:22px}.showcase-note{font-size:10px}.showcase-rail{grid-auto-columns:minmax(145px,47%)}.showcase-card .showcase-img{height:122px}}
 
@@ -250,6 +250,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
       {% if p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if p.codigo in ['AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% elif p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}
       <div class="showcase-card-name">{{ p.nombre|product_name }}</div>
       <div class="showcase-brand">{{ p.marca }} · {{ 'rollo de cocina' if p.categoria|lower == 'pañuelitos' else p.categoria }}</div>
+      <div class="price-note">{{ price_label(p) }}</div>
       <div class="stock-note">✅ Disponible</div>
       <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
     </div>
@@ -276,6 +277,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
       <div class="hero-steps" aria-label="Pasos para hacer un pedido"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">🛒 Pedí</span></div>
     </div>
   </div>
+
+  <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
+  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscar('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscar('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscar('pack')">Ver packs</button></div></div></div>
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
@@ -332,6 +336,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
           <div class="prod-body">
             <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
             <div class="stock-note">✅ Disponible</div>
+            <div class="price-note">{{ price_label(p) }}</div>
             <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
             {% if p.desc_ %}<div class="prod-desc">{{ p.desc_|product_name }}</div>{% endif %}
             <div class="prod-footer">
@@ -514,8 +519,10 @@ function sendWhatsApp() {
 
   var msg = '🛒 *NUEVO PEDIDO — {{ catalogo.nombre }}*\n';
   msg += '👤 Cliente: ' + nombre + '\n';
+  msg += '📅 Fecha: ' + new Date().toLocaleString('es-AR') + '\n';
   msg += '📦 Entrega: ' + entrega + '\n';
   if (direccion) msg += '📍 Dirección: ' + direccion + '\n';
+  msg += '💳 Medio de pago: ' + (payMethod || 'A confirmar') + '\n';
   msg += '─────────────────\n';
   keys.forEach(function(k){
     var it = cart[k];

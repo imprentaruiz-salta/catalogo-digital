@@ -129,6 +129,15 @@ def product_name(name):
     text=__import__('re').sub(r'\bpack\s+x\s*(\d+)', r'pack x \1', text, flags=__import__('re').I)
     return text
 app.jinja_env.globals['cat_icon']=cat_icon
+def price_label(product):
+    code=str(product.get('codigo','')) if hasattr(product,'get') else ''
+    desc=str(product.get('desc_','')) if hasattr(product,'get') else ''
+    if code in {'AB-PH-016','AB-PH-017','AB-PH-018','AB-PN-008'}: return 'Precio por fardo'
+    if code == 'AB-PN-001': return 'Pack $2.100 · fardo x10 $20.000'
+    if 'fardo' in desc.lower(): return 'Pack + precio de fardo en detalle'
+    if 'pack' in desc.lower(): return 'Precio por pack'
+    return 'Precio por rollo'
+app.jinja_env.globals['price_label']=price_label
 app.jinja_env.filters['product_name']=product_name
 def storage_status():
     # Render Free uses an ephemeral filesystem. A mounted DATA_DIR is the only
