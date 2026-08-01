@@ -476,7 +476,7 @@ def admin_cargar_abigail():
                     im=ImageOps.exif_transpose(im); im.thumbnail((1600,1600))
                     if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
                     im.save(target,'WEBP',quality=82,method=6)
-            cat='papel higienico' if item['code'].startswith('AB-PH') else 'pañuelitos'
+            cat='papel higienico' if item['code'].startswith('AB-PH') else 'rollo de cocina'
             db.execute("INSERT OR IGNORE INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(item['code'],item['name'],item['description'],item['price'],cat,item['brand'],fname,1,1,slug,0,0,0,'','Estándar'))
             db.execute("UPDATE productos SET nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=1,catalogo_slug=? WHERE codigo=?",(item['name'],item['description'],item['price'],cat,item['brand'],fname,slug,item['code']))
             count+=1
