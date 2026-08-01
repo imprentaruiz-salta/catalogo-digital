@@ -417,6 +417,19 @@ def _guardar_producto(pid):
     cloud_sync()
     log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
     return redirect(url_for('admin_index'))
+@app.route('/admin/productos/disponibles',methods=['POST'])
+@login_required
+def admin_marcar_disponibles():
+    """Mark every product in the selected catalog as available without inventing quantities."""
+    slug=current_slug()
+    with get_db() as db:
+        db.execute('UPDATE productos SET stock=1 WHERE catalogo_slug=?',(slug,))
+        db.commit()
+    cloud_sync()
+    log_change('disponibilidad',slug,'todos los productos disponibles')
+    flash('✅ Todos los productos quedaron disponibles')
+    return redirect(url_for('admin_index'))
+
 @app.route('/admin/producto/<int:pid>/eliminar',methods=['POST'])
 @login_required
 def admin_eliminar(pid):
