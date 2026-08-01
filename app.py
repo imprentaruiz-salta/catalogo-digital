@@ -246,7 +246,7 @@ def static_asset(filename):
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
         return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
-    if filename.startswith('banner_'):
+    if filename.startswith('banner_') or filename.startswith('social_preview_'):
         return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
