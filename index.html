@@ -188,7 +188,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <body>
 {% macro cat_visual(cat, size='nav') -%}
   {% set n = cat|lower %}
-  {% if n == 'papel higiénico' or n == 'papel higienico' %}
+  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
   <svg class="cat-svg {{ size }}" viewBox="0 0 120 120" role="img" aria-label="Papel higiénico"><rect x="8" y="8" width="104" height="104" rx="24" fill="#eef7ff"/><ellipse cx="60" cy="42" rx="34" ry="18" fill="#fff" stroke="#4388b8" stroke-width="4"/><path d="M26 42v36c0 20 68 20 68 0V42" fill="#dff1ff" stroke="#4388b8" stroke-width="4"/><ellipse cx="60" cy="42" rx="12" ry="6" fill="#b9dcf4" stroke="#4388b8" stroke-width="3"/><path d="M42 67c12 8 24 8 36 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M36 79c15 8 33 8 48 0" fill="none" stroke="#8fc3e6" stroke-width="3" stroke-linecap="round"/></svg>
   {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
   <svg class="cat-svg {{ size }}" viewBox="0 0 120 120" role="img" aria-label="Rollo de cocina"><rect x="8" y="8" width="104" height="104" rx="24" fill="#fff4dc"/><path d="M26 35c0-12 68-12 68 0v50c0 12-68 12-68 0z" fill="#f7d58a" stroke="#b97a20" stroke-width="4"/><ellipse cx="60" cy="35" rx="34" ry="16" fill="#fff" stroke="#b97a20" stroke-width="4"/><ellipse cx="60" cy="35" rx="11" ry="5" fill="#e9b95d" stroke="#b97a20" stroke-width="3"/><path d="M37 56h46M37 68h46" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M46 82c9 5 19 5 28 0" fill="none" stroke="#b97a20" stroke-width="3" stroke-linecap="round"/></svg>
@@ -255,7 +255,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
-    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico'] %}Papel higiénico{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
+    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
   </div>{% endif %}
 
   {% if showcase.total %}
