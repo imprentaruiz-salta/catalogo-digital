@@ -35,7 +35,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .logo-icon{font-size:28px}
 .logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
 .logo-text span{font-size:11px;opacity:.85}
-.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}
+.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .cart-btn:hover{background:rgba(255,255,255,.35)}
 .search-bar{padding:0 16px 12px}
 .search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -80,7 +80,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
 .showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
 .showcase-add{width:32px;height:32px;flex:none}
-.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}
+.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}
 .showcase-empty{padding:14px;color:var(--mut);font-size:12px;background:#f8faf9;border-radius:12px}
 @media(max-width:599px){.showcase-wrap{margin:0 8px 20px}.showcase-section{padding:12px 9px 13px}.showcase-title{font-size:16px}.showcase-title .showcase-icon{font-size:22px}.showcase-note{font-size:10px}.showcase-rail{grid-auto-columns:minmax(145px,47%)}.showcase-card .showcase-img{height:122px}}
 
@@ -122,7 +122,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 }
 
 /* FLOAT CART */
-.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}
+.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}.float-whatsapp{right:20px;bottom:20px}.quick-action-row{display:flex;gap:9px;margin:0 12px 16px}.quick-action{flex:1;border:0;border-radius:13px;padding:12px 9px;font-weight:850;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.1)}.quick-action-cart{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.quick-action-wa{background:#fff;border:2px solid #25d366;color:#128c7e}
 .float-cart.visible{display:flex}
 
 /* CARRITO MODAL */
@@ -228,6 +228,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </a>
   {% endfor %}
 </nav>
+<div class="quick-action-row" aria-label="Acciones rápidas">
+  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
+  <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>
+</div>
 
 <!-- Contacto rápido por WhatsApp -->
 <a class="float-whatsapp" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp">
@@ -240,15 +244,26 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   <article class="showcase-card">
     {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
     <div class="showcase-img">
-      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ display_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
     </div>
     <div class="showcase-card-body">
-      <div class="showcase-card-name">{{ p.nombre }}</div>
-      <div class="showcase-brand">{{ p.marca }} · {{ p.categoria }}</div>
-      <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+      {% if p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-new">🆕 Nuevo</span>{% elif p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}
+      <div class="showcase-card-name">{{ p.nombre|product_name }}</div>
+      <div class="showcase-brand">{{ p.marca }} · {{ 'rollo de cocina' if p.categoria|lower == 'pañuelitos' else p.categoria }}</div>
+      <div class="stock-note">✅ Disponible</div>
+      <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
     </div>
   </article>
   {%- endmacro %}
+{% macro product_badges(p) -%}
+  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
+  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
+  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
+  {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+{%- endmacro %}
+{% macro stock_note(p) -%}
+  {% if p.stock_actual|default(0)|int > 0 %}<div class="stock-note">✅ Disponible · {{ p.stock_actual }} unidades</div>{% else %}<div class="stock-note">✅ Disponible</div>{% endif %}
+{%- endmacro %}
 
   <!-- HERO -->
   <div class="hero">
@@ -305,17 +320,23 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
       </button>
       <div class="brand-products">
         {% for p in productos %}
+        {% set display_name = p.nombre|product_name %}
         <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
-          <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ p.nombre }}" onclick='openProduct({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
-            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+          {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
+          {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
+          {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
+          {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+          <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ display_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
           </div>
           <div class="prod-body">
             <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
-            <div class="prod-name" title="{{ p.nombre }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ p.nombre }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
-            {% if p.desc_ %}<div class="prod-desc">{{ p.desc_ }}</div>{% endif %}
+            <div class="stock-note">✅ Disponible</div>
+            <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
+            {% if p.desc_ %}<div class="prod-desc">{{ p.desc_|product_name }}</div>{% endif %}
             <div class="prod-footer">
               <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
-              <div class="prod-actions"><button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ p.nombre|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+              <div class="prod-actions"><button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
             </div>
           </div>
         </div>
@@ -414,6 +435,8 @@ function updateUI() {
   document.getElementById('cartCount').textContent = count;
   document.getElementById('floatTotal').textContent = '$' + formatNum(total);
   document.getElementById('floatCart').classList.toggle('visible', count > 0);
+  document.querySelector('.cart-btn').classList.toggle('has-items', count > 0);
+  document.getElementById('quickCartText').textContent = count ? 'Ver pedido · $' + formatNum(total) : 'Ver pedido';
 
   var itemsEl = document.getElementById('cartItems');
   var totalEl = document.getElementById('cartTotal');

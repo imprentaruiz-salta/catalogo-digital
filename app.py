@@ -67,20 +67,37 @@ def cloud_sync():
         app.logger.exception("No se pudo guardar la copia persistente")
         return False
 
+def _db_has_products(path):
+    """Check a snapshot without trusting its contents or replacing live data."""
+    try:
+        check=sqlite3.connect(path)
+        integrity=check.execute('PRAGMA integrity_check').fetchone()[0]
+        tables={r[0] for r in check.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        count=check.execute('SELECT COUNT(*) FROM productos WHERE activo=1').fetchone()[0] if 'productos' in tables else 0
+        check.close()
+        return integrity == 'ok' and count > 0
+    except Exception:
+        return False
+
 def restore_from_cloud():
-    """Restore the last snapshot before database initialization on a new container."""
+    """Restore only a valid, non-empty snapshot before DB initialization."""
     if not cloud_enabled(): return False
+    # Never replace a usable local database with an older cloud copy.
+    if os.path.exists(DB_PATH) and _db_has_products(DB_PATH): return False
     try:
         with cloud_request(SUPABASE_SNAPSHOT,"GET") as response:
             raw=response.read()
         with zipfile.ZipFile(io.BytesIO(raw)) as z:
             names=z.namelist()
             if "base/catalogo.sqlite3" not in names: return False
-            z.extract("base/catalogo.sqlite3",DATA_DIR)
-            restored=os.path.join(DATA_DIR,"base","catalogo.sqlite3")
-            if os.path.exists(DB_PATH): os.replace(restored,DB_PATH)
-            else: os.replace(restored,DB_PATH)
-            shutil.rmtree(os.path.join(DATA_DIR,"base"),ignore_errors=True)
+            extracted=os.path.join(DATA_DIR,"restore-check.sqlite3")
+            with z.open("base/catalogo.sqlite3") as src, open(extracted,"wb") as dst:
+                shutil.copyfileobj(src,dst)
+            if not _db_has_products(extracted):
+                os.remove(extracted)
+                app.logger.warning("Se descartó una copia persistente vacía o inválida")
+                return False
+            os.replace(extracted,DB_PATH)
             for name in names:
                 if name.startswith("imagenes/") and not name.endswith("/"):
                     target=os.path.join(UPLOAD_FOLDER,os.path.basename(name))
@@ -103,7 +120,16 @@ CAT_ICONS={
  "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
+def product_name(name):
+    """Present product names with one readable units convention in the public catalog."""
+    text=str(name or '').replace('Pañuelitos','Rollo de cocina').replace('pañuelitos','rollo de cocina')
+    text=unicodedata.normalize('NFC',text)
+    text=__import__('re').sub(r'\bx\s*(\d+)', r'x \1', text, flags=__import__('re').I)
+    text=__import__('re').sub(r'\b(\d+)\s*[uU]\b', r'\1 u', text)
+    text=__import__('re').sub(r'\bpack\s+x\s*(\d+)', r'pack x \1', text, flags=__import__('re').I)
+    return text
 app.jinja_env.globals['cat_icon']=cat_icon
+app.jinja_env.filters['product_name']=product_name
 def storage_status():
     # Render Free uses an ephemeral filesystem. A mounted DATA_DIR is the only
     # mode in which live catalog data can survive a deploy/restart.
