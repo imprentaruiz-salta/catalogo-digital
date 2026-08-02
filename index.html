@@ -191,7 +191,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   .brand-products.open{grid-template-columns:repeat(3,1fr)}
   .cat-section{margin:0 24px 24px}
 }
-.catalog-section-title{text-align:center;font-size:18px;font-weight:900;color:#128c7e;margin:14px 12px 10px;padding:10px;border-bottom:3px solid #25d366}.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.quick-category-list::-webkit-scrollbar{display:none}.quick-category{flex:0 0 145px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center;scroll-snap-align:start}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.cat-thumb{width:54px;height:54px;object-fit:contain;display:block}.cat-thumb.nav{width:38px;height:38px}.cat-thumb.header{width:62px;height:62px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
+.catalog-section-title{text-align:center;font-size:18px;font-weight:900;color:#128c7e;margin:14px 12px 10px;padding:10px;border-bottom:3px solid #25d366}.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.quick-category-list::-webkit-scrollbar{display:none}.quick-category-list.auto-marquee{overflow:hidden;scroll-snap-type:none;justify-content:flex-start}.quick-category-list.auto-marquee .category-track{display:flex;flex:0 0 auto;gap:8px;animation:categoryMarquee var(--category-duration,18s) linear infinite}.quick-category-list.auto-marquee .quick-category{scroll-snap-align:none}@keyframes categoryMarquee{from{transform:translateX(0)}to{transform:translateX(var(--category-shift))}}.quick-category-list.auto-marquee.is-paused .category-track{animation-play-state:paused}.quick-category-list.auto-marquee:hover,.quick-category-list.auto-marquee:active{animation-play-state:paused}.quick-category{flex:0 0 145px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center;scroll-snap-align:start}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.cat-thumb{width:54px;height:54px;object-fit:contain;display:block}.cat-thumb.nav{width:38px;height:38px}.cat-thumb.header{width:62px;height:62px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body>
@@ -285,7 +285,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
-    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
+    <div class="quick-category-list" id="availableCategories"><div class="category-track">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div></div>
   </div>{% endif %}
 
   {% if showcase.total %}
@@ -596,26 +596,38 @@ function toggleBrand(btn) {
 
 /* Carrusel automático de categorías y acceso rápido: movimiento horizontal continuo */
 (function(){
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
   rails.forEach(function(rail){
-    var paused=false, raf=0, resumeTimer=0, speed=0.22;
+    /* La fila de “Productos disponibles” usa una pista duplicada para que
+       el movimiento sea continuo y visible, incluso con pocas categorías. */
+    if(rail.id === 'availableCategories'){
+      var track=rail.querySelector('.category-track');
+      if(!track || !track.children.length) return;
+      Array.prototype.slice.call(track.children).forEach(function(card){track.appendChild(card.cloneNode(true));});
+      requestAnimationFrame(function(){
+        var half=track.scrollWidth/2;
+        rail.style.setProperty('--category-shift',(-half)+'px');
+        rail.style.setProperty('--category-duration',Math.max(14,half/24)+'s');
+        rail.classList.add('auto-marquee');
+      });
+      function stop(){rail.classList.add('is-paused');}
+      function start(){rail.classList.remove('is-paused');}
+      rail.addEventListener('mouseenter',stop); rail.addEventListener('mouseleave',start);
+      rail.addEventListener('touchstart',stop,{passive:true}); rail.addEventListener('touchend',function(){setTimeout(start,1800)},{passive:true});
+      return;
+    }
+    var paused=false, raf=0;
     function tick(){
       if(!paused && rail.scrollWidth > rail.clientWidth + 8){
         var max=rail.scrollWidth-rail.clientWidth;
-        rail.scrollLeft += speed;
+        rail.scrollLeft += 0.22;
         if(rail.scrollLeft >= max-1) rail.scrollLeft=0;
       }
       raf=requestAnimationFrame(tick);
     }
-    function pause(){paused=true;clearTimeout(resumeTimer);}
-    function resume(){clearTimeout(resumeTimer);resumeTimer=setTimeout(function(){paused=false;},1800);}
-    rail.addEventListener('mouseenter',pause);
-    rail.addEventListener('mouseleave',function(){paused=false;});
-    rail.addEventListener('touchstart',pause,{passive:true});
-    rail.addEventListener('touchend',resume,{passive:true});
-    rail.addEventListener('pointerdown',pause,{passive:true});
-    rail.addEventListener('wheel',resume,{passive:true});
+    function pause(){paused=true;}
+    rail.addEventListener('mouseenter',pause); rail.addEventListener('mouseleave',function(){paused=false;});
+    rail.addEventListener('touchstart',pause,{passive:true}); rail.addEventListener('touchend',function(){setTimeout(function(){paused=false;},1800)},{passive:true});
     tick();
   });
 })();
