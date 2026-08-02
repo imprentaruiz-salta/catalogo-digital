@@ -80,7 +80,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
 .showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
 .showcase-add{width:32px;height:32px;flex:none}
-.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}.price-note{font-size:10px;color:#6b7280;font-weight:700;margin:2px 0 6px}.info-strip{margin:0 12px 16px;padding:12px 14px;background:#fff;border:2px solid #b7ebc6;border-radius:15px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:12px;color:#14532d}.info-strip strong{display:block;color:#128c7e;font-size:14px;margin-bottom:5px}.combo-grid{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px}.combo-card{min-width:210px;background:linear-gradient(135deg,#fff7ed,#fffbeb);border:2px solid #fed7aa;border-radius:14px;padding:12px}.combo-card h3{font-size:14px;color:#9a3412;margin-bottom:4px}.combo-card p{font-size:11px;color:#7c2d12;margin-bottom:8px}.combo-card button{border:0;border-radius:20px;background:#f97316;color:#fff;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer}
+.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}.price-note{font-size:10px;color:#6b7280;font-weight:700;margin:2px 0 6px}.info-strip{margin:0 12px 16px;padding:12px 14px;background:#fff;border:2px solid #b7ebc6;border-radius:15px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:12px;color:#14532d}.info-strip strong{display:block;color:#128c7e;font-size:14px;margin-bottom:5px}.combo-grid{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none}.combo-grid::-webkit-scrollbar{display:none}.combo-grid.is-paused{scroll-behavior:auto}.combo-card{min-width:210px;background:linear-gradient(135deg,#fff7ed,#fffbeb);border:2px solid #fed7aa;border-radius:14px;padding:12px;scroll-snap-align:start}.combo-progress{font-size:10px;color:#9a3412;text-align:center;margin-top:7px;font-weight:750;opacity:.8}.combo-card h3{font-size:14px;color:#9a3412;margin-bottom:4px}.combo-card p{font-size:11px;color:#7c2d12;margin-bottom:8px}.combo-card button{border:0;border-radius:20px;background:#f97316;color:#fff;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer}
 .showcase-empty{padding:14px;color:var(--mut);font-size:12px;background:#f8faf9;border-radius:12px}
 @media(max-width:599px){.showcase-wrap{margin:0 8px 20px}.showcase-section{padding:12px 9px 13px}.showcase-title{font-size:16px}.showcase-title .showcase-icon{font-size:22px}.showcase-note{font-size:10px}.showcase-rail{grid-auto-columns:minmax(145px,47%)}.showcase-card .showcase-img{height:122px}}
 
@@ -279,7 +279,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </div>
 
   <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
-  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div></div></div>
+  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid" id="comboRail"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div></div><div class="combo-progress">Deslizá ↔ · mirá todos los combos</div></div>
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
@@ -571,6 +571,26 @@ function toggleBrand(btn) {
   btn.classList.toggle('open');
   btn.nextElementSibling.classList.toggle('open');
 }
+
+/* Carrusel lento de combos destacados */
+(function(){
+  var rail=document.getElementById('comboRail');
+  if(!rail || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var paused=false, timer;
+  function step(){
+    if(paused) return;
+    var card=rail.querySelector('.combo-card'); if(!card) return;
+    var next=rail.scrollLeft+card.getBoundingClientRect().width+9;
+    if(next>=rail.scrollWidth-rail.clientWidth-4) next=0;
+    rail.scrollTo({left:next,behavior:'smooth'});
+  }
+  function start(){clearInterval(timer);timer=setInterval(step,6200)}
+  rail.addEventListener('mouseenter',function(){paused=true});
+  rail.addEventListener('mouseleave',function(){paused=false;start()});
+  rail.addEventListener('touchstart',function(){paused=true;rail.classList.add('is-paused')},{passive:true});
+  rail.addEventListener('touchend',function(){setTimeout(function(){paused=false;rail.classList.remove('is-paused');start()},2200)},{passive:true});
+  start();
+})();
 
 /* Carruseles de vidriera: avance suave, pausado al tocar/deslizar */
 (function(){
