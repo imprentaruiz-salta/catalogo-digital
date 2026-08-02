@@ -594,6 +594,33 @@ function toggleBrand(btn) {
   start();
 })();
 
+/* Carrusel automático de categorías: ayuda a descubrirlas cuando van creciendo */
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
+  rails.forEach(function(rail){
+    if(rail.scrollWidth <= rail.clientWidth + 8) return;
+    var paused=false, timer;
+    function step(){
+      if(paused) return;
+      var item=rail.querySelector('a'); if(!item) return;
+      var gap=parseFloat(getComputedStyle(rail).gap)||8;
+      var next=rail.scrollLeft+item.getBoundingClientRect().width+gap;
+      if(next >= rail.scrollWidth-rail.clientWidth-4) next=0;
+      rail.scrollTo({left:next,behavior:'smooth'});
+    }
+    function start(){clearInterval(timer);timer=setInterval(step,5200)}
+    function pause(){paused=true;clearInterval(timer);}
+    function resume(){paused=false;start();}
+    rail.addEventListener('mouseenter',pause);
+    rail.addEventListener('mouseleave',resume);
+    rail.addEventListener('touchstart',pause,{passive:true});
+    rail.addEventListener('touchend',function(){setTimeout(resume,2200)},{passive:true});
+    rail.addEventListener('pointerdown',pause,{passive:true});
+    start();
+  });
+})();
+
 /* Carruseles de vidriera: avance suave, pausado al tocar/deslizar */
 (function(){
   var rails=document.querySelectorAll('.showcase-rail');
