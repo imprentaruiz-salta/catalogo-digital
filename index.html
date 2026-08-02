@@ -594,30 +594,29 @@ function toggleBrand(btn) {
   start();
 })();
 
-/* Carrusel automático de categorías y acceso rápido: ayuda a descubrirlas cuando van creciendo */
+/* Carrusel automático de categorías y acceso rápido: movimiento horizontal continuo */
 (function(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
   rails.forEach(function(rail){
-    if(rail.scrollWidth <= rail.clientWidth + 8) return;
-    var paused=false, timer;
-    function step(){
-      if(paused) return;
-      var item=rail.querySelector('a'); if(!item) return;
-      var gap=parseFloat(getComputedStyle(rail).gap)||8;
-      var next=rail.scrollLeft+item.getBoundingClientRect().width+gap;
-      if(next >= rail.scrollWidth-rail.clientWidth-4) next=0;
-      rail.scrollTo({left:next,behavior:'smooth'});
+    var paused=false, raf=0, resumeTimer=0, speed=0.22;
+    function tick(){
+      if(!paused && rail.scrollWidth > rail.clientWidth + 8){
+        var max=rail.scrollWidth-rail.clientWidth;
+        rail.scrollLeft += speed;
+        if(rail.scrollLeft >= max-1) rail.scrollLeft=0;
+      }
+      raf=requestAnimationFrame(tick);
     }
-    function start(){clearInterval(timer);timer=setInterval(step,5200)}
-    function pause(){paused=true;clearInterval(timer);}
-    function resume(){paused=false;start();}
+    function pause(){paused=true;clearTimeout(resumeTimer);}
+    function resume(){clearTimeout(resumeTimer);resumeTimer=setTimeout(function(){paused=false;},1800);}
     rail.addEventListener('mouseenter',pause);
-    rail.addEventListener('mouseleave',resume);
+    rail.addEventListener('mouseleave',function(){paused=false;});
     rail.addEventListener('touchstart',pause,{passive:true});
-    rail.addEventListener('touchend',function(){setTimeout(resume,2200)},{passive:true});
+    rail.addEventListener('touchend',resume,{passive:true});
     rail.addEventListener('pointerdown',pause,{passive:true});
-    start();
+    rail.addEventListener('wheel',resume,{passive:true});
+    tick();
   });
 })();
 
