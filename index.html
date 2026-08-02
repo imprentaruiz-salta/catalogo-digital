@@ -279,7 +279,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   </div>
 
   <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
-  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscar('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscar('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscar('pack')">Ver packs</button></div></div></div>
+  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div></div></div>
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
@@ -535,6 +535,17 @@ function sendWhatsApp() {
   msg += '\n¡Gracias por tu pedido! 😊';
 
   window.open('https://wa.me/' + WPP + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function buscarCombo(q) {
+  var input=document.getElementById('searchInput');
+  if(input) input.value=q;
+  buscar(q);
+  var first=document.querySelector('.product-card[data-hidden="false"]');
+  if(first){
+    var section=first.closest('.cat-section');
+    if(section) section.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 
 function buscar(q) {
