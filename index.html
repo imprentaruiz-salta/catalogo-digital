@@ -201,6 +201,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
   <img class="cat-thumb {{ size }}" src="/static/category_papel_real.jpg" alt="Papel higiénico">
   {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
   <img class="cat-thumb {{ size }}" src="/static/category_cocina_real.jpg" alt="Rollo de cocina">
+  {% elif n == 'jabones en pan' %}
+  <img class="cat-thumb {{ size }}" src="/static/category_jabones_pan.jpg" alt="Jabones en pan">
   {% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
 {%- endmacro %}
 
