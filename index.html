@@ -226,7 +226,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 <nav class="cat-nav" id="catNav">
   {% for cat in cats %}
   <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Ver categoría {{ cat }}" title="Ver {{ cat }}">
-    {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% else %}{{ cat }}{% endif %}
+    {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}
   </a>
   {% endfor %}
 </nav>
@@ -285,7 +285,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
   {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
     <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
-    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
+    <div class="quick-category-list">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div>
   </div>{% endif %}
 
   {% if showcase.total %}
@@ -307,7 +307,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
     <div class="cat-header">
       {{ cat_visual(cat, 'header') }}
       <div>
-        <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% else %}{{ cat }}{% endif %}</h2>
+        <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}</h2>
         <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
       </div>
     </div>
