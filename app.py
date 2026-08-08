@@ -285,6 +285,20 @@ def static_asset(filename):
         return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
+@app.route('/menu')
+def menu_digital():
+    return render_template('menu.html')
+
+@app.route('/fleming')
+@app.route('/fleming/')
+def fleming_brochure():
+    return render_template('fleming.html')
+
+@app.route('/fleming/cargar')
+@app.route('/fleming/cargar/')
+def fleming_cargar():
+    return render_template('fleming-cargar.html')
+
 @app.route('/')
 def index():
     cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
