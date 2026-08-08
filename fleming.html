@@ -87,6 +87,32 @@
 .catalog-grid .property-card.is-compact .action-button{min-height:31px;border-radius:5px;font-size:9.5px;line-height:1.15;padding:8px 9px}
 .catalog-grid .property-card.is-compact .card-actions .social-button{width:31px;height:31px}
 @media(max-width:560px){.catalog-grid .property-card.is-compact{padding:9px 9px 12px}.catalog-grid .property-card.is-compact .main-photo{height:205px}.catalog-grid .property-card.is-compact .mini{height:55px}.catalog-grid .property-card.is-compact h2{font-size:19px}.catalog-grid .property-card.is-compact .quick-facts{font-size:11.5px}}
+
+/* Plantilla compacta renovada: cada propiedad chica conserva foto, datos, precio e iconos. */
+@media(min-width:561px){
+  .catalog-grid .property-card.is-compact{
+    grid-column:1/-1;display:grid;grid-template-columns:minmax(240px,38%) minmax(0,1fr);
+    column-gap:18px;row-gap:0;align-items:start;padding:13px 15px 15px;
+  }
+  .catalog-grid .property-card.is-compact .card-label{grid-column:1/-1;grid-row:1;margin-bottom:9px}
+  .catalog-grid .property-card.is-compact .gallery-box{grid-column:1;grid-row:2 / span 6;margin:0}
+  .catalog-grid .property-card.is-compact h2{grid-column:2;grid-row:2;margin:2px 2px 5px;font-size:23px;line-height:1.12}
+  .catalog-grid .property-card.is-compact .quick-facts{grid-column:2;grid-row:3;margin:0 2px 8px;font-size:13px;line-height:1.45}
+  .catalog-grid .property-card.is-compact .property-details{grid-column:2;grid-row:4;margin:0 2px}
+  .catalog-grid .property-card.is-compact .price-location-row{grid-column:2;grid-row:5;margin:11px 2px 0}
+  .catalog-grid .property-card.is-compact .card-actions{grid-column:2;grid-row:6;margin:12px 2px 0;align-self:start}
+  .catalog-grid .property-card.is-compact .main-photo{height:205px}
+  .catalog-grid .property-card.is-compact .mini{height:48px}
+  .catalog-grid .property-card.is-compact .card-actions .social-button{width:auto;height:31px;padding:8px 9px}
+}
+@media(max-width:560px){
+  .catalog-grid .property-card.is-compact{display:block}
+  .catalog-grid .property-card.is-compact .card-label{margin-bottom:8px}
+  .catalog-grid .property-card.is-compact h2{font-size:21px;line-height:1.12;margin-top:13px}
+  .catalog-grid .property-card.is-compact .quick-facts{font-size:12px;line-height:1.45}
+  .catalog-grid .property-card.is-compact .card-actions{display:flex;flex-wrap:wrap;gap:5px}
+  .catalog-grid .property-card.is-compact .card-actions .social-button{width:auto;height:31px;padding:8px 9px}
+}
 </style>
 </head>
 <body>
