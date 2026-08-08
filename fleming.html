@@ -113,6 +113,12 @@
   .catalog-grid .property-card.is-compact .card-actions{display:flex;flex-wrap:wrap;gap:5px}
   .catalog-grid .property-card.is-compact .card-actions .social-button{width:auto;height:31px;padding:8px 9px}
 }
+
+/* Acceso claro para ampliar desde cualquier tarjeta compacta. */
+.card-label{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.expand-property{margin-left:auto;display:none;align-items:center;gap:3px;border:1px solid #c8d8cc;border-radius:999px;background:#f5faf5;color:var(--green);padding:5px 9px;font:600 10px Arial,sans-serif;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.property-card.is-compact .expand-property{display:inline-flex}
+.property-card.is-compact .expand-property:hover{background:#e5f0e6}
 </style>
 </head>
 <body>
@@ -139,13 +145,36 @@
   const grid=document.querySelector('.catalog-grid');
   if(!grid) return;
   const cards=[...grid.querySelectorAll('.property-card:not(.empty)')];
+  const interactive='a,button,input,textarea,select,summary,label,details,form,.location-popover';
   function selectCard(card,move){
     cards.forEach(c=>{c.classList.toggle('is-featured',c===card);c.classList.toggle('is-compact',c!==card);});
     if(move) setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),30);
   }
   const initial=cards.find(c=>c.classList.contains('is-featured'))||cards[0];
   selectCard(initial,false);
-  cards.forEach(card=>card.addEventListener('pointerdown',()=>selectCard(card,true),{capture:true}));
+  cards.forEach(card=>{
+    const label=card.querySelector('.card-label');
+    if(label){
+      const expand=document.createElement('button');
+      expand.type='button'; expand.className='expand-property';
+      expand.innerHTML='↗ <span>Ampliar</span>';
+      label.appendChild(expand);
+      expand.addEventListener('click',event=>{event.stopPropagation();selectCard(card,true);});
+    }
+    // Solo una zona neutra de la tarjeta cambia de tamaño. Los controles internos
+    // (mapa, descripción, formulario, enlaces e imágenes) siguen funcionando allí mismo.
+    card.addEventListener('click',event=>{
+      if(event.target.closest(interactive)) return;
+      selectCard(card,true);
+    });
+  });
+  // Cerrar una foto ampliada sin saltar al principio del catálogo.
+  document.addEventListener('click',event=>{
+    const close=event.target.closest('.zoom-close');
+    if(!close) return;
+    event.preventDefault();
+    history.replaceState(null,'','#venta');
+  });
 })();
 </script>
 </body>
