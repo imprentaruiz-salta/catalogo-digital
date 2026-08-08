@@ -119,10 +119,13 @@
 .expand-property{margin-left:auto;display:none;align-items:center;gap:3px;border:1px solid #c8d8cc;border-radius:999px;background:#f5faf5;color:var(--green);padding:5px 9px;font:600 10px Arial,sans-serif;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
 .property-card.is-compact .expand-property{display:inline-flex}
 .property-card.is-compact .expand-property:hover{background:#e5f0e6}
+
+/* Selector de idioma: visible y fácil de tocar en cualquier pantalla. */
+.language-picker{display:flex;align-items:center;gap:4px;margin-left:12px;white-space:nowrap}.language-label{font-size:10px;font-weight:bold;letter-spacing:.02em;opacity:.95;margin-right:3px}.language-picker button{border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.10);color:#fff;padding:5px 7px;font:11px Arial,sans-serif;cursor:pointer}.language-picker button:hover,.language-picker button.active{background:#fff;color:var(--green)}.language-picker button b{font-size:9px}.language-picker button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}html[dir=rtl] .language-picker{direction:rtl}@media(max-width:850px){.topbar .inner{flex-wrap:wrap}.language-picker{order:3;width:100%;justify-content:center;margin:9px 0 0;padding-top:8px;border-top:1px solid rgba(255,255,255,.18)}.language-label{font-size:10px}}@media(max-width:560px){.language-picker{gap:3px}.language-picker button{padding:7px 8px}.language-label{font-size:10px;margin-right:2px}}
 </style>
 </head>
 <body>
-  <header class="topbar"><div class="inner"><div class="brand"><span>FLEMING</span><span class="brand-sub">INMOBILIARIA Y ASOCIADOS · SALTA</span></div><nav class="nav"><details class="sales-dropdown"><summary>VENTAS⌄</summary><div class="sales-options"><a href="/fleming/cargar">CARGAR</a><a href="/fleming#mostrar">MOSTRAR</a></div></details><a href="#alquiler">ALQUILER</a><a href="#contacto">CONTACTO</a></nav></div></header>
+  <header class="topbar"><div class="inner"><div class="brand"><span>FLEMING</span><span class="brand-sub">INMOBILIARIA Y ASOCIADOS · SALTA</span></div><nav class="nav"><details class="sales-dropdown"><summary>VENTAS⌄</summary><div class="sales-options"><a href="/fleming/cargar">CARGAR</a><a href="/fleming#mostrar">MOSTRAR</a></div></details><a href="#alquiler">ALQUILER</a><a href="#contacto">CONTACTO</a></nav><div class="language-picker" data-no-translate aria-label="Ver en tu idioma"><span class="language-label">🌐 Ver en tu idioma</span><button type="button" data-lang="es" aria-label="Español">🇦🇷 <b>ES</b></button><button type="button" data-lang="en" aria-label="English">🇬🇧 <b>EN</b></button><button type="button" data-lang="zh" aria-label="中文">🇨🇳 <b>中文</b></button><button type="button" data-lang="he" aria-label="עברית">🇮🇱 <b>עברית</b></button></div></div></header>
   <main class="page">
     <div class="filters"><a class="filter active" href="#venta">Todas</a><a class="filter" href="#venta">Ventas</a><a class="filter" href="#alquiler">Alquiler</a></div>
     <section class="heading"><h1>Propiedades</h1><p>Propiedades en venta y alquiler en Salta</p></section>
@@ -177,5 +180,33 @@
   });
 })();
 </script>
-</body>
+<script>
+(function(){
+  const picker=document.querySelector('.language-picker');
+  if(!picker) return;
+  const dict={
+    'VENTAS⌄':{en:'SALES⌄',zh:'出售⌄',he:'מכירה⌄'},'ALQUILER':{en:'RENTALS',zh:'出租',he:'השכרה'},'CONTACTO':{en:'CONTACT',zh:'联系',he:'צור קשר'},'CARGAR':{en:'ADD PROPERTY',zh:'发布房源',he:'הוספת נכס'},'MOSTRAR':{en:'VIEW',zh:'查看',he:'הצג'},
+    'Ver en tu idioma':{en:'View in your language',zh:'选择语言',he:'לצפייה בשפה שלך'},'Todas':{en:'All',zh:'全部',he:'全部'},'Ventas':{en:'For sale',zh:'出售',he:'למכירה'},'Propiedades':{en:'Properties',zh:'房源',he:'נכסים'},'Propiedades en venta y alquiler en Salta':{en:'Properties for sale and rent in Salta',zh:'萨尔塔出售和出租房源',he:'נכסים למכירה ולהשכרה בסלטה'},
+    '01 · Venta · Departamento en Zona Shopping':{en:'01 · For sale · Apartment near the Shopping area',zh:'01 · 出售 · 购物区公寓',he:'01 · למכירה · דירה באזור הקניות'},'02 · Venta · Departamento en Barrio Bancario':{en:'02 · For sale · Apartment in Barrio Bancario',zh:'02 · 出售 · Barrio Bancario 公寓',he:'02 · למכירה · דירה בשכונת בנקריו'},
+    'Disponible para visitar':{en:'Available for visits',zh:'可预约看房',he:'זמין לביקורים'},'VENTA':{en:'FOR SALE',zh:'出售',he:'למכירה'},'APTO CRÉDITO':{en:'MORTGAGE ELIGIBLE',zh:'可申请贷款',he:'מתאים למשכנתא'},'Depto. con cochera':{en:'Apartment with parking',zh:'带车位公寓',he:'דירה עם חניה'},'Vendo departamento (Bancario)':{en:'Apartment for sale (Bancario)',zh:'出售公寓（Bancario）',he:'דירה למכירה (Bancario)'},
+    '1 dormitorio · Cochera · Zona Shopping':{en:'1 bedroom · Parking · Shopping area',zh:'1间卧室 · 车位 · 购物区',he:'חדר שינה 1 · חניה · אזור הקניות'},'3 dormitorios · Living comedor · Cochera cerrada':{en:'3 bedrooms · Living-dining room · Enclosed parking',zh:'3间卧室 · 客厅餐厅 · 封闭车位',he:'3 חדרי שינה · סלון ופינת אוכל · חניה סגורה'},'Descripción completa':{en:'Full description',zh:'完整描述',he:'תיאור מלא'},
+    'Quiero visitar':{en:'I want to visit',zh:'预约看房',he:'אני רוצה לבקר'},'Consultar por WhatsApp':{en:'Ask on WhatsApp',zh:'通过 WhatsApp 咨询',he:'בירור ב‑WhatsApp'},'Compartir':{en:'Share',zh:'分享',he:'שיתוף'},'Nueva propiedad':{en:'New property',zh:'新房源',he:'נכס חדש'},'Casa o departamento':{en:'House or apartment',zh:'房屋或公寓',he:'בית או דירה'},
+    '¿Buscás una propiedad?':{en:'Looking for a property?',zh:'正在寻找房产？',he:'מחפשים נכס?'},'Consultá por venta, alquiler o publicación de tu inmueble.':{en:'Ask us about buying, renting or listing your property.',zh:'咨询买卖、租赁或发布您的房产。',he:'שאלו אותנו על קנייה, השכרה או פרסום הנכס שלכם.'},'Volver al catálogo':{en:'Back to catalog',zh:'返回目录',he:'חזרה לקטלוג'},'Los espacios 03 a 06 quedan preparados para las próximas propiedades.':{en:'Spaces 03 to 06 are ready for upcoming properties.',zh:'03至06号位置已为新房源准备就绪。',he:'המקומות 03 עד 06 מוכנים לנכסים הבאים.'},
+    'Nombre y apellido':{en:'Full name',zh:'姓名',he:'שם מלא'},'Celular / WhatsApp':{en:'Phone / WhatsApp',zh:'手机 / WhatsApp',he:'טלפון / WhatsApp'},'Email':{en:'Email',zh:'电子邮箱',he:'אימייל'},'Día preferido':{en:'Preferred day',zh:'首选日期',he:'יום מועדף'},'Horario preferido':{en:'Preferred time',zh:'首选时间',he:'שעה מועדפת'},'Mensaje':{en:'Message',zh:'留言',he:'הודעה'},'× Cerrar formulario':{en:'× Close form',zh:'× 关闭表单',he:'× סגירת הטופס'},'Enviar solicitud por WhatsApp':{en:'Send request on WhatsApp',zh:'通过 WhatsApp 发送请求',he:'שליחת בקשה ב‑WhatsApp'},'Al enviar, se abrirá WhatsApp para coordinar la visita de esta propiedad.':{en:'WhatsApp will open to arrange a visit to this property.',zh:'发送后将打开 WhatsApp 以安排看房。',he:'לאחר השליחה ייפתח WhatsApp לתיאום ביקור בנכס.'},'Ampliar':{en:'View larger',zh:'放大查看',he:'הצגה גדולה'}
+  };
+  const nodes=[];
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  let n; while(n=walker.nextNode()){if(n.parentElement.closest('[data-no-translate],script,style')) continue; n._base=n.nodeValue; nodes.push(n);}
+  function apply(lang){
+    document.documentElement.lang=lang==='zh'?'zh-CN':lang==='he'?'he':'es';
+    document.documentElement.dir=lang==='he'?'rtl':'ltr';
+    nodes.forEach(node=>{const base=node._base, key=base.trim(); const value=lang==='es'?key:(dict[key]&&dict[key][lang])||key; node.nodeValue=base.replace(key,value);});
+    picker.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+    const label=picker.querySelector('.language-label'); if(label){const key='Ver en tu idioma';label.textContent='🌐 '+(lang==='es'?key:dict[key][lang]);}
+    localStorage.setItem('fleming-language',lang);
+  }
+  picker.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.lang)));
+  apply(localStorage.getItem('fleming-language')||'es');
+})();
+</script></body>
 </html>
