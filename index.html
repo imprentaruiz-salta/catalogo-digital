@@ -200,11 +200,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
- <img class="cat-thumb {{ size }}" src="/static/category_papel_real.jpg" alt="Papel higiénico">
+ <img class="cat-thumb {{ size }}" src="/static/category_papel_real.webp" alt="Papel higiénico">
  {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
- <img class="cat-thumb {{ size }}" src="/static/category_cocina_real.jpg" alt="Rollo de cocina">
+ <img class="cat-thumb {{ size }}" src="/static/category_cocina_real.webp" alt="Rollo de cocina">
  {% elif n == 'jabones en pan' %}
- <img class="cat-thumb {{ size }}" src="/static/category_jabones_pan.jpg" alt="Jabones en pan">
+ <img class="cat-thumb {{ size }}" src="/static/category_jabones_pan.webp" alt="Jabones en pan">
  {% elif n == 'acondicionador' %}
  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Acondicionador"><rect x="19" y="13" width="26" height="42" rx="7" fill="#c4b5fd"/><rect x="24" y="7" width="16" height="9" rx="3" fill="#7c3aed"/><path d="M25 35c5-7 12 7 17 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="25" r="4" fill="#fef3c7"/></svg>
  {% elif n == 'cepillos de dientes' %}
@@ -290,7 +290,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
  <!-- HERO -->
  <div class="hero">
- {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+ {% set banner_url = '/static/banner_abigail.webp' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
  {% if banner_url %}<div class="hero-banner"><img src="{{ banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
  <div class="hero-copy">
  <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
