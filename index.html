@@ -37,7 +37,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
 .logo-text span{font-size:11px;opacity:.85}
 .cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-.language-switch{display:flex;gap:4px;align-items:center;margin-left:auto;margin-right:8px}.language-switch button{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.13);color:#fff;border-radius:20px;padding:6px 8px;font-size:11px;font-weight:800;cursor:pointer;transition:.2s}.language-switch button.active,.language-switch button:hover{background:#fff;color:var(--gd)}
+.language-switch{display:flex;gap:4px;align-items:center;margin-left:auto;margin-right:8px}.language-switch button,.language-switch a{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.13);color:#fff;border-radius:20px;padding:6px 8px;font-size:11px;font-weight:800;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}.language-switch button.active,.language-switch a.active,.language-switch button:hover,.language-switch a:hover{background:#fff;color:var(--gd)}
 .cart-btn:hover{background:rgba(255,255,255,.35)}
 .search-bar{padding:0 16px 12px}
 .search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -228,6 +228,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  <h1>{{ catalogo.nombre }}</h1>
  <span>{{ catalogo.subtitulo }}</span>
  </div>
+ </div>
+ <div class="language-switch" role="group" aria-label="{{ 'Language' if request.args.get('lang') == 'en' else 'Idioma' }}">
+  <a href="/c/{{ catalogo.slug }}?v=20260809-separate-es" class="{{ 'active' if request.args.get('lang') != 'en' else '' }}" aria-label="{{ 'Spanish' if request.args.get('lang') == 'en' else 'Español' }}">🇪🇸 ES</a>
+  <a href="/c/{{ catalogo.slug }}?lang=en&v=20260809-separate-en" class="{{ 'active' if request.args.get('lang') == 'en' else '' }}" aria-label="{{ 'English' if request.args.get('lang') == 'en' else 'Inglés' }}">🇬🇧 EN</a>
  </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
