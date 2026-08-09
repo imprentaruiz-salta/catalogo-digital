@@ -43,7 +43,7 @@
       <p class="privacy">No se suben las fotos a internet desde esta herramienta: el recorte y el ZIP se hacen en el celular.</p>
     </section>
   </main>
-  <dialog id="editorDialog"><div class="editor"><div class="editor-head"><h3>Recortá esta foto</h3><button class="close" id="closeEditor" type="button" aria-label="Cerrar">×</button></div><div class="canvasbox"><canvas id="cropCanvas" width="360" height="360"></canvas></div><p class="editor-note">Arrastrá la imagen y usá el zoom para encuadrar el producto.</p><div class="zoomline"><span>−</span><input id="zoom" type="range" min="1" max="3" step="0.01" value="1"><span>＋</span></div><div class="editor-actions"><button class="reset" id="resetCrop" type="button">Centrar</button><button class="save" id="saveCrop" type="button">Guardar recorte</button></div></div></dialog>
+  <dialog id="editorDialog"><div class="editor"><div class="editor-head"><h3>Recortá esta foto</h3><button class="close" id="closeEditor" type="button" aria-label="Cerrar">×</button></div><div class="canvasbox"><canvas id="cropCanvas" width="360" height="360"></canvas></div><p class="editor-note">Ahora podés achicar más la imagen. Usá “Ver completa” para no cortar la parte de arriba y después arrastrá para acomodarla.</p><div class="zoomline"><span>−</span><input id="zoom" type="range" min="0.5" max="3" step="0.01" value="1"><span>＋</span></div><div class="editor-actions"><button class="reset" id="resetCrop" type="button">Centrar</button><button class="reset" id="fitCrop" type="button">Ver completa</button><button class="save" id="saveCrop" type="button">Guardar</button></div></div></dialog>
   <script>
   (()=>{
     const $=s=>document.querySelector(s), input=$('#fileInput'), work=$('#workCard'), list=$('#photoList'), count=$('#count'), process=$('#process'), notice=$('#notice'), success=$('#success'), download=$('#download'), dialog=$('#editorDialog'), canvas=$('#cropCanvas'), ctx=canvas.getContext('2d'), zoom=$('#zoom'), installBtn=$('#installBtn');
@@ -85,6 +85,7 @@
     $('#closeEditor').addEventListener('click',closeEditor);dialog.addEventListener('cancel',e=>{e.preventDefault();closeEditor();});
     zoom.addEventListener('input',()=>{const it=state.items[state.current];if(!it)return;it.zoom=+zoom.value;renderEditor();});
     $('#resetCrop').addEventListener('click',()=>{const it=state.items[state.current];if(!it)return;it.zoom=1;it.ox=0;it.oy=0;renderEditor();});
+    $('#fitCrop').addEventListener('click',()=>{const it=state.items[state.current];if(!it)return;it.zoom=0.55;it.ox=0;it.oy=0;renderEditor();});
     $('#saveCrop').addEventListener('click',()=>{const it=state.items[state.current];if(it)it.edited=true;closeEditor();});
     canvas.addEventListener('pointerdown',e=>{const it=state.items[state.current];if(!it)return;canvas.setPointerCapture(e.pointerId);state.drag={x:e.clientX,y:e.clientY,ox:it.ox,oy:it.oy};});
     canvas.addEventListener('pointermove',e=>{const it=state.items[state.current];if(!it||!state.drag)return;it.ox=state.drag.ox+(e.clientX-state.drag.x)*(360/canvas.getBoundingClientRect().width);it.oy=state.drag.oy+(e.clientY-state.drag.y)*(360/canvas.getBoundingClientRect().height);renderEditor();});
