@@ -229,7 +229,7 @@ def get_catalogo(slug='libreria-ruiz'):
     with get_db() as db: rows=db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()
     cats={}
     for row in rows: cats.setdefault(row['categoria'],{}).setdefault(row['marca'],[]).append(dict(row))
-    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}
+    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}     # Abigail: order categories as a simple shopping journey, not alphabetically.     if slug == 'limpieza-abigail':         orden.update({cat:i for i,cat in enumerate([             'jabones en pan','papel higienicos','rollo de cocina','shampoo',             'acondicionador','desodorantes','pastas dentales','cepillos de dientes',             'protectores diarios','máquinas de afeitar','talcos','cremas'         ])})     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
 def get_showcase(slug='libreria-ruiz'):
     # Curated visual shelves are derived from the catalog until explicit merchandising fields are added.
