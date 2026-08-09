@@ -230,8 +230,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  </div>
  </div>
  <div class="language-switch" role="group" aria-label="{{ 'Language' if request.args.get('lang') == 'en' else 'Idioma' }}">
-  <a href="/c/{{ catalogo.slug }}?v=20260809-separate-es" class="{{ 'active' if request.args.get('lang') != 'en' else '' }}" aria-label="{{ 'Spanish' if request.args.get('lang') == 'en' else 'Español' }}">🇪🇸 ES</a>
-  <a href="/c/{{ catalogo.slug }}?lang=en&v=20260809-separate-en" class="{{ 'active' if request.args.get('lang') == 'en' else '' }}" aria-label="{{ 'English' if request.args.get('lang') == 'en' else 'Inglés' }}">🇬🇧 EN</a>
+  <a href="/c/{{ catalogo.slug }}?v=20260809-webp-es" class="{{ 'active' if request.args.get('lang') != 'en' else '' }}" aria-label="{{ 'Spanish' if request.args.get('lang') == 'en' else 'Español' }}">🇪🇸 ES</a>
+  <a href="/c/{{ catalogo.slug }}?lang=en&v=20260809-webp-en" class="{{ 'active' if request.args.get('lang') == 'en' else '' }}" aria-label="{{ 'English' if request.args.get('lang') == 'en' else 'Inglés' }}">🇬🇧 EN</a>
  </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
