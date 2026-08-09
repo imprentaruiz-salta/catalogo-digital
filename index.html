@@ -608,7 +608,7 @@ function toggleBrand(btn) {
  start();
 })();
 
-/* Carrusel automático de categorías: avance lento, continuo y paus-able. */
+/* Carrusel automático de categorías: avance lento, continuo y paus-able (15 px/s). */
 (function(){
  var SPEED=15; // px/s: visible en móvil sin resultar invasivo
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
@@ -623,7 +623,7 @@ function toggleBrand(btn) {
    clone.setAttribute('tabindex','-1');
    track.appendChild(clone);
   });
-  var paused=false, loopWidth=0, lastTime=0, resumeTimer;
+  var paused=false, loopWidth=0, lastTime=0, position=0, resumeTimer;
   function measure(){
    var first=track.children[0], second=track.children[original.length];
    if(!first || !second) return;
@@ -632,25 +632,24 @@ function toggleBrand(btn) {
    rail.classList.add('auto-marquee');
    rail.style.scrollSnapType='none';
   }
-  function pause(){paused=true;clearTimeout(resumeTimer);}
+  function pause(){position=rail.scrollLeft;paused=true;clearTimeout(resumeTimer);}
   function resumeSoon(){
    clearTimeout(resumeTimer);
-   resumeTimer=setTimeout(function(){paused=false;},2200);
+   resumeTimer=setTimeout(function(){position=rail.scrollLeft;paused=false;},2200);
   }
   function tick(now){
    if(!lastTime) lastTime=now;
    var elapsed=Math.min(now-lastTime,100);
    lastTime=now;
    if(!paused && loopWidth>0 && rail.scrollWidth>rail.clientWidth+8){
-    rail.scrollLeft += SPEED*elapsed/1000;
-    if(rail.scrollLeft>=loopWidth) rail.scrollLeft-=loopWidth;
+    position += SPEED*elapsed/1000;
+    if(position>=loopWidth) position=position%loopWidth;
+    rail.scrollLeft=position;
    }
    requestAnimationFrame(tick);
   }
   measure();
   window.addEventListener('resize',measure,{passive:true});
-  rail.addEventListener('mouseenter',pause);
-  rail.addEventListener('mouseleave',function(){paused=false;});
   rail.addEventListener('pointerdown',pause,{passive:true});
   rail.addEventListener('pointerup',resumeSoon,{passive:true});
   rail.addEventListener('pointercancel',resumeSoon,{passive:true});
