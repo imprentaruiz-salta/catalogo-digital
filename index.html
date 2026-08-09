@@ -1,2 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#128C7E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">
+<link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
+{% set share_image = 'https://catalogo-app-zm3w.onrender.com/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+{% set share_description = catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.' %}
+<meta name="description" content="{{ share_description }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta property="og:description" content="{{ share_description }}">
+<meta property="og:url" content="{{ request.url }}">
+{% if share_image %}<meta property="og:image" content="{{ share_image }}">
+<meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
+<meta name="twitter:description" content="{{ share_description }}">
+{% if share_image %}<meta name="twitter:image" content="{{ share_image }}">{% endif %}
+<title>{{ catalogo.nombre }} — Catálogo digital</title>
+<style>
+:root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
-<script>(function(){var m={"acondicionador":"<rect x='19' y='13' width='26' height='42' rx='7' fill='#c4b5fd'/><rect x='24' y='7' width='16' height='9' rx='3' fill='#7c3aed'/><path d='M25 35c5-7 12 7 17 0' fill='none' stroke='#fff' stroke-width='3' stroke-linecap='round'/><circle cx='32' cy='25' r='4' fill='#fef3c7'/>","cepillos de dientes":"<path d='M16 48L43 17' stroke='#38bdf8' stroke-width='7' stroke-linecap='round'/><path d='M42 18l6-7m-2 12l7-5m-11 0l2-9' stroke='#2563eb' stroke-width='3' stroke-linecap='round'/><path d='M25 54L52 23' stroke='#f9a8d4' stroke-width='6' stroke-linecap='round'/><path d='M51 24l6-7m-2 12l6-5m-11 0l2-9' stroke='#db2777' stroke-width='3' stroke-linecap='round'/>","cremas":"<path d='M18 25h28v27a5 5 0 0 1-5 5H23a5 5 0 0 1-5-5z' fill='#f9a8d4'/><path d='M23 25v-7h18v7' fill='#fce7f3' stroke='#db2777' stroke-width='2'/><rect x='27' y='12' width='10' height='7' rx='2' fill='#db2777'/><path d='M25 38h14' stroke='#fff' stroke-width='3' stroke-linecap='round'/><circle cx='32' cy='46' r='5' fill='#fff' opacity='.8'/>","máquinas de afeitar":"<path d='M28 22h8v28a4 4 0 0 1-8 0z' fill='#60a5fa'/><rect x='19' y='11' width='26' height='13' rx='4' fill='#1e40af'/><path d='M22 14h20M22 19h20' stroke='#bfdbfe' stroke-width='3' stroke-linecap='round'/><circle cx='32' cy='31' r='3' fill='#dbeafe'/>","protectores diarios":"<path d='M22 10h20l9 9v27a7 7 0 0 1-7 7H20a7 7 0 0 1-7-7V17z' fill='#fda4af'/><path d='M42 10v12h12' fill='#ffe4e6'/><path d='M23 35c6-10 12 10 18 0' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round'/><path d='M24 43h16' stroke='#be123c' stroke-width='3' stroke-linecap='round'/>","talcos":"<path d='M21 21h22v31a5 5 0 0 1-5 5H26a5 5 0 0 1-5-5z' fill='#fde68a'/><path d='M20 21h24' stroke='#b45309' stroke-width='3'/><path d='M24 14h16v8H24z' fill='#f59e0b'/><rect x='27' y='10' width='10' height='5' rx='2' fill='#92400e'/><circle cx='32' cy='38' r='7' fill='#fff' opacity='.85'/><path d='M26 48h12' stroke='#b45309' stroke-width='3' stroke-linecap='round'/>"};document.querySelectorAll('.cat-nav a,.quick-category,.cat-header').forEach(function(e){var t=(e.getAttribute('data-cat')||e.textContent).toLowerCase().trim(),k=Object.keys(m).find(function(x){return t.indexOf(x)>=0});if(k){var o=e.querySelector('.icon');if(o){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('class','cat-svg '+(e.classList.contains('cat-header')?'header':'nav'));s.setAttribute('viewBox','0 0 64 64');s.setAttribute('role','img');s.setAttribute('aria-label',k[0].toUpperCase()+k.slice(1));s.innerHTML=m[k];o.replaceWith(s)}}})})();</script>
+/* HEADER */
+header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:28px}
+.logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.logo-text span{font-size:11px;opacity:.85}
+.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.cart-btn:hover{background:rgba(255,255,255,.35)}
+.search-bar{padding:0 16px 12px}
+.search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
+/* CAT NAV */
+.cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:7px 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100;display:flex;gap:7px}
+.cat-nav::-webkit-scrollbar{display:none}.cat-nav{scroll-snap-type:x proximity}.cat-nav a{scroll-snap-align:start}.cat-nav a:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.cat-nav a{display:inline-flex;flex:0 0 auto;min-width:74px;min-height:62px;padding:7px 9px;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:1.05;font-weight:700;color:var(--mut);text-decoration:none;border:2px solid transparent;border-radius:13px;transition:.2s}
+.cat-nav a.active,.cat-nav a:hover{color:var(--gd);border-color:var(--g);background:#effcf3}
+.cat-nav a .icon{font-size:29px;line-height:1;margin:0}.cat-nav a .cat-thumb{width:32px;height:32px;border-radius:50%;object-fit:contain;background:#fff;vertical-align:middle;border:1px solid #dbeafe}.cat-nav a .cat-visual{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;border:1px solid #dbeafe}.cat-svg{display:inline-block;vertical-align:middle;transition:transform .18s ease,filter .18s ease;cursor:pointer}.cat-svg.nav{width:34px;height:34px}.cat-svg.header{width:58px;height:58px;flex:none}.cat-nav a:hover .cat-svg,.cat-nav a:focus-visible .cat-svg,.cat-nav a:active .cat-svg,.quick-category:active .cat-svg{transform:scale(1.16);filter:drop-shadow(0 3px 4px rgba(18,140,126,.28))}.cat-header .cat-svg{transition:transform .2s ease}.cat-header .cat-svg:hover{transform:scale(1.08)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
+.hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
+.hero h2{font-size:20px;font-weight:800;color:var(--gd);margin-bottom:6px}
+.hero p{font-size:13px;color:var(--mut)}
+.hero-banner{position:relative;overflow:hidden;border-radius:16px;margin:-8px -4px 14px;background:#dff7e8;min-height:150px;box-shadow:0 3px 14px rgba(0,0,0,.10)}
+.hero-banner img{display:block;width:100%;height:auto;min-height:120px;max-height:260px;object-fit:contain;object-position:center;background:#dff7e8;transition:transform .5s ease}
+.hero-banner:hover img{transform:scale(1.025)}
+.hero-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(0,0,0,.20));pointer-events:none}
+.hero-copy{display:flex;flex-direction:column;align-items:center;gap:7px}
+.hero-kicker{display:inline-flex;align-items:center;gap:6px;color:var(--gd);font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.hero-kicker span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;font-size:15px}
+.hero-steps{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:5px}
+.hero-step{padding:7px 10px;border-radius:50px;background:rgba(255,255,255,.82);color:var(--gd);font-size:11px;font-weight:800;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+@media (prefers-reduced-motion:reduce){.hero-banner img{transition:none}.hero-banner:hover img{transform:none}}
+
+/* VIDRIERA VISUAL */
+.showcase-wrap{margin:0 12px 24px}
+.showcase-section{margin:0 0 18px;padding:14px 12px 16px;background:#fff;border-radius:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden}
+.showcase-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.showcase-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:850;letter-spacing:-.2px}
+.showcase-title .showcase-icon{font-size:25px}
+.showcase-note{font-size:11px;color:var(--mut);white-space:nowrap}
+.showcase-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(156px,42%);gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin;scroll-behavior:smooth}.showcase-rail.is-auto{scrollbar-width:none}.showcase-rail.is-auto::-webkit-scrollbar{display:none}.showcase-rail.is-paused{scroll-behavior:auto}.showcase-progress{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--mut);font-size:11px}.showcase-progress-track{height:5px;flex:1;background:#e5eee8;border-radius:9px;overflow:hidden}.showcase-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--gd));border-radius:9px;transition:width .25s ease}.showcase-progress-hint{white-space:nowrap}.showcase-section.is-moving .showcase-progress-bar{animation:progressPulse 1.2s ease-in-out infinite alternate}@keyframes progressPulse{from{opacity:.65}to{opacity:1}}
+.showcase-card{scroll-snap-align:start;min-width:0;background:#fbfffc;border:1px solid #e5eee8;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative}
+.showcase-card .showcase-img{height:132px;background:#f4f7f5;display:flex;align-items:center;justify-content:center;font-size:42px}
+.showcase-card .showcase-img img{width:100%;height:100%;object-fit:contain;background:#fff}
+.showcase-card-body{padding:9px}
+.showcase-card-name{font-size:13px;font-weight:800;line-height:1.25;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.showcase-brand{font-size:10px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
+.showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
+.showcase-add{width:32px;height:32px;flex:none}
+.showcase-tag{position:absolute;top:7px;left:7px;background:#ffb703;color:#573600;border-radius:50px;padding:4px 7px;font-size:9px;font-weight:850;box-shadow:0 1px 4px rgba(0,0,0,.13)}.product-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 5px}.product-badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:850;line-height:1}.badge-new{background:#dcfce7;color:#166534}.badge-offer{background:#ffedd5;color:#9a3412}.badge-best{background:#fef3c7;color:#92400e}.stock-note{font-size:10px;color:#15803d;font-weight:750;margin:3px 0 5px}.stock-low{color:#b45309}.stock-out{color:#b91c1c}.price-note{font-size:10px;color:#6b7280;font-weight:700;margin:2px 0 6px}.info-strip{margin:0 12px 16px;padding:12px 14px;background:#fff;border:2px solid #b7ebc6;border-radius:15px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:12px;color:#14532d}.info-strip strong{display:block;color:#128c7e;font-size:14px;margin-bottom:5px}.combo-grid{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none}.combo-grid::-webkit-scrollbar{display:none}.combo-grid.is-paused{scroll-behavior:auto}.combo-card{min-width:210px;background:linear-gradient(135deg,#fff7ed,#fffbeb);border:2px solid #fed7aa;border-radius:14px;padding:12px;scroll-snap-align:start}.combo-progress{font-size:10px;color:#9a3412;text-align:center;margin-top:7px;font-weight:750;opacity:.8}.combo-card h3{font-size:14px;color:#9a3412;margin-bottom:4px}.combo-card p{font-size:11px;color:#7c2d12;margin-bottom:8px}.combo-card button{border:0;border-radius:20px;background:#f97316;color:#fff;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer}
+.showcase-empty{padding:14px;color:var(--mut);font-size:12px;background:#f8faf9;border-radius:12px}
+@media(max-width:599px){.showcase-wrap{margin:0 8px 20px}.showcase-section{padding:12px 9px 13px}.showcase-title{font-size:16px}.showcase-title .showcase-icon{font-size:22px}.showcase-note{font-size:10px}.showcase-rail{grid-auto-columns:minmax(145px,47%)}.showcase-card .showcase-img{height:122px}}
+
+/* SECCIONES */
+.cat-section{margin:0 12px 24px}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.cat-header .cat-emoji{font-size:42px;line-height:1;filter:saturate(1.12)}.cat-header .cat-visual{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:16px;border:1px solid #dbeafe;flex:none}
+.cat-header h2{font-size:20px;font-weight:800;color:var(--txt);letter-spacing:-.2px}
+.cat-header .cat-count{font-size:12px;color:var(--mut);margin-top:2px}
+
+/* MARCA ACCORDION */
+.brand-block{margin-bottom:12px;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.07)}
+.brand-header{background:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:none;width:100%;text-align:left;font-size:15px;font-weight:700;color:var(--txt);border-left:4px solid var(--g)}
+.brand-header:hover{background:#f9fffe}
+.brand-header .brand-left{display:flex;align-items:center;gap:10px}
+.brand-header .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800}
+.brand-header .chevron{font-size:12px;color:var(--mut);transition:.3s}
+.brand-header.open .chevron{transform:rotate(180deg)}
+.brand-products{display:none;background:#fafafa;padding:12px}
+.brand-products.open{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+
+/* PRODUCTO CARD */
+.product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);transition:.2s;min-height:245px}
+.product-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
+.product-card[data-hidden="true"]{display:none}
+.prod-img{width:100%;height:150px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
+.prod-img img{width:100%;height:100%;object-fit:contain;background:#fff}
+.prod-body{padding:10px}
+.prod-code{font-size:9px;color:#94a3b8;font-family:monospace;margin-bottom:3px;opacity:.8}
+.prod-name{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.prod-desc{font-size:11px;color:var(--mut);margin-bottom:8px;line-height:1.4}
+.prod-footer{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.prod-price{font-size:17px;font-weight:800;color:var(--gd)}
+.prod-price small{font-size:9px;color:var(--mut);display:block;font-weight:400}
+.prod-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.buy-now-btn{background:#fff;border:1px solid var(--gd);color:var(--gd);border-radius:50px;padding:7px 9px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}.buy-now-btn:hover{background:#effcf3}.add-btn{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1}.add-btn:hover{transform:scale(1.15)}
+.prod-img,.prod-name{cursor:pointer}.prod-img:focus-visible,.prod-name:focus-visible{outline:3px solid #86efac;outline-offset:2px}
+/* VENTANA AMPLIADA DEL PRODUCTO */
+.product-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.64);z-index:700;padding:18px;align-items:center;justify-content:center}.product-overlay.open{display:flex}.product-modal{position:relative;width:min(460px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.3);animation:modalIn .22s ease}.product-modal-close{position:absolute;right:12px;top:10px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.92);font-size:24px;line-height:1;cursor:pointer;z-index:2}.modal-product-image{height:260px;border-radius:17px;background:#f5f8f6;display:flex;align-items:center;justify-content:center;font-size:70px;overflow:hidden;margin-bottom:14px}.modal-product-image img{width:100%;height:100%;object-fit:contain;background:#fff}.modal-product-code{font-size:10px;color:#94a3b8;font-family:monospace}.modal-product-name{font-size:23px;font-weight:850;line-height:1.2;margin:5px 0}.modal-product-brand{font-size:13px;color:var(--mut)}.modal-product-desc{font-size:14px;color:#475569;line-height:1.45;margin:12px 0;min-height:20px}.modal-product-price{font-size:25px;color:var(--gd);font-weight:900;margin:10px 0 14px}.modal-product-actions{display:flex;gap:8px}.modal-product-actions button{flex:1;border:0;border-radius:50px;padding:13px 10px;font-size:14px;font-weight:800;cursor:pointer}.modal-buy{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.modal-add{background:#effcf3;color:var(--gd);border:1px solid #b7ebc6!important}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}
+}
+
+/* FLOAT CART */
+.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}.float-whatsapp{right:20px;bottom:20px}.quick-action-row{display:flex;gap:9px;margin:0 12px 16px}.quick-action{flex:1;border:0;border-radius:13px;padding:12px 9px;font-weight:850;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.1)}.quick-action-cart{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.quick-action-wa{background:#fff;border:2px solid #25d366;color:#128c7e}
+.float-cart.visible{display:flex}
+
+/* CARRITO MODAL */
+.cart-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
+.cart-overlay.open{display:block}
+.cart-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:80vh;overflow-y:auto;z-index:500;transform:translateY(100%);transition:.35s cubic-bezier(.4,0,.2,1)}
+.cart-modal.open{transform:translateY(0)}
+.cart-modal h3{font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--brd)}
+.cart-item-name{font-size:13px;font-weight:600;flex:1}
+.cart-item-price{font-size:13px;color:var(--gd);font-weight:700;margin:0 10px}
+.qty-ctrl{display:flex;align-items:center;gap:8px}
+.qty-btn{background:var(--bg);border:1px solid var(--brd);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-val{font-size:14px;font-weight:700;min-width:20px;text-align:center}
+.cart-total{font-size:17px;font-weight:800;color:var(--gd);padding:14px 0 6px;text-align:right}
+
+/* PAGO */
+.pay-title{font-size:13px;font-weight:700;color:var(--txt);margin:12px 0 8px}
+.pay-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pay-opt{padding:8px 14px;border:2px solid var(--brd);border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.pay-opt.selected,.pay-opt:hover{border-color:var(--g);background:#e8f5e9;color:var(--gd)}
+
+/* NOMBRE */
+.nombre-input{width:100%;padding:12px 16px;border:2px solid var(--brd);border-radius:50px;font-size:14px;margin-bottom:14px;outline:none}
+.nombre-input:focus{border-color:var(--g)}
+
+/* BTN WPP */
+.wpp-btn{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.close-btn{width:100%;background:var(--bg);border:none;padding:12px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer}
+
+/* EMPTY */
+.empty-cart{text-align:center;padding:30px 0;color:var(--mut);font-size:14px}
+.no-results{text-align:center;padding:40px;color:var(--mut);font-size:14px;display:none}
+
+/* BOTÓN FLOTANTE WHATSAPP */
+.float-whatsapp{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 5px 18px rgba(18,140,126,.45);z-index:350;transition:transform .2s,box-shadow .2s;animation:waPulse 2.5s infinite}
+.float-whatsapp:hover{transform:scale(1.08);box-shadow:0 7px 24px rgba(18,140,126,.6)}
+.float-whatsapp svg{width:31px;height:31px;fill:currentColor}
+.float-whatsapp .wa-label{position:absolute;right:68px;white-space:nowrap;background:#fff;color:var(--txt);font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);opacity:0;transform:translateX(6px);pointer-events:none;transition:.2s}
+.float-whatsapp:hover .wa-label{opacity:1;transform:translateX(0)}
+@keyframes waPulse{0%,70%,100%{box-shadow:0 5px 18px rgba(18,140,126,.45)}35%{box-shadow:0 5px 0 9px rgba(37,211,102,.12),0 5px 22px rgba(18,140,126,.55)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* AJUSTES ESPECIALES PARA CELULAR */
+@media(max-width:599px){
+  body{font-size:14px;overflow-x:hidden;padding-bottom:8px}
+  header{position:sticky;top:0}
+  .hdr-top{padding:10px 12px;min-height:58px}
+  .logo-area{gap:7px;min-width:0}.logo-icon{font-size:24px}.logo-text{min-width:0}.logo-text h1{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logo-text span{font-size:10px}
+  .cart-btn{padding:8px 11px;font-size:13px;flex-shrink:0}
+  .search-bar{padding:0 12px 10px}.search-bar input{height:42px;font-size:15px;padding:10px 14px}
+  .cat-nav{top:0;padding:6px 5px;position:sticky}.cat-nav a{min-width:68px;min-height:60px;padding:6px 7px;font-size:10px}.cat-nav a .icon{font-size:27px}.cat-nav a .cat-thumb,.cat-nav a .cat-visual{width:30px;height:30px}.cat-svg.nav{width:30px;height:30px}
+  .hero{margin:10px 10px 16px;padding:18px 14px}.hero h2{font-size:19px}.hero p{font-size:12px;line-height:1.45}.hero-banner{margin:-7px -4px 12px;min-height:130px}.hero-banner img{height:auto;min-height:130px;max-height:none;object-fit:contain}.hero-step{padding:6px 8px;font-size:10px}
+  .cat-section{margin:0 8px 20px}.cat-header{padding:12px;margin-bottom:10px}.cat-header .cat-emoji{font-size:36px}.cat-header .cat-visual{width:50px;height:50px}.cat-svg.header{width:50px;height:50px}.cat-header h2{font-size:18px}
+  .brand-block{margin-bottom:9px}.brand-header{padding:12px 13px;font-size:14px}.brand-header .brand-icon{width:32px;height:32px}
+  .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
+  .product-card{min-width:0;border-radius:11px}.prod-img{height:126px;font-size:40px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:13px;min-height:34px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:16px}.add-btn{width:34px;height:34px;font-size:21px}
+  .float-cart{bottom:14px;padding:12px 20px;font-size:14px;max-width:calc(100% - 130px);overflow:hidden;text-overflow:ellipsis}.float-whatsapp{right:12px;bottom:14px;width:50px;height:50px}.float-whatsapp svg{width:27px;height:27px}.float-whatsapp .wa-label{display:none}
+  .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
+}
+
+@media(min-width:600px){
+  .brand-products.open{grid-template-columns:repeat(3,1fr)}
+  .cat-section{margin:0 24px 24px}
+}
+.catalog-section-title{text-align:center;font-size:18px;font-weight:900;color:#128c7e;margin:14px 12px 10px;padding:10px;border-bottom:3px solid #25d366}.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.quick-category-list::-webkit-scrollbar{display:none}.quick-category-list.auto-marquee{overflow:hidden;scroll-snap-type:none;justify-content:flex-start}.quick-category-list.auto-marquee .category-track{display:flex;flex:0 0 auto;gap:0;will-change:transform;animation:categoryMarquee var(--category-duration,12s) linear infinite}.quick-category-list.auto-marquee .quick-category{scroll-snap-align:none;margin-right:8px}.quick-category-list.auto-marquee .quick-category:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}@keyframes categoryMarquee{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--category-shift),0,0)}}.quick-category-list.auto-marquee.is-paused .category-track{animation-play-state:paused}.quick-category-list.auto-marquee:hover,.quick-category-list.auto-marquee:active{animation-play-state:paused}.quick-category{flex:0 0 145px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center;scroll-snap-align:start}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.cat-thumb{width:54px;height:54px;object-fit:contain;display:block}.cat-thumb.nav{width:38px;height:38px}.cat-thumb.header{width:62px;height:62px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+{% macro cat_visual(cat, size='nav') -%}
+  {% set n = cat|lower %}
+  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
+  <img class="cat-thumb {{ size }}" src="/static/category_papel_real.jpg" alt="Papel higiénico">
+  {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
+  <img class="cat-thumb {{ size }}" src="/static/category_cocina_real.jpg" alt="Rollo de cocina">
+  {% elif n == 'jabones en pan' %}
+  <img class="cat-thumb {{ size }}" src="/static/category_jabones_pan.jpg" alt="Jabones en pan">
+  {% elif n == 'acondicionador' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Acondicionador"><rect x="19" y="13" width="26" height="42" rx="7" fill="#c4b5fd"/><rect x="24" y="7" width="16" height="9" rx="3" fill="#7c3aed"/><path d="M25 35c5-7 12 7 17 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="25" r="4" fill="#fef3c7"/></svg>
+  {% elif n == 'cepillos de dientes' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Cepillos de dientes"><path d="M16 48L43 17" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/><path d="M42 18l6-7m-2 12l7-5m-11 0l2-9" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/><path d="M18 50L11 57" stroke="#f97316" stroke-width="6" stroke-linecap="round"/><path d="M25 54L52 23" stroke="#f9a8d4" stroke-width="6" stroke-linecap="round"/><path d="M51 24l6-7m-2 12l6-5m-11 0l2-9" stroke="#db2777" stroke-width="3" stroke-linecap="round"/></svg>
+  {% elif n == 'cremas' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Cremas"><path d="M18 25h28v27a5 5 0 0 1-5 5H23a5 5 0 0 1-5-5z" fill="#f9a8d4"/><path d="M23 25v-7h18v7" fill="#fce7f3" stroke="#db2777" stroke-width="2"/><rect x="27" y="12" width="10" height="7" rx="2" fill="#db2777"/><path d="M25 38h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="46" r="5" fill="#fff" opacity=".8"/></svg>
+  {% elif n == 'máquinas de afeitar' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Máquinas de afeitar"><path d="M28 22h8v28a4 4 0 0 1-8 0z" fill="#60a5fa"/><rect x="19" y="11" width="26" height="13" rx="4" fill="#1e40af"/><path d="M22 14h20M22 19h20" stroke="#bfdbfe" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="31" r="3" fill="#dbeafe"/></svg>
+  {% elif n == 'protectores diarios' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Protectores diarios"><path d="M22 10h20l9 9v27a7 7 0 0 1-7 7H20a7 7 0 0 1-7-7V17z" fill="#fda4af"/><path d="M42 10v12h12" fill="#ffe4e6"/><path d="M23 35c6-10 12 10 18 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M24 43h16" stroke="#be123c" stroke-width="3" stroke-linecap="round"/></svg>
+  {% elif n == 'talcos' %}
+  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Talcos"><path d="M21 21h22v31a5 5 0 0 1-5 5H26a5 5 0 0 1-5-5z" fill="#fde68a"/><path d="M20 21h24" stroke="#b45309" stroke-width="3"/><path d="M24 14h16v8H24z" fill="#f59e0b"/><rect x="27" y="10" width="10" height="5" rx="2" fill="#92400e"/><circle cx="32" cy="38" r="7" fill="#fff" opacity=".85"/><path d="M26 48h12" stroke="#b45309" stroke-width="3" stroke-linecap="round"/></svg>
+  {% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
+{%- endmacro %}
+
+<header>
+  <div class="hdr-top">
+    <div class="logo-area">
+      <img src="{{ catalogo.logo or 'https://share.zapia.com/lw6ro8nz7tp7k487va08fu' }}" alt="{{ catalogo.nombre }}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;background:#111">
+      <div class="logo-text">
+        <h1>{{ catalogo.nombre }}</h1>
+        <span>{{ catalogo.subtitulo }}</span>
+      </div>
+    </div>
+    <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar producto o marca..." oninput="buscar(this.value)"><select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
+  </div>
+</header>
+
+<!-- NAV CATEGORÍAS -->
+<nav class="cat-nav" id="catNav">
+  {% for cat in cats %}
+  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Ver categoría {{ cat }}" title="Ver {{ cat }}">
+    {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}
+  </a>
+  {% endfor %}
+</nav>
+<div class="quick-action-row" aria-label="Acciones rápidas">
+  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
+  <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>
+</div>
+
+<!-- Contacto rápido por WhatsApp -->
+<a class="float-whatsapp" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp">
+  <span class="wa-label">¿Necesitás ayuda?</span>
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>
+</a>
+
+<main>
+  {% macro showcase_card(p, tag='') -%}
+  <article class="showcase-card">
+    {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
+    <div class="showcase-img">
+      {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+    </div>
+    <div class="showcase-card-body">
+      {% if p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if p.codigo in ['AB-PN-008','AB-PH-018'] %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% elif p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}
+      <div class="showcase-card-name">{{ p.nombre|product_name }}</div>
+      <div class="showcase-brand">{{ p.marca }} · {{ 'rollo de cocina' if p.categoria|lower == 'pañuelitos' else p.categoria }}</div>
+      <div class="price-note">{{ price_label(p) }}</div>
+      <div class="stock-note">✅ Disponible</div>
+      <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+    </div>
+  </article>
+  {%- endmacro %}
+{% macro product_badges(p) -%}
+  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
+  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
+  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
+  {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+{%- endmacro %}
+{% macro stock_note(p) -%}
+  {% if p.stock_actual|default(0)|int > 0 %}<div class="stock-note">✅ Disponible · {{ p.stock_actual }} unidades</div>{% else %}<div class="stock-note">✅ Disponible</div>{% endif %}
+{%- endmacro %}
+
+  <!-- HERO -->
+  <div class="hero">
+    {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+    {% if banner_url %}<div class="hero-banner"><img src="{{ banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
+    <div class="hero-copy">
+      <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
+      <h2>{{ catalogo.nombre }}</h2>
+      <p>Todo se entiende de un vistazo: foto, marca y precio.</p>
+      <div class="hero-steps" aria-label="Pasos para hacer un pedido"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">🛒 Pedí</span></div>
+    </div>
+  </div>
+
+  <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
+  <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid" id="comboRail"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div></div><div class="combo-progress">Deslizá ↔ · mirá todos los combos</div></div>
+
+  {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
+    <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
+    <div class="quick-category-list" id="availableCategories"><div class="category-track">{% for cat, marcas in cats.items() %}<a href="#sec-{{ loop.index }}" class="quick-category">{{ cat_visual(cat, 'nav') }}<span>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat|title }}{% endif %}</span></a>{% endfor %}</div></div>
+  </div>{% endif %}
+
+  {% if showcase.total %}
+  <section class="showcase-wrap" aria-label="Vidriera visual">
+    {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">✨</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.destacados|length }}</span></div></div>{% endif %}
+    {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🆕</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.novedades|length }}</span></div></div>{% endif %}
+    {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🏷️</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.ofertas|length }}</span></div></div>{% endif %}
+    {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">💡</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.recomendaciones|length }}</span></div></div>{% endif %}
+    {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🔥</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.pedidos|length }}</span></div></div>{% endif %}
+  </section>
+  {% endif %}
+  <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
+  <!-- CATEGORÍAS -->
+  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
+  {% for cat, marcas in cats.items() %}
+  {% set total = namespace(n=0) %}
+  {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
+  <section class="cat-section" id="sec-{{ loop.index }}">
+    <div class="cat-header">
+      {{ cat_visual(cat, 'header') }}
+      <div>
+        <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}</h2>
+        <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
+      </div>
+    </div>
+
+    {% for marca, productos in marcas.items() %}
+    <div class="brand-block">
+      <button class="brand-header" onclick="toggleBrand(this)">
+        <div class="brand-left">
+          <div class="brand-icon">{{ marca[0] }}</div>
+          <div>
+            <div>{{ marca }}</div>
+            <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ productos|length }} variante{{ 's' if productos|length != 1 else '' }}</div>
+          </div>
+        </div>
+        <span class="chevron">▼</span>
+      </button>
+      <div class="brand-products">
+        {% for p in productos %}
+        {% set display_name = p.nombre|product_name %}
+        <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
+          {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
+          {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
+          {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
+          {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+          <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+          </div>
+          <div class="prod-body">
+            <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
+            <div class="stock-note">✅ Disponible</div>
+            <div class="price-note">{{ price_label(p) }}</div>
+            <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
+            {% if p.desc_ %}<div class="prod-desc">{{ p.desc_|product_name }}</div>{% endif %}
+            <div class="prod-footer">
+              <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
+              <div class="prod-actions"><button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <!-- SUGERENCIAS, debajo de los productos -->
+  <div class="hero" style="background:#fff8e1;border:1px solid #ffe082">
+    <h2 style="color:#9a6700">📣 ¿Qué producto necesitás?</h2>
+    <p>Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.</p>
+    <div style="display:flex;gap:8px;max-width:520px;margin:12px auto 0"><input id="suggestProduct" class="nombre-input" style="margin:0" placeholder="Ej: cinta adhesiva ancha"><button class="add-btn" style="border-radius:50%;flex:none" onclick="enviarSugerencia()">➤</button></div>
+    <div style="display:flex;gap:8px;max-width:520px;margin:8px auto 0"><input id="suggestQty" type="number" min="1" value="1" class="nombre-input" style="margin:0;max-width:100px" title="Cantidad"><input id="suggestName" class="nombre-input" style="margin:0" placeholder="Tu nombre (opcional)"></div><input id="suggestComment" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="Tamaño, marca o detalle (opcional)"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
+  </div>
+
+</main>
+
+<!-- FLOAT CART -->
+<button class="float-cart" id="floatCart" onclick="toggleCart()">
+  🛒 Ver pedido · <span id="floatTotal">$0</span>
+</button>
+
+<!-- OVERLAY -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+<!-- CARRITO MODAL -->
+<div class="cart-modal" id="cartModal">
+  <h3>🛒 Tu pedido</h3>
+  <div id="cartItems"><div class="empty-cart">Todavía no agregaste productos 😊</div></div>
+  <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
+
+  <div id="cartForm" style="display:none">
+    <input class="nombre-input" type="text" id="clienteNombre" placeholder="Tu nombre *" required>
+    <select class="nombre-input" id="tipoEntrega" onchange="toggleDireccion()"><option value="Retiro en el local">🏪 Retiro en el local</option><option value="Envío a domicilio">🛵 Envío a domicilio</option></select>
+    <input class="nombre-input" type="text" id="direccion" placeholder="Dirección para el envío" style="display:none">
+    <div class="pay-title">¿Cómo vas a pagar?</div>
+    <div class="pay-opts">
+      <div class="pay-opt" onclick="selectPay(this,'Efectivo')">💵 Efectivo</div>
+      <div class="pay-opt" onclick="selectPay(this,'Transferencia')">🏦 Transferencia</div>
+      <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📱 Mercado Pago</div>
+    </div>
+    <button class="wpp-btn" onclick="sendWhatsApp()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar pedido por WhatsApp
+    </button>
+    <button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>
+  </div>
+  <button class="close-btn" onclick="toggleCart()">Cerrar</button>
+</div>
+
+<!-- VENTANA AMPLIADA DEL PRODUCTO -->
+<div class="product-overlay" id="productOverlay" onclick="if(event.target===this)closeProduct()" role="dialog" aria-modal="true" aria-label="Detalle del producto">
+  <article class="product-modal">
+    <button class="product-modal-close" onclick="closeProduct()" aria-label="Cerrar">×</button>
+    <div class="modal-product-image" id="modalProductImage"></div>
+    <div class="modal-product-code" id="modalProductCode"></div>
+    <h2 class="modal-product-name" id="modalProductName"></h2>
+    <div class="modal-product-brand" id="modalProductBrand"></div>
+    <div class="modal-product-desc" id="modalProductDesc"></div>
+    <div class="modal-product-price" id="modalProductPrice"></div>
+    <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>
+  </article>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var cart = {};
+var payMethod = '';
+var WPP = '{{ catalogo.whatsapp }}';
+
+function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),q=document.getElementById('suggestQty').value,c=document.getElementById('suggestComment').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,cantidad:q,comentario:c,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
+
+function addToCart(code, name, price, icon) {
+  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
+  else cart[code].qty++;
+  updateUI();
+  showToast('✅ ' + name + ' agregado');
+}
+
+function changeQty(code, delta) {
+  if (!cart[code]) return;
+  cart[code].qty += delta;
+  if (cart[code].qty <= 0) delete cart[code];
+  updateUI();
+}
+
+function updateUI() {
+  var keys = Object.keys(cart);
+  var total = 0;
+  var count = 0;
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; count += cart[k].qty; });
+
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('floatTotal').textContent = '$' + formatNum(total);
+  document.getElementById('floatCart').classList.toggle('visible', count > 0);
+  document.querySelector('.cart-btn').classList.toggle('has-items', count > 0);
+  document.getElementById('quickCartText').textContent = count ? 'Ver pedido · $' + formatNum(total) : 'Ver pedido';
+
+  var itemsEl = document.getElementById('cartItems');
+  var totalEl = document.getElementById('cartTotal');
+  var formEl  = document.getElementById('cartForm');
+
+  if (keys.length === 0) {
+    itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊</div>';
+    totalEl.style.display = 'none';
+    formEl.style.display  = 'none';
+    return;
+  }
+
+  var html = '';
+  keys.forEach(function(k){
+    var it = cart[k];
+    html += '<div class="cart-item">';
+    html += '<div class="cart-item-name">' + it.icon + ' ' + it.name + '</div>';
+    html += '<div class="cart-item-price">$' + formatNum(it.price * it.qty) + '</div>';
+    html += '<div class="qty-ctrl">';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',-1)">−</button>';
+    html += '<span class="qty-val">' + it.qty + '</span>';
+    html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',1)">+</button>';
+    html += '</div></div>';
+  });
+  itemsEl.innerHTML = html;
+  document.getElementById('totalAmt').textContent = '$' + formatNum(total);
+  totalEl.style.display = 'block';
+  formEl.style.display  = 'block';
+}
+
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+  document.getElementById('cartModal').classList.toggle('open');
+}
+
+function toggleDireccion() { document.getElementById("direccion").style.display = document.getElementById("tipoEntrega").value === "Envío a domicilio" ? "block" : "none"; }
+
+function selectPay(el, method) {
+  payMethod = method;
+  document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function sendTelegram() {
+  var keys=Object.keys(cart); if(!keys.length){showToast('Agregá productos primero');return;}
+  var nombre=document.getElementById('clienteNombre').value.trim(); if(!nombre){document.getElementById('clienteNombre').focus();showToast('Escribí tu nombre');return;}
+  var entrega=document.getElementById('tipoEntrega').value, direccion=document.getElementById('direccion').value.trim(), total=0;
+  keys.forEach(function(k){total+=cart[k].price*cart[k].qty});
+  var msg='🛒 NUEVO PEDIDO — {{ catalogo.nombre }}\\n👤 Cliente: '+nombre+'\\n📦 Entrega: '+entrega+'\\n';
+  if(direccion)msg+='📍 Dirección: '+direccion+'\\n'; msg+='────────────\\n';
+  keys.forEach(function(k){var it=cart[k];msg+='• '+it.name+' x'+it.qty+' = $'+formatNum(it.price*it.qty)+'\\n'});
+  msg+='────────────\\n💰 TOTAL: $'+formatNum(total); if(payMethod)msg+='\\n💳 Pago: '+payMethod;
+  var btn = document.querySelector('.wpp-btn[onclick="sendTelegram()"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando pedido…';}
+  fetch('/api/pedido-telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:msg})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});})
+    .then(function(result){
+      if(result.ok && result.data.ok){showToast('✅ Pedido enviado por Telegram');}
+      else {navigator.clipboard && navigator.clipboard.writeText(msg).catch(function(){});showToast('Telegram no está conectado. Pedido copiado para pegarlo.');}
+    })
+    .catch(function(){navigator.clipboard && navigator.clipboard.writeText(msg).catch(function(){});showToast('No se pudo enviar. Pedido copiado para pegarlo.');})
+    .finally(function(){if(btn){btn.disabled=false;btn.textContent='✈️ Enviar pedido por Telegram';}});
+}
+
+function sendWhatsApp() {
+  var keys = Object.keys(cart);
+  if (keys.length === 0) { showToast('Agregá productos primero'); return; }
+  var nombre = document.getElementById('clienteNombre').value.trim();
+  if (!nombre) { document.getElementById('clienteNombre').focus(); showToast('Escribí tu nombre'); return; }
+  var entrega = document.getElementById('tipoEntrega').value;
+  var direccion = document.getElementById('direccion').value.trim();
+  if (entrega === 'Envío a domicilio' && !direccion) { document.getElementById('direccion').focus(); showToast('Escribí la dirección'); return; }
+  var total = 0;
+  keys.forEach(function(k){ total += cart[k].price * cart[k].qty; });
+
+  var msg = '🛒 *NUEVO PEDIDO — {{ catalogo.nombre }}*\n';
+  msg += '👤 Cliente: ' + nombre + '\n';
+  msg += '📅 Fecha: ' + new Date().toLocaleString('es-AR') + '\n';
+  msg += '📦 Entrega: ' + entrega + '\n';
+  if (direccion) msg += '📍 Dirección: ' + direccion + '\n';
+  msg += '💳 Medio de pago: ' + (payMethod || 'A confirmar') + '\n';
+  msg += '─────────────────\n';
+  keys.forEach(function(k){
+    var it = cart[k];
+    msg += it.icon + ' ' + it.name + '\n';
+    msg += '   x' + it.qty + ' = $' + formatNum(it.price * it.qty) + '\n';
+  });
+  msg += '─────────────────\n';
+  msg += '💰 *TOTAL: $' + formatNum(total) + '*\n';
+  if (payMethod) msg += '💳 Pago: ' + payMethod + '\n';
+  msg += '\n¡Gracias por tu pedido! 😊';
+
+  window.open('https://wa.me/' + WPP + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function buscarCombo(q) {
+  var input=document.getElementById('searchInput');
+  if(input) input.value=q;
+  buscar(q);
+  var first=document.querySelector('.product-card[data-hidden="false"]');
+  if(first){
+    var section=first.closest('.cat-section');
+    if(section) section.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+function buscar(q) {
+  q = (q || '').toLowerCase().trim();
+  var level = document.getElementById('priceFilter').value;
+  var cards = document.querySelectorAll('.product-card');
+  var visible = 0;
+  cards.forEach(function(c){
+    var matchText = !q || c.dataset.name.indexOf(q) !== -1;
+    var matchLevel = !level || c.dataset.level === level;
+    var match = matchText && matchLevel;
+    c.dataset.hidden = match ? 'false' : 'true';
+    if (match) visible++;
+    if ((q || level) && match) {
+      var bp = c.closest('.brand-products');
+      if (bp) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
+    }
+  });
+  document.getElementById('noResults').style.display = ((q || level) && visible === 0) ? 'block' : 'none';
+}
+
+function toggleBrand(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+/* Carrusel lento de combos destacados */
+(function(){
+  var rail=document.getElementById('comboRail');
+  if(!rail || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var paused=false, timer;
+  function step(){
+    if(paused) return;
+    var card=rail.querySelector('.combo-card'); if(!card) return;
+    var next=rail.scrollLeft+card.getBoundingClientRect().width+9;
+    if(next>=rail.scrollWidth-rail.clientWidth-4) next=0;
+    rail.scrollTo({left:next,behavior:'smooth'});
+  }
+  function start(){clearInterval(timer);timer=setInterval(step,6200)}
+  rail.addEventListener('mouseenter',function(){paused=true});
+  rail.addEventListener('mouseleave',function(){paused=false;start()});
+  rail.addEventListener('touchstart',function(){paused=true;rail.classList.add('is-paused')},{passive:true});
+  rail.addEventListener('touchend',function(){setTimeout(function(){paused=false;rail.classList.remove('is-paused');start()},2200)},{passive:true});
+  start();
+})();
+
+/* Carrusel automático de categorías y acceso rápido: movimiento horizontal continuo */
+(function(){
+  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
+  rails.forEach(function(rail){
+    /* La fila de “Productos disponibles” usa una pista duplicada para que
+       el movimiento sea continuo y visible, incluso con pocas categorías. */
+    if(rail.id === 'availableCategories'){
+      var track=rail.querySelector('.category-track');
+      if(!track || !track.children.length) return;
+      var original=Array.prototype.slice.call(track.children);
+      original.forEach(function(card){track.appendChild(card.cloneNode(true));});
+      requestAnimationFrame(function(){
+        /* El ancho de una copia incluye sus tarjetas y sus separaciones.
+           La segunda copia empieza exactamente después de ese ancho. */
+        var first=track.children[0], last=track.children[original.length-1];
+        var half=(last.offsetLeft+last.offsetWidth+8);
+        rail.style.setProperty('--category-shift',(-half)+'px');
+        rail.style.setProperty('--category-duration',Math.max(9,half/42)+'s');
+        rail.classList.add('auto-marquee');
+      });
+      function stop(){rail.classList.add('is-paused');}
+      function start(){rail.classList.remove('is-paused');}
+      rail.addEventListener('mouseenter',stop); rail.addEventListener('mouseleave',start);
+      rail.addEventListener('touchstart',stop,{passive:true}); rail.addEventListener('touchend',function(){setTimeout(start,1800)},{passive:true});
+      return;
+    }
+    var paused=false, raf=0;
+    function tick(){
+      if(!paused && rail.scrollWidth > rail.clientWidth + 8){
+        var max=rail.scrollWidth-rail.clientWidth;
+        rail.scrollLeft += 0.22;
+        if(rail.scrollLeft >= max-1) rail.scrollLeft=0;
+      }
+      raf=requestAnimationFrame(tick);
+    }
+    function pause(){paused=true;}
+    rail.addEventListener('mouseenter',pause); rail.addEventListener('mouseleave',function(){paused=false;});
+    rail.addEventListener('touchstart',pause,{passive:true}); rail.addEventListener('touchend',function(){setTimeout(function(){paused=false;},1800)},{passive:true});
+    tick();
+  });
+})();
+
+/* Carruseles de vidriera: avance suave, pausado al tocar/deslizar */
+(function(){
+  var rails=document.querySelectorAll('.showcase-rail');
+  if(!rails.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  rails.forEach(function(rail){
+    var section=rail.closest('.showcase-section'), progress=section&&section.querySelector('.showcase-progress'), bar=progress&&progress.querySelector('.showcase-progress-bar'), count=progress&&progress.querySelector('.showcase-progress-count');
+    function updateProgress(){
+      if(!progress) return;
+      var max=Math.max(rail.scrollWidth-rail.clientWidth,1), pct=Math.min(100,Math.max(0,rail.scrollLeft/max*100));
+      bar.style.width=Math.max(8,pct)+'%';
+      var cards=rail.querySelectorAll('.showcase-card'), cardW=cards[0]?cards[0].getBoundingClientRect().width+10:1, pos=Math.min(cards.length,Math.floor(rail.scrollLeft/cardW)+1);
+      count.textContent=pos+'/'+cards.length;
+    }
+    rail.addEventListener('scroll',updateProgress,{passive:true}); updateProgress();
+    if(rail.scrollWidth <= rail.clientWidth + 8) return;
+    rail.classList.add('is-auto');
+    var paused=false, timer;
+    function step(){
+      if(paused) return;
+      var cards=rail.querySelectorAll('.showcase-card');
+      var card=cards[0];
+      if(!card) return;
+      var next=rail.scrollLeft + card.getBoundingClientRect().width + 10;
+      if(next >= rail.scrollWidth - rail.clientWidth - 4) next=0;
+      rail.scrollTo({left:next,behavior:'smooth'});
+    }
+    function pause(){paused=true;section.classList.add('is-moving');rail.classList.add('is-paused');clearInterval(timer);setTimeout(function(){if(paused){paused=false;section.classList.remove('is-moving');rail.classList.remove('is-paused');timer=setInterval(step,5200);}},7000);}
+    rail.addEventListener('pointerdown',pause,{passive:true});
+    rail.addEventListener('wheel',pause,{passive:true});
+    rail.addEventListener('mouseenter',function(){paused=true;section.classList.add('is-moving');clearInterval(timer);});
+    rail.addEventListener('mouseleave',function(){paused=false;section.classList.remove('is-moving');timer=setInterval(step,5200);});
+    timer=setInterval(step,5200);
+  });
+})();
+
+var currentProduct = null;
+function openProduct(code,name,brand,category,price,desc,image,icon){
+  currentProduct={code:code,name:name,brand:brand,category:category,price:Number(price),desc:desc||'',image:image||'',icon:icon||'📦'};
+  var box=document.getElementById('modalProductImage');
+  box.innerHTML=currentProduct.image?'<img src="'+currentProduct.image+'" alt="'+name+'">':currentProduct.icon;
+  document.getElementById('modalProductCode').textContent='COD: '+code;
+  document.getElementById('modalProductName').textContent=name;
+  document.getElementById('modalProductBrand').textContent=brand+' · '+category;
+  document.getElementById('modalProductDesc').textContent=currentProduct.desc;
+  document.getElementById('modalProductPrice').textContent='$'+formatNum(currentProduct.price)+' c/u';
+  document.getElementById('modalBuyBtn').onclick=function(){buyNow(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon)};
+  document.getElementById('modalAddBtn').onclick=function(){addToCart(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon);closeProduct()};
+  document.getElementById('productOverlay').classList.add('open');document.body.style.overflow='hidden';
+  setTimeout(function(){document.querySelector('.product-modal-close').focus()},50);
+}
+function closeProduct(){document.getElementById('productOverlay').classList.remove('open');document.body.style.overflow='';}
+function buyNow(code,name,price,icon){
+  addToCart(code,name,price,icon);toggleCart();showToast('Producto agregado. Completá tus datos para comprar 😊');
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProduct()});
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+function formatNum(n) {
+  return Math.round(n).toLocaleString('es-AR');
+}
+
+// Nav activo en scroll
+var sections = document.querySelectorAll('.cat-section');
+var navLinks = document.querySelectorAll('.cat-nav a');
+window.addEventListener('scroll', function(){
+  var y = window.scrollY + 200;
+  sections.forEach(function(sec){
+    if (y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight) {
+      var id = sec.id;
+      navLinks.forEach(function(l){
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, {passive:true});
+</script>
+</body>
+</html>
