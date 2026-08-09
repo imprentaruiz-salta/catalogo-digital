@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#128C7E">
 <meta name="mobile-web-app-capable" content="yes">
@@ -195,7 +196,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .catalog-section-title{text-align:center;font-size:18px;font-weight:900;color:#128c7e;margin:14px 12px 10px;padding:10px;border-bottom:3px solid #25d366}.quick-categories{margin:0 12px 16px;padding:14px 12px;background:#fff;border:2px solid #b7ebc6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.quick-categories-title{text-align:center;font-size:17px;font-weight:800;color:var(--gd);margin-bottom:10px}.quick-category-list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.quick-category-list .category-track{display:flex;flex:0 0 auto;width:max-content;gap:8px;will-change:transform}.quick-category-list::-webkit-scrollbar{display:none}.cat-nav.auto-marquee,.quick-category-list.auto-marquee{overflow-x:auto;scroll-snap-type:none;justify-content:flex-start}.cat-nav.auto-marquee .category-track,.quick-category-list.auto-marquee .category-track{animation:none!important;transform:none!important}.cat-nav.auto-marquee .category-track{gap:7px}.quick-category-list.auto-marquee .category-track{gap:0}.quick-category-list.auto-marquee .quick-category{scroll-snap-align:none;margin-right:8px}.quick-category-list.auto-marquee .quick-category:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}@keyframes categoryMarquee{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--category-shift),0,0)}}.cat-nav.auto-marquee.is-paused .category-track,.quick-category-list.auto-marquee.is-paused .category-track{animation-play-state:paused}.quick-category-list.auto-marquee:hover .category-track,.quick-category-list.auto-marquee:active .category-track{animation-play-state:paused}.quick-category{flex:0 0 145px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border:2px solid #d1fae5;border-radius:13px;background:#f7fff9;color:var(--gd);text-decoration:none;font-weight:800;font-size:13px;text-align:center;scroll-snap-align:start}.quick-category:hover{border-color:var(--g);background:#effcf3}.quick-category .cat-visual,.quick-category .cat-thumb{width:38px;height:38px}.cat-thumb{width:54px;height:54px;object-fit:contain;display:block}.cat-thumb.nav{width:38px;height:38px}.cat-thumb.header{width:62px;height:62px}.price-filter{padding:10px 12px;border:2px solid var(--brd);border-radius:50px;font-size:12px;background:#fff;color:var(--txt);outline:none}.price-level{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:3px 7px;margin-bottom:7px;background:#fef3c7;color:#92400e} .quick-category-list{display:block;overflow:hidden;white-space:nowrap}.quick-category-list .category-track{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important}.quick-category-list .quick-category{display:flex!important;flex:0 0 145px!important}
 </style>
 </head>
-<body>
+<body class="notranslate">
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
@@ -227,10 +228,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  <h1>{{ catalogo.nombre }}</h1>
  <span>{{ catalogo.subtitulo }}</span>
  </div>
- </div>
- <div class="language-switch" role="group" aria-label="Idioma">
-  <button type="button" id="langEs" class="active" onclick="setLanguage('es')">🇪🇸 ES</button>
-  <button type="button" id="langEn" onclick="setLanguage('en')">🇬🇧 EN</button>
  </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
@@ -472,6 +469,7 @@ function updateUI() {
  itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊</div>';
  totalEl.style.display = 'none';
  formEl.style.display = 'none';
+ if(window.applyLanguage) applyLanguage();
  return;
  }
 
@@ -491,6 +489,7 @@ function updateUI() {
  document.getElementById('totalAmt').textContent = '$' + formatNum(total);
  totalEl.style.display = 'block';
  formEl.style.display = 'block';
+ if(window.applyLanguage) applyLanguage();
 }
 
 function toggleCart() {
@@ -702,7 +701,8 @@ function toggleBrand(btn) {
 })();
 
 /* Selector de idioma: el español queda como idioma inicial. */
-var currentLanguage = localStorage.getItem('abigail-language') || 'es';
+// Catálogos separados: el enlace normal es español; ?lang=en es inglés.
+var currentLanguage = /(?:^|&)lang=en(?:&|$)/i.test(window.location.search.replace(/^\?/,'') ) ? 'en' : 'es';
 var EN = {
  'Todos':'All','Todo':'All','Económico':'Budget','Estándar':'Standard','Premium':'Premium','Idioma':'Language','Catálogo digital':'Digital catalog','Limpieza del hogar':'Home cleaning','Consultar por WhatsApp':'Contact us on WhatsApp','💬 Consultar por WhatsApp':'💬 Contact us on WhatsApp','Todo de un vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Todo de a vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Compra de forma fácil y segura':'Shop easily and safely','Compra de forma easy y segura':'Shop easily and safely','Recoger en tienda':'Pick up in store','Consultar sobre el delivery':'Ask about delivery','Transferencia bancaria':'Bank transfer','Bank transfer bancaria':'Bank transfer','Paquetes destacados':'Featured bundles','Paquete de rollos de cocina':'Paper towel bundle','Paquete of rolls of cocina':'Paper towel bundle','Paquete of rolls de cocina':'Paper towel bundle','A mayor cantidad, mejor precio.':'More quantity, better price.','A mayor cantidad, mejor precio':'More quantity, better price','Elige el paquete por marca y tamaño.':'Choose a pack by brand and size.','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORÍA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORIA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','Buscar producto o marca...':'Search product or brand...','Buscar producto o marca':'Search product or brand','Precio por rollo':'Price per roll','Precio por pack':'Price per pack','Precio por fardo':'Price per bundle','Precio':'Price',
  'NAV CATEGORÍAS':'CATEGORIES','Idioma':'Language','Filtrar nivel de precio':'Filter price level','Acciones rápidas':'Quick actions','Categorías del catálogo':'Catalog categories','Categorías disponibles':'Available categories','Pasos para hacer un pedido':'Steps to place an order','Información de compra':'Shopping information','Combos destacados':'Featured bundles','Vidriera visual':'Visual storefront','Ver categoría':'View category','Ver pedido':'View order','Consultar por WhatsApp':'Contact us on WhatsApp','Contacto rápido por WhatsApp':'Quick WhatsApp contact','¿Necesitás ayuda?':'Need help?',
@@ -747,13 +747,14 @@ function setLanguage(lang){currentLanguage=lang;localStorage.setItem('abigail-la
 var currentProduct = null;
 function openProduct(code,name,brand,category,price,desc,image,icon){
  currentProduct={code:code,name:name,brand:brand,category:category,price:Number(price),desc:desc||'',image:image||'',icon:icon||'📦'};
+ var shownName=currentLanguage==='en'?englishText(name):name, shownBrand=currentLanguage==='en'?englishText(brand):brand, shownCategory=currentLanguage==='en'?englishText(category):category, shownDesc=currentLanguage==='en'?englishText(desc||''):desc||'';
  var box=document.getElementById('modalProductImage');
- box.innerHTML=currentProduct.image?'<img src="'+currentProduct.image+'" alt="'+name+'">':currentProduct.icon;
- document.getElementById('modalProductCode').textContent='COD: '+code;
- document.getElementById('modalProductName').textContent=name;
- document.getElementById('modalProductBrand').textContent=brand+' · '+category;
- document.getElementById('modalProductDesc').textContent=currentProduct.desc;
- document.getElementById('modalProductPrice').textContent='$'+formatNum(currentProduct.price)+' c/u';
+ box.innerHTML=currentProduct.image?'<img src="'+currentProduct.image+'" alt="'+shownName+'">':currentProduct.icon;
+ document.getElementById('modalProductCode').textContent=(currentLanguage==='en'?'CODE: ':'COD: ')+code;
+ document.getElementById('modalProductName').textContent=shownName;
+ document.getElementById('modalProductBrand').textContent=shownBrand+' · '+shownCategory;
+ document.getElementById('modalProductDesc').textContent=shownDesc;
+ document.getElementById('modalProductPrice').textContent='$'+formatNum(currentProduct.price)+' '+(currentLanguage==='en'?'each':'c/u');
  document.getElementById('modalBuyBtn').onclick=function(){buyNow(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon)};
  document.getElementById('modalAddBtn').onclick=function(){addToCart(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon);closeProduct()};
  document.getElementById('productOverlay').classList.add('open');document.body.style.overflow='hidden';
@@ -766,6 +767,7 @@ function buyNow(code,name,price,icon){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProduct()});
 
 function showToast(msg) {
+ if(currentLanguage==='en') msg=englishText(msg);
  var t = document.getElementById('toast');
  t.textContent = msg;
  t.classList.add('show');
@@ -790,8 +792,13 @@ window.addEventListener('scroll', function(){
  }
  });
 }, {passive:true});
+
 /* Aplica el idioma guardado al abrir el catálogo. */
 applyLanguage();
+if(window.MutationObserver){
+ var languageObserver=new MutationObserver(function(){if(currentLanguage==='en')applyLanguage();});
+ languageObserver.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['aria-label','alt','title','placeholder']});
+}
 </script>
 </body>
 </html>
