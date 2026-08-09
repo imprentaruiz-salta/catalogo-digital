@@ -299,6 +299,12 @@ def fleming_brochure():
 def fleming_cargar():
     return render_template('fleming-cargar.html')
 
+@app.route('/cargar-fotos')
+@app.route('/cargar-fotos/')
+def cargar_fotos():
+    # Mobile-first client-side tool: images stay on the phone and are packaged as one ZIP.
+    return render_template('cargar_fotos.html')
+
 @app.route('/')
 def index():
     cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
