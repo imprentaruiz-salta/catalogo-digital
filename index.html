@@ -36,6 +36,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
 .logo-text span{font-size:11px;opacity:.85}
 .cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.language-switch{display:flex;gap:4px;align-items:center;margin-left:auto;margin-right:8px}.language-switch button{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.13);color:#fff;border-radius:20px;padding:6px 8px;font-size:11px;font-weight:800;cursor:pointer;transition:.2s}.language-switch button.active,.language-switch button:hover{background:#fff;color:var(--gd)}
 .cart-btn:hover{background:rgba(255,255,255,.35)}
 .search-bar{padding:0 16px 12px}
 .search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -226,6 +227,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  <h1>{{ catalogo.nombre }}</h1>
  <span>{{ catalogo.subtitulo }}</span>
  </div>
+ </div>
+ <div class="language-switch" role="group" aria-label="Idioma">
+  <button type="button" id="langEs" class="active" onclick="setLanguage('es')">🇪🇸 ES</button>
+  <button type="button" id="langEn" onclick="setLanguage('en')">🇬🇧 EN</button>
  </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
@@ -696,6 +701,43 @@ function toggleBrand(btn) {
  });
 })();
 
+/* Selector de idioma: el español queda como idioma inicial. */
+var currentLanguage = localStorage.getItem('abigail-language') || 'es';
+var EN = {
+ 'Todos':'All','Económico':'Budget','Estándar':'Standard','Premium':'Premium',
+ 'NAV CATEGORÍAS':'CATEGORIES','Ver pedido':'View order','Consultar por WhatsApp':'Contact us on WhatsApp','Contacto rápido por WhatsApp':'Quick WhatsApp contact','¿Necesitás ayuda?':'Need help?',
+ 'Nuevo':'New','Oferta':'Sale','Más vendido':'Best seller','Favorito':'Favorite','Destacado':'Featured','✅ Disponible':'✅ Available','c/u':'each','Comprar ahora':'Buy now',
+ '✨ La vidriera de hoy':"✨ Today's showcase",'Mirá · elegí · pedí':'See · choose · order','Todo se entiende de un vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','👀 Mirá':'👀 See','☝️ Elegí':'☝️ Choose','🛒 Pedí':'🛒 Order',
+ '🛍️ Comprá fácil y seguro':'🛍️ Shop easily and safely','🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago':'🏪 Pick up in store · 🛵 Ask about delivery · 💵 Cash · 🏦 Bank transfer · 📱 Mercado Pago',
+ '🔥 Combos destacados':'🔥 Featured bundles','Presentaciones económicas para ahorrar.':'Budget packs to save money.','Ver fardos':'View bundles','Más cantidad, mejor precio.':'More quantity, better price.','Pack económico':'Budget pack','Elegí packs por marca y presentación.':'Choose packs by brand and size.','Ver packs':'View packs','Deslizá ↔ · mirá todos los combos':'Swipe ↔ · see all bundles',
+ '👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','✨':'✨','Productos destacados':'Featured products','Elegidos para vos':'Picked for you','🆕':'🆕','Novedades':'New arrivals','Lo último':'The latest','🏷️':'🏷️','Ofertas':'Special offers','Precios convenientes':'Great prices','💡':'💡','Recomendaciones':'Recommendations','Mirá estas ideas':'Take a look at these ideas','🔥':'🔥','Productos más pedidos':'Most ordered products','Los favoritos':'Customer favorites','Deslizá ↔':'Swipe ↔',
+ '😕 No encontramos productos para tu búsqueda':'😕 No products found for your search','CATEGORÍAS':'CATEGORIES','🛍️ PRODUCTOS DEL CATÁLOGO':'🛍️ CATALOG PRODUCTS','producto':'product','productos':'products','marca':'brand','marcas':'brands','variante':'variant','variantes':'variants',
+ '📣 ¿Qué producto necesitás?':'📣 What product do you need?','Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.':'Request it even if it is not in the catalog. If several people ask for it, we will add it.',
+ '🛒 Tu pedido':'🛒 Your order','Todavía no agregaste productos 😊':'You have not added any products yet 😊','Total:':'Total:','🏪 Retiro en el local':'🏪 Pick up in store','🛵 Envío a domicilio':'🛵 Home delivery','¿Cómo vas a pagar?':'How will you pay?','💵 Efectivo':'💵 Cash','🏦 Transferencia':'🏦 Bank transfer','📱 Mercado Pago':'📱 Mercado Pago','Enviar pedido por WhatsApp':'Send order by WhatsApp','✈️ Enviar pedido por Telegram':'✈️ Send order by Telegram','Cerrar':'Close','🛒 Agregar al pedido':'🛒 Add to order','COD:':'CODE:','SUGERENCIAS, debajo de los productos':'SUGGESTIONS, below the products'
+};
+var CAT_EN = {'papel higiénico':'toilet paper','papel higiénicos':'toilet paper','rollo de cocina':'paper towel roll','rollos de cocina':'paper towel roll','jabones en pan':'bar soaps','acondicionador':'conditioner','cepillos de dientes':'toothbrushes','cremas':'creams','desodorantes':'deodorants','máquinas de afeitar':'razors','protectores diarios':'panty liners','talcos':'body powder','detergentes':'dish soap','lavandinas':'bleach','limpieza':'cleaning','limpiadores de baño':'bathroom cleaners','shampoo':'shampoo','pastas dentales':'toothpaste'};
+var WORD_EN = {'Papel higiénico':'Toilet paper','Papel higiénicos':'Toilet paper','Rollo de cocina':'Paper towel roll','Rollos de cocina':'Paper towel rolls','Jabón':'Soap','Jabones':'Soaps','Detergente':'Dish soap','Detergentes':'Dish soap','Lavandina':'Bleach','Lavandinas':'Bleach','Limpiador de baños':'Bathroom cleaner','Limpiadores de baño':'Bathroom cleaners','Acondicionador':'Conditioner','Cepillo de dientes':'Toothbrush','Cepillos de dientes':'Toothbrushes','Crema':'Cream','Cremas':'Creams','Desodorante':'Deodorant','Desodorantes':'Deodorants','Máquina de afeitar':'Razor','Máquinas de afeitar':'Razors','Protector diario':'Panty liner','Protectores diarios':'Panty liners','Talco':'Body powder','Talcos':'Body powder','Pasta dental':'Toothpaste','Pastas dentales':'Toothpaste','unidades':'units','unidad':'unit'};
+function englishText(value){
+ var lead=value.match(/^\s*/)?.[0]||'', trail=value.match(/\s*$/)?.[0]||'', v=value.trim();
+ if(EN[v]) return lead+EN[v]+trail;
+ if(CAT_EN[v.toLowerCase()]) return lead+CAT_EN[v.toLowerCase()]+trail;
+ if(/^\d+ producto(s)? · \d+ marca(s)?$/i.test(v)) return lead+v.replace(/producto(s)?/i,function(_,s){return s?'products':'product'}).replace(/marca(s)?/i,function(_,s){return s?'brands':'brand'})+trail;
+ if(/^\d+ variante(s)?$/i.test(v)) return lead+v.replace(/variante(s)?/i,function(_,s){return s?'variants':'variant'})+trail;
+ if(/^✅ Disponible( · \d+ unidades)?$/.test(v)) return lead+v.replace('Disponible','Available').replace('unidades','units')+trail;
+ if(/^COD: /.test(v)) return lead+v.replace('COD:','CODE:')+trail;
+ var out=v;
+ Object.keys(WORD_EN).sort(function(a,b){return b.length-a.length}).forEach(function(k){out=out.split(k).join(WORD_EN[k]);});
+ return lead+out+trail;
+}
+function applyLanguage(){
+ var en=currentLanguage==='en';
+ document.documentElement.lang=en?'en':'es';
+ document.querySelectorAll('.language-switch button').forEach(function(b){b.classList.toggle('active',b.id===(en?'langEn':'langEs'));});
+ document.querySelectorAll('body *').forEach(function(el){if(el.tagName==='SCRIPT'||el.tagName==='STYLE')return;Array.prototype.forEach.call(el.childNodes,function(n){if(n.nodeType!==3)return;if(!n.__originalText)n.__originalText=n.nodeValue;n.nodeValue=en?englishText(n.__originalText):n.__originalText;});});
+ document.querySelectorAll('input[placeholder],select[aria-label],a[aria-label],img[alt]').forEach(function(el){if(!el.__originalAttr){el.__originalAttr={placeholder:el.getAttribute('placeholder'),aria:el.getAttribute('aria-label'),alt:el.getAttribute('alt')}};['placeholder','aria-label','alt'].forEach(function(a){if(el.__originalAttr[a])el.setAttribute(a,en?englishText(el.__originalAttr[a]):el.__originalAttr[a]);});});
+}
+function setLanguage(lang){currentLanguage=lang;localStorage.setItem('abigail-language',lang);applyLanguage();}
+
 var currentProduct = null;
 function openProduct(code,name,brand,category,price,desc,image,icon){
  currentProduct={code:code,name:name,brand:brand,category:category,price:Number(price),desc:desc||'',image:image||'',icon:icon||'📦'};
@@ -742,6 +784,8 @@ window.addEventListener('scroll', function(){
  }
  });
 }, {passive:true});
+/* Aplica el idioma guardado al abrir el catálogo. */
+applyLanguage();
 </script>
 </body>
 </html>
