@@ -305,6 +305,24 @@ def cargar_fotos():
     # Mobile-first client-side tool: images stay on the phone and are packaged as one ZIP.
     return send_from_directory(BASE_DIR, 'cargar_fotos.html')
 
+@app.route('/cargar-fotos/manifest.webmanifest')
+def cargar_fotos_manifest():
+    body=json.dumps({
+        'name':'Preparador de fotos · Librería Ruiz',
+        'short_name':'Fotos Ruiz',
+        'start_url':'/cargar-fotos/',
+        'scope':'/cargar-fotos/',
+        'display':'standalone',
+        'background_color':'#f7faf9',
+        'theme_color':'#128C7E',
+        'description':'Recortá y prepará fotos de catálogo desde el celular.'
+    },ensure_ascii=False)
+    return app.response_class(body,mimetype='application/manifest+json')
+
+@app.route('/cargar-fotos/sw.js')
+def cargar_fotos_service_worker():
+    return send_from_directory(BASE_DIR, 'cargar_fotos-sw.js', mimetype='application/javascript')
+
 @app.route('/')
 def index():
     cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
