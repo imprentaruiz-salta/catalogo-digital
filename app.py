@@ -270,19 +270,24 @@ def web_manifest():
     body=render_template('manifest.json',catalogo=cfg,manifest_slug=slug)
     return app.response_class(body,mimetype='application/manifest+json')
 
+def cached_asset(directory, filename, max_age):
+    response=send_from_directory(directory, filename)
+    response.headers['Cache-Control']=f'public, max-age={max_age}, immutable'
+    return response
+
 @app.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
-    # Product photos live in DATA_DIR, not inside the deployable code folder.
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    # Product filenames are unique WebP files, so they can be cached for a year.
+    return cached_asset(UPLOAD_FOLDER, filename, 31536000)
 
 @app.route('/static/<path:filename>')
 def static_asset(filename):
     # Visual assets may live in static/ or at the repository root (kept deployable).
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
-        return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
+        return cached_asset(os.path.join(BASE_DIR,'static'), filename, 604800)
     if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_'):
-        return send_from_directory(BASE_DIR, filename)
+        return cached_asset(BASE_DIR, filename, 604800)
     return ('',404)
 
 @app.route('/menu')
