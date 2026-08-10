@@ -920,9 +920,22 @@ var ABIGAIL_PRODUCTS = [
   replaceSay(tx('No encontré ese producto en el catálogo actual. No quiero inventarte un precio. ¿Querés probar con detergente, jabón, papel, dentífrico o lavandina?','I could not find that product in the current catalog. I do not want to make up a price. Would you like to try dish soap, soap, paper, toothpaste or bleach?'));
  }
  function welcome(){if(started)return;started=true;widget.classList.add('welcoming');setTimeout(function(){widget.classList.remove('welcoming')},1300);replaceSay(tx('Hola, soy Abigail, tu asistente de limpieza. 😊','Hello, I am Abigail, your cleaning assistant. 😊'));welcomeTimer=setTimeout(function(){replaceSay(tx('¿Qué producto estás buscando?','What product are you looking for?'))},2300)}
- function showNudge(){if(!nudge||chat.classList.contains('open'))return;nudge.classList.add('show');setTimeout(function(){nudge.classList.remove('show')},9000)}
- if(nudge){nudge.onclick=function(){nudge.classList.remove('show');open()};setTimeout(showNudge,8000);setInterval(showNudge,120000)}
- function open(){chat.classList.add('open');chat.setAttribute('aria-hidden','false');launcher.setAttribute('aria-expanded','true');if(nudge)nudge.classList.remove('show');welcome();setTimeout(function(){input.focus()},80)}
+ var nudgeCycleTimer=null,nudgeStepTimers=[];
+ function clearNudgeSteps(){nudgeStepTimers.forEach(function(t){clearTimeout(t)});nudgeStepTimers=[]}
+ function hideNudge(){if(nudge)nudge.classList.remove('show')}
+ function showNudgeText(text){if(!nudge||chat.classList.contains('open'))return;nudge.textContent=tx(text.es,text.en);nudge.classList.add('show')}
+ function runNudgeCycle(){
+  clearNudgeSteps();
+  if(!nudge)return;
+  if(chat.classList.contains('open')){nudgeCycleTimer=setTimeout(runNudgeCycle,120000);return}
+  showNudgeText({es:'👋 Hola, soy Abigail, tu asistente de limpieza.',en:'👋 Hi, I am Abigail, your cleaning assistant.'});
+  nudgeStepTimers.push(setTimeout(function(){showNudgeText({es:'Hacé clic acá y te ayudo.',en:'Click here and I will help you.'})},3600));
+  nudgeStepTimers.push(setTimeout(function(){showNudgeText({es:'🔎 Tocá la búsqueda y escribí el producto que necesitás.',en:'🔎 Tap search and write the product you need.'})},7200));
+  nudgeStepTimers.push(setTimeout(hideNudge,12500));
+  nudgeCycleTimer=setTimeout(runNudgeCycle,120000);
+ }
+ if(nudge){nudge.onclick=function(){clearNudgeSteps();hideNudge();open()};setTimeout(runNudgeCycle,8000)}
+ function open(){chat.classList.add('open');chat.setAttribute('aria-hidden','false');launcher.setAttribute('aria-expanded','true');clearNudgeSteps();if(nudge)hideNudge();welcome();setTimeout(function(){input.focus()},80)}
  function close(){chat.classList.remove('open');chat.setAttribute('aria-hidden','true');launcher.setAttribute('aria-expanded','false')}
  launcher.onclick=function(){chat.classList.contains('open')?close():open()};document.getElementById('abigailClose').onclick=close;
  document.getElementById('abigailForm').onsubmit=function(e){e.preventDefault();var value=input.value;input.value='';process(value)};
