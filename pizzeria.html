@@ -14,7 +14,7 @@
 {% for p in cats %}<article class="card" data-name="{{ p.nombre|e }}" data-price="{{ p.precio|int }}">
 <div class="pizza{% if loop.index is even %} alt{% endif %}">{% if p.foto %}<img src="{{ url_for('uploaded_file',filename=p.foto) }}" alt="{{ p.nombre|e }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute">{% endif %}<span class="pizza-label">{% if p.foto %}pizza{% else %}foto pizza{% endif %}</span></div>
 <div class="thumbs">{% for i in range(6) %}<div class="thumb">foto</div>{% endfor %}</div>
-<div class="name" style="display:block!important;color:#171717!important;font-size:17px!important;line-height:1.12!important;font-weight:700!important;min-height:22px!important;margin:0 0 7px!important;visibility:visible!important;opacity:1!important">{{ p.nombre|e }}</div>
+<p style="display:block!important;color:#171717!important;font-size:17px!important;line-height:1.12!important;font-weight:700!important;min-height:22px!important;margin:0 0 7px!important;visibility:visible!important;opacity:1!important">{{ p.nombre|e }}</p>
 <div class="desc"><button type="button">Descripción completa</button></div><div class="fulltext">{{ p.desc_|e }}</div>
 <div class="price">${{ '{:,.0f}'.format(p.precio).replace(',', '.') }}</div>
 <div class="qty">cantidad <select aria-label="Cantidad de {{ p.nombre|e }}"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
