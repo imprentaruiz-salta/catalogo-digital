@@ -331,7 +331,9 @@ def catalogo_publico(slug):
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     if slug == 'pizzeria-demo':
-        return render_template('pizzeria.html',cats=get_catalogo(slug),catalogo=cfg)
+        grouped=get_catalogo(slug)
+        pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
+        return render_template('pizzeria.html',cats=pizzas,catalogo=cfg)
     return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
