@@ -229,7 +229,7 @@ def get_catalogo(slug='libreria-ruiz'):
     with get_db() as db: rows=db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()
     cats={}
     for row in rows: cats.setdefault(row['categoria'],{}).setdefault(row['marca'],[]).append(dict(row))
-    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}     # Abigail: order categories as a simple shopping journey, not alphabetically.     if slug == 'limpieza-abigail':         orden.update({cat:i for i,cat in enumerate([             'jabones en pan','papel higienicos','rollo de cocina','shampoo',             'acondicionador','desodorantes','pastas dentales','cepillos de dientes',             'protectores diarios','máquinas de afeitar','talcos','cremas'         ])})     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
+    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}
     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
 def get_showcase(slug='libreria-ruiz'):
     # Curated visual shelves are derived from the catalog until explicit merchandising fields are added.
@@ -270,24 +270,19 @@ def web_manifest():
     body=render_template('manifest.json',catalogo=cfg,manifest_slug=slug)
     return app.response_class(body,mimetype='application/manifest+json')
 
-def cached_asset(directory, filename, max_age):
-    response=send_from_directory(directory, filename)
-    response.headers['Cache-Control']=f'public, max-age={max_age}, immutable'
-    return response
-
 @app.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
-    # Product filenames are unique WebP files, so they can be cached for a year.
-    return cached_asset(UPLOAD_FOLDER, filename, 31536000)
+    # Product photos live in DATA_DIR, not inside the deployable code folder.
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route('/static/<path:filename>')
 def static_asset(filename):
     # Visual assets may live in static/ or at the repository root (kept deployable).
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
-        return cached_asset(os.path.join(BASE_DIR,'static'), filename, 604800)
+        return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
     if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_'):
-        return cached_asset(BASE_DIR, filename, 604800)
+        return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
 @app.route('/menu')
@@ -335,6 +330,8 @@ def index():
 def catalogo_publico(slug):
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
+    if slug == 'pizzeria-demo':
+        return render_template('pizzeria.html',cats=get_catalogo(slug),catalogo=cfg)
     return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
