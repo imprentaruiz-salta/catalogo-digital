@@ -234,6 +234,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Jabones líquidos"><path d="M26 18h14v8H26z" fill="#14b8a6"/><path d="M23 25h22v30H23z" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/><path d="M33 18v-7h13" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/><circle cx="34" cy="39" r="6" fill="#fff" opacity=".8"/></svg>
  {% elif n == 'talcos' %}
  <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Talcos"><path d="M21 21h22v31a5 5 0 0 1-5 5H26a5 5 0 0 1-5-5z" fill="#fde68a"/><path d="M20 21h24" stroke="#b45309" stroke-width="3"/><path d="M24 14h16v8H24z" fill="#f59e0b"/><rect x="27" y="10" width="10" height="5" rx="2" fill="#92400e"/><circle cx="32" cy="38" r="7" fill="#fff" opacity=".85"/><path d="M26 48h12" stroke="#b45309" stroke-width="3" stroke-linecap="round"/></svg>
+ {% elif n == 'esponjas' %}
+ <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Esponjas"><path d="M11 38h38v12a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5z" fill="#facc15" stroke="#a16207" stroke-width="2"/><path d="M11 38h38v-7a5 5 0 0 0-5-5H16a5 5 0 0 0-5 5z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="2"/><path d="M19 34h22M18 45h24" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/><circle cx="21" cy="20" r="4" fill="#fbbf24"/><circle cx="34" cy="17" r="3" fill="#fde68a"/></svg>
+ {% elif n == 'algodón' or n == 'algodon' %}
+ <svg class="cat-svg {{ size }}" viewBox="0 0 64 64" role="img" aria-label="Algodón"><circle cx="24" cy="31" r="13" fill="#fff" stroke="#bfdbfe" stroke-width="2"/><circle cx="39" cy="29" r="14" fill="#fff" stroke="#bfdbfe" stroke-width="2"/><circle cx="32" cy="41" r="14" fill="#f8fafc" stroke="#bfdbfe" stroke-width="2"/><path d="M18 13h28v9H18z" fill="#38bdf8"/><path d="M22 17h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M24 50h16" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>
  {% else %}<span class="icon" aria-hidden="true">{{ cat_icon(cat) }}</span>{% endif %}
 {%- endmacro %}
 
