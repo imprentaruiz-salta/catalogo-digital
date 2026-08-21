@@ -7,7 +7,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
 app.secret_key = "catalogo_ruiz_2026_secret_x7k"
-app.config['MAX_CONTENT_LENGTH']=12*1024*1024
+app.config['MAX_CONTENT_LENGTH']=80*1024*1024
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -16,7 +16,10 @@ os.makedirs(DATA_DIR,exist_ok=True)
 DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
 UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
 BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
-os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True)
+VIDEO_FOLDER=os.path.join(DATA_DIR,"fleming_videos")
+os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True); os.makedirs(VIDEO_FOLDER,exist_ok=True)
+ALLOWED_VIDEO_EXT={"mp4","webm","mov","m4v"}
+MAX_VIDEO_BYTES=80*1024*1024
 
 # Optional durable cloud snapshot. Render Free can restart at any time, so the
 # local SQLite database and optimized images are mirrored to Supabase Storage.
@@ -59,6 +62,9 @@ def cloud_sync():
         for root,_,files in os.walk(UPLOAD_FOLDER):
             for name in files:
                 z.write(os.path.join(root,name),os.path.join("imagenes",name))
+        for root,_,files in os.walk(VIDEO_FOLDER):
+            for name in files:
+                z.write(os.path.join(root,name),os.path.join("videos",name))
     try:
         with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip") as response:
             response.read()
@@ -101,6 +107,9 @@ def restore_from_cloud():
             for name in names:
                 if name.startswith("imagenes/") and not name.endswith("/"):
                     target=os.path.join(UPLOAD_FOLDER,os.path.basename(name))
+                    with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
+                if name.startswith("videos/") and not name.endswith("/"):
+                    target=os.path.join(VIDEO_FOLDER,os.path.basename(name))
                     with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
         return True
     except urllib.error.HTTPError as exc:
@@ -158,6 +167,7 @@ def init_db():
             try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
         db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1)")
+        db.execute("CREATE TABLE IF NOT EXISTS fleming_videos (property_id TEXT PRIMARY KEY, filename TEXT NOT NULL, title TEXT DEFAULT '', uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP)")
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
@@ -289,6 +299,23 @@ def static_asset(filename):
 def menu_digital():
     return render_template('menu.html')
 
+def _video_extension(filename):
+    return filename.rsplit('.',1)[1].lower() if '.' in filename else ''
+
+def _valid_property_id(value):
+    value=(value or '').strip().lower()
+    return value if value.startswith('p') and value[1:].isdigit() and 1 <= int(value[1:]) <= 999 else ''
+
+@app.route('/fleming/video-list.json')
+def fleming_video_list():
+    with get_db() as db:
+        rows=db.execute('SELECT property_id,filename,title FROM fleming_videos ORDER BY property_id').fetchall()
+    return jsonify({r['property_id']:{'url':url_for('fleming_video_file',filename=r['filename']),'title':r['title']} for r in rows})
+
+@app.route('/fleming/videos/<path:filename>')
+def fleming_video_file(filename):
+    return send_from_directory(VIDEO_FOLDER, filename, conditional=True)
+
 @app.route('/fleming')
 @app.route('/fleming/')
 def fleming_brochure():
@@ -372,6 +399,52 @@ def api_sugerencia():
         db.commit()
     cloud_sync()
     return jsonify(ok=True)
+
+@app.route('/fleming/admin/videos',methods=['GET','POST'])
+@login_required
+def fleming_video_admin():
+    error=None
+    if request.method=='POST':
+        property_id=_valid_property_id(request.form.get('property_id'))
+        uploaded=request.files.get('video')
+        title=(request.form.get('title') or '').strip()[:120]
+        if not property_id: error='Elegí una propiedad válida, por ejemplo p11.'
+        elif not uploaded or not uploaded.filename: error='Seleccioná un video.'
+        elif _video_extension(uploaded.filename) not in ALLOWED_VIDEO_EXT: error='Usá MP4, WEBM, MOV o M4V.'
+        else:
+            raw=uploaded.read(MAX_VIDEO_BYTES+1)
+            if len(raw)>MAX_VIDEO_BYTES: error='El video supera el límite de 80 MB.'
+            else:
+                ext=_video_extension(uploaded.filename); filename=f'{property_id}-{uuid.uuid4().hex}.{ext}'
+                target=os.path.join(VIDEO_FOLDER,filename)
+                with open(target,'wb') as out: out.write(raw)
+                backup_db('antes-video-fleming')
+                with get_db() as db:
+                    old=db.execute('SELECT filename FROM fleming_videos WHERE property_id=?',(property_id,)).fetchone()
+                    db.execute('INSERT INTO fleming_videos(property_id,filename,title,uploaded_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(property_id) DO UPDATE SET filename=excluded.filename,title=excluded.title,uploaded_at=CURRENT_TIMESTAMP',(property_id,filename,title))
+                    db.commit()
+                if old and old['filename'] != filename:
+                    try: os.remove(os.path.join(VIDEO_FOLDER,old['filename']))
+                    except OSError: pass
+                cloud_sync(); log_change('video-fleming',property_id,filename)
+                flash(f'✅ Video guardado en la propiedad {property_id[1:]}')
+                return redirect(url_for('fleming_video_admin'))
+    with get_db() as db: videos=[dict(r) for r in db.execute('SELECT * FROM fleming_videos ORDER BY property_id').fetchall()]
+    return render_template('fleming-videos.html',videos=videos,error=error)
+
+@app.route('/fleming/admin/videos/<property_id>/eliminar',methods=['POST'])
+@login_required
+def fleming_video_delete(property_id):
+    property_id=_valid_property_id(property_id)
+    if property_id:
+        with get_db() as db:
+            row=db.execute('SELECT filename FROM fleming_videos WHERE property_id=?',(property_id,)).fetchone()
+            db.execute('DELETE FROM fleming_videos WHERE property_id=?',(property_id,)); db.commit()
+        if row:
+            try: os.remove(os.path.join(VIDEO_FOLDER,row['filename']))
+            except OSError: pass
+        cloud_sync(); log_change('eliminar-video-fleming',property_id,'')
+    return redirect(url_for('fleming_video_admin'))
 
 @app.route('/admin/login',methods=['GET','POST'])
 def admin_login():
