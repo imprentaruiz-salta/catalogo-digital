@@ -242,6 +242,13 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .float-telegram:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
 .telegram-focus{animation:telegramFocus .55s ease-in-out 3!important}@keyframes telegramFocus{50%{transform:scale(1.04);filter:brightness(1.12)}}
 @media(max-width:599px){.float-telegram{right:9px;bottom:202px;width:50px;height:50px}.float-telegram svg{width:28px;height:28px}}
+/* Canales de contacto visibles junto a Abigail */
+.abigail-contact-actions{position:absolute;right:104px;bottom:8px;width:210px;padding:9px 10px;background:#fffdfb;border:2px solid #6f4941;border-radius:17px 18px 16px 18px;box-shadow:3px 4px 0 rgba(92,58,50,.16);display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;font-size:11px;font-weight:850;color:#55332f}
+.abigail-contact-actions:after{content:'';position:absolute;right:-9px;bottom:18px;width:13px;height:13px;background:#fffdfb;border-right:2px solid #6f4941;border-top:2px solid #6f4941;transform:skew(16deg) rotate(27deg)}
+.abigail-contact-actions a,.abigail-contact-actions button{position:relative;z-index:1;border:0;border-radius:50px;padding:6px 8px;color:#fff;font-size:10px;font-weight:850;text-decoration:none;cursor:pointer}
+.abigail-contact-actions a{background:#25d366}.abigail-contact-actions button{background:#229ed9}
+.abigail-contact-actions a:hover,.abigail-contact-actions button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+@media(max-width:599px){.abigail-contact-actions{right:98px;bottom:4px;width:190px;font-size:10px;padding:8px 7px}.abigail-contact-actions a,.abigail-contact-actions button{font-size:9px;padding:5px 7px}}
 </style>
 </head>
 <body class="notranslate">
@@ -454,6 +461,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 </button>
 <!-- ABIGAIL: vendedora virtual flotante -->
 <div class="abigail-widget" id="abigailWidget">
+ <div class="abigail-contact-actions" aria-label="Elegí cómo comunicarte">
+  <span>💬 ¿Querés comunicarte?</span>
+  <a href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">🟢 WhatsApp</a>
+  <button type="button" onclick="openTelegramOrder()">🔵 Telegram</button>
+ </div>
  <button type="button" class="abigail-nudge" id="abigailNudge">🔎 Tocá la búsqueda y escribí el producto que necesitás</button>
  <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="Chat con Abigail" aria-hidden="true">
   <div class="abigail-head">
