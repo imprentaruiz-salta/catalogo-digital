@@ -270,6 +270,7 @@ body.has-abigail .abigail-contact-actions{display:none}
 @keyframes helperPop{from{opacity:0;transform:scale(.6) translateY(8px)}to{opacity:1;transform:none}}@keyframes helperBounce{to{transform:translateY(-4px) rotate(5deg)}}
 .abigail-magic-cart{position:absolute;left:-108px;bottom:4px;z-index:6;display:flex;align-items:center;gap:3px;min-width:82px;min-height:39px;padding:4px 7px;border:2px solid #229ed9;border-radius:16px;background:#eaf7ff;color:#12628b;font-size:10px;font-weight:900;box-shadow:2px 3px 0 rgba(22,138,196,.18)}
 .magic-cart-icon{font-size:26px;line-height:1}.magic-cart-count{display:flex;align-items:center;justify-content:center;min-width:19px;height:19px;border-radius:50%;background:#f97316;color:#fff;font-size:10px}.magic-cart-items{position:absolute;left:7px;bottom:-17px;white-space:nowrap;font-size:13px;letter-spacing:-2px}.abigail-magic-cart.is-popping{animation:magicCartPop .5s ease-in-out}.abigail-magic-cart.is-full{background:#fff4d6;border-color:#f59e0b;color:#9a6700}@keyframes magicCartPop{50%{transform:translateY(-8px) rotate(-5deg) scale(1.08)}}
+.magic-flyer{position:fixed;z-index:10000;pointer-events:none;font-size:30px;line-height:1;filter:drop-shadow(2px 3px 2px rgba(15,23,42,.2));transition:transform .72s cubic-bezier(.2,.85,.3,1),opacity .72s ease;will-change:transform,opacity}
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
 </head>
@@ -356,7 +357,7 @@ body.has-abigail .abigail-contact-actions{display:none}
 
 <main>
  {% macro showcase_card(p, tag='') -%}
- <article class="showcase-card">
+ <article class="showcase-card" data-code="{{ p.codigo }}">
  {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
  <div class="showcase-img">
  {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
@@ -440,7 +441,7 @@ body.has-abigail .abigail-contact-actions{display:none}
  <div class="brand-products">
  {% for p in productos %}
  {% set display_name = p.nombre|product_name %}
- <div class="product-card" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
+ <div class="product-card" data-code="{{ p.codigo }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
@@ -577,6 +578,9 @@ var WPP = '{{ catalogo.whatsapp }}';
 
 function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),q=document.getElementById('suggestQty').value,c=document.getElementById('suggestComment').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,cantidad:q,comentario:c,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
 
+function flyToMagicCart(code,icon){
+ var target=document.getElementById('abigailMagicCart'),source=document.querySelector('.product-card[data-code="'+code+'"] .prod-img,.showcase-card[data-code="'+code+'"] .showcase-img');if(!target)return;var from=source?source.getBoundingClientRect():{left:window.innerWidth/2,top:window.innerHeight/2,width:1,height:1},to=target.getBoundingClientRect();var flyer=document.createElement('span');flyer.className='magic-flyer';flyer.textContent=icon||'📦';flyer.style.left=(from.left+from.width/2-15)+'px';flyer.style.top=(from.top+from.height/2-15)+'px';document.body.appendChild(flyer);requestAnimationFrame(function(){flyer.style.transform='translate('+(to.left+to.width/2-from.left-from.width/2)+'px,'+(to.top+to.height/2-from.top-from.height/2)+'px) scale(.35) rotate(360deg)';flyer.style.opacity='0'});setTimeout(function(){flyer.remove()},800)
+}
 function updateMagicCart(){
  var box=document.getElementById('abigailMagicCart'),countEl=document.getElementById('magicCartCount'),itemsEl=document.getElementById('magicCartItems');if(!box||!countEl||!itemsEl)return;var keys=Object.keys(cart),count=0,icons=[];keys.forEach(function(k){count+=cart[k].qty;if(icons.length<4)icons.push(cart[k].icon)});countEl.textContent=count;itemsEl.textContent=icons.join('');box.classList.toggle('is-full',count>=3)}
 function popMagicCart(){var box=document.getElementById('abigailMagicCart');if(!box)return;box.classList.remove('is-popping');void box.offsetWidth;box.classList.add('is-popping');setTimeout(function(){box.classList.remove('is-popping')},650)}
@@ -585,7 +589,7 @@ function addToCart(code, name, price, icon) {
  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
  else cart[code].qty++;
  updateUI();
- updateMagicCart();popMagicCart();
+ updateMagicCart();popMagicCart();flyToMagicCart(code,icon);
  showToast('✅ ' + name + ' agregado');
 }
 
