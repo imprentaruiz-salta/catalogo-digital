@@ -249,9 +249,18 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .abigail-contact-actions a{background:#25d366}.abigail-contact-actions button{background:#229ed9}
 .abigail-contact-actions a:hover,.abigail-contact-actions button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 @media(max-width:599px){.abigail-contact-actions{right:98px;bottom:4px;width:190px;font-size:10px;padding:8px 7px}.abigail-contact-actions a,.abigail-contact-actions button{font-size:9px;padding:5px 7px}}
+/* Abigail queda centrada entre los dos canales de contacto */
+body.has-abigail .float-whatsapp,body.has-abigail .float-telegram{display:none!important}
+body.has-abigail .abigail-widget{width:280px;height:156px;right:16px;bottom:64px}
+body.has-abigail .abigail-widget>.abigail-launcher{position:absolute;right:84px;bottom:0;z-index:3}
+body.has-abigail .abigail-contact-actions{left:0;right:0;bottom:2px;width:auto;height:54px;padding:0;background:transparent;border:0;box-shadow:none;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:nowrap;gap:8px;z-index:5;pointer-events:none}
+body.has-abigail .abigail-contact-actions:after{display:none}
+body.has-abigail .abigail-contact-actions span{position:absolute;left:50%;top:-31px;transform:translateX(-50%);white-space:nowrap;padding:6px 9px;border:2px solid #6f4941;border-radius:14px;background:#fffdfb;box-shadow:2px 3px 0 rgba(92,58,50,.14);font-size:10px;pointer-events:none}
+body.has-abigail .abigail-contact-actions a,body.has-abigail .abigail-contact-actions button{min-width:82px;pointer-events:auto;box-shadow:2px 3px 0 rgba(92,58,50,.14)}
+@media(max-width:599px){body.has-abigail .abigail-widget{width:278px;height:150px;right:2px;bottom:52px}body.has-abigail .abigail-widget>.abigail-launcher{right:80px}body.has-abigail .abigail-contact-actions span{font-size:9px;top:-28px}body.has-abigail .abigail-contact-actions a,body.has-abigail .abigail-contact-actions button{min-width:76px}}
 </style>
 </head>
-<body class="notranslate">
+<body class="notranslate{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
