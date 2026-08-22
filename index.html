@@ -264,6 +264,13 @@ body.has-abigail .abigail-widget{width:auto;height:auto;right:88px;bottom:72px}
 body.has-abigail .abigail-widget>.abigail-launcher{position:relative;right:auto;bottom:auto;z-index:auto}
 body.has-abigail .abigail-contact-actions{display:none}
 @media(max-width:599px){body.has-abigail .abigail-widget{width:auto;height:auto;right:70px;bottom:58px}body.has-abigail .abigail-widget>.abigail-launcher{right:auto}}
+/* Ayudante pequeño y carrito mágico de Abigail */
+.abigail-helper{position:absolute;left:-72px;bottom:105px;z-index:6;display:none;align-items:center;gap:3px;padding:5px 7px;border:2px solid #6f4941;border-radius:14px;background:#fffdfb;color:#55332f;font-size:9px;font-weight:850;box-shadow:2px 3px 0 rgba(92,58,50,.14);animation:helperPop .35s ease-out}
+.abigail-helper.show{display:flex}.abigail-helper-icon{font-size:26px;line-height:1;animation:helperBounce .65s ease-in-out infinite alternate}
+@keyframes helperPop{from{opacity:0;transform:scale(.6) translateY(8px)}to{opacity:1;transform:none}}@keyframes helperBounce{to{transform:translateY(-4px) rotate(5deg)}}
+.abigail-magic-cart{position:absolute;left:-108px;bottom:4px;z-index:6;display:flex;align-items:center;gap:3px;min-width:82px;min-height:39px;padding:4px 7px;border:2px solid #229ed9;border-radius:16px;background:#eaf7ff;color:#12628b;font-size:10px;font-weight:900;box-shadow:2px 3px 0 rgba(22,138,196,.18)}
+.magic-cart-icon{font-size:26px;line-height:1}.magic-cart-count{display:flex;align-items:center;justify-content:center;min-width:19px;height:19px;border-radius:50%;background:#f97316;color:#fff;font-size:10px}.magic-cart-items{position:absolute;left:7px;bottom:-17px;white-space:nowrap;font-size:13px;letter-spacing:-2px}.abigail-magic-cart.is-popping{animation:magicCartPop .5s ease-in-out}.abigail-magic-cart.is-full{background:#fff4d6;border-color:#f59e0b;color:#9a6700}@keyframes magicCartPop{50%{transform:translateY(-8px) rotate(-5deg) scale(1.08)}}
+@media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
 </head>
 <body class="notranslate{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% endif %}">
@@ -476,6 +483,8 @@ body.has-abigail .abigail-contact-actions{display:none}
 </button>
 <!-- ABIGAIL: vendedora virtual flotante -->
 <div class="abigail-widget" id="abigailWidget">
+ <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante Espumita"><span class="abigail-helper-icon">🧼</span><span>Espumita</span></div>
+ <div class="abigail-magic-cart" id="abigailMagicCart" aria-label="Carrito mágico"><span class="magic-cart-icon">🛒</span><span class="magic-cart-count" id="magicCartCount">0</span><span class="magic-cart-items" id="magicCartItems"></span></div>
  <div class="abigail-contact-actions" aria-label="Elegí cómo comunicarte">
   <span>💬 ¿Querés comunicarte?</span>
   <a href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">🟢 WhatsApp</a>
@@ -568,10 +577,15 @@ var WPP = '{{ catalogo.whatsapp }}';
 
 function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),q=document.getElementById('suggestQty').value,c=document.getElementById('suggestComment').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,cantidad:q,comentario:c,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
 
+function updateMagicCart(){
+ var box=document.getElementById('abigailMagicCart'),countEl=document.getElementById('magicCartCount'),itemsEl=document.getElementById('magicCartItems');if(!box||!countEl||!itemsEl)return;var keys=Object.keys(cart),count=0,icons=[];keys.forEach(function(k){count+=cart[k].qty;if(icons.length<4)icons.push(cart[k].icon)});countEl.textContent=count;itemsEl.textContent=icons.join('');box.classList.toggle('is-full',count>=3)}
+function popMagicCart(){var box=document.getElementById('abigailMagicCart');if(!box)return;box.classList.remove('is-popping');void box.offsetWidth;box.classList.add('is-popping');setTimeout(function(){box.classList.remove('is-popping')},650)}
+function showAbigailHelper(){var helper=document.getElementById('abigailHelper');if(!helper)return;helper.classList.add('show');clearTimeout(window.abigailHelperTimer);window.abigailHelperTimer=setTimeout(function(){helper.classList.remove('show')},9000)}
 function addToCart(code, name, price, icon) {
  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
  else cart[code].qty++;
  updateUI();
+ updateMagicCart();popMagicCart();
  showToast('✅ ' + name + ' agregado');
 }
 
@@ -579,7 +593,7 @@ function changeQty(code, delta) {
  if (!cart[code]) return;
  cart[code].qty += delta;
  if (cart[code].qty <= 0) delete cart[code];
- updateUI();
+ updateUI();updateMagicCart();
 }
 
 function updateUI() {
@@ -1009,7 +1023,7 @@ var ABIGAIL_PRODUCTS = [
  }
  function startMission(label,terms,pose){
   var list=missionProducts(terms);if(!list.length){replaceSay(tx('Todavía no tengo un combo para esa misión, pero puedo mostrarte el catálogo.','I do not have a combo for that mission yet, but I can show you the catalog.'));return;}
-  if(pose)poseAbigail(pose,2600);revealCatalog(list);clearAssistant();var total=list.reduce(function(sum,p){return sum+Number(p.price||0)},0);var bubble=productBubble(list,tx('Para '+label+' te recomiendo este combo:','For '+label+' I recommend this combo:'));
+  if(pose)poseAbigail(pose,2600);showAbigailHelper();revealCatalog(list);clearAssistant();var total=list.reduce(function(sum,p){return sum+Number(p.price||0)},0);var bubble=productBubble(list,tx('Para '+label+' te recomiendo este combo:','For '+label+' I recommend this combo:'));
   var note=document.createElement('div');note.style.cssText='margin-top:7px;font-size:11px;font-weight:800;color:#128c7e';note.textContent=tx('Combo sugerido · total aproximado '+money(total),'Suggested combo · approximate total '+money(total));bubble.appendChild(note);
   var addAll=document.createElement('button');addAll.type='button';addAll.className='abigail-option';addAll.textContent=tx('➕ Agregar combo al pedido','➕ Add combo to order');addAll.onclick=function(){list.forEach(function(p){addToCart(p.code,p.name,p.price,iconFor(p))});poseAbigail('carting',2600);replaceSay(tx('¡Listo! Preparé tu combo de '+label+' 🛒','Done! I prepared your '+label+' combo 🛒'))};bubble.appendChild(addAll);
  }
