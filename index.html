@@ -258,6 +258,12 @@ body.has-abigail .abigail-contact-actions:after{display:none}
 body.has-abigail .abigail-contact-actions span{position:absolute;left:50%;top:-31px;transform:translateX(-50%);white-space:nowrap;padding:6px 9px;border:2px solid #6f4941;border-radius:14px;background:#fffdfb;box-shadow:2px 3px 0 rgba(92,58,50,.14);font-size:10px;pointer-events:none}
 body.has-abigail .abigail-contact-actions a,body.has-abigail .abigail-contact-actions button{min-width:82px;pointer-events:auto;box-shadow:2px 3px 0 rgba(92,58,50,.14)}
 @media(max-width:599px){body.has-abigail .abigail-widget{width:278px;height:150px;right:2px;bottom:52px}body.has-abigail .abigail-widget>.abigail-launcher{right:80px}body.has-abigail .abigail-contact-actions span{font-size:9px;top:-28px}body.has-abigail .abigail-contact-actions a,body.has-abigail .abigail-contact-actions button{min-width:76px}}
+/* Diseño lateral: Telegram arriba, Abigail al medio y WhatsApp abajo */
+body.has-abigail .float-whatsapp,body.has-abigail .float-telegram{display:flex!important}
+body.has-abigail .abigail-widget{width:auto;height:auto;right:46px;bottom:72px}
+body.has-abigail .abigail-widget>.abigail-launcher{position:relative;right:auto;bottom:auto;z-index:auto}
+body.has-abigail .abigail-contact-actions{display:none}
+@media(max-width:599px){body.has-abigail .abigail-widget{width:auto;height:auto;right:8px;bottom:58px}body.has-abigail .abigail-widget>.abigail-launcher{right:auto}}
 </style>
 </head>
 <body class="notranslate{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% endif %}">
