@@ -235,6 +235,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 @keyframes abigailBucketMove{from{transform:translateX(0) rotate(-8deg)}to{transform:translateX(12px) rotate(8deg)}}
 @keyframes abigailBag{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-6deg)}}
 @keyframes abigailBagMove{from{transform:rotate(-10deg) translateY(2px)}to{transform:rotate(10deg) translateY(-5px)}}
+/* Telegram flotante: queda arriba de Abigail para que siempre sea visible */
+.float-telegram{position:fixed;right:18px;bottom:218px;z-index:360;display:flex;align-items:center;gap:6px;border:0;border-radius:50px;background:linear-gradient(135deg,#229ed9,#168ac4);color:#fff;padding:10px 13px;font-size:12px;font-weight:850;cursor:pointer;box-shadow:0 5px 17px rgba(22,138,196,.38);transition:transform .2s,box-shadow .2s}
+.float-telegram:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(22,138,196,.48)}
+.float-telegram:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
+.telegram-focus{animation:telegramFocus .55s ease-in-out 3!important}@keyframes telegramFocus{50%{transform:scale(1.04);filter:brightness(1.12)}}
+@media(max-width:599px){.float-telegram{right:9px;bottom:202px;padding:9px 11px;font-size:11px}}
 </style>
 </head>
 <body class="notranslate">
@@ -441,6 +447,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 </main>
 
 {% if catalogo.slug == 'limpieza-abigail' %}
+<!-- Telegram queda separado y arriba de Abigail para que sea fácil de tocar -->
+<button class="float-telegram" type="button" onclick="openTelegramOrder()" aria-label="Abrir pedido para enviarlo por Telegram">✈️ Telegram</button>
 <!-- ABIGAIL: vendedora virtual flotante -->
 <div class="abigail-widget" id="abigailWidget">
  <button type="button" class="abigail-nudge" id="abigailNudge">🔎 Tocá la búsqueda y escribí el producto que necesitás</button>
@@ -586,6 +594,15 @@ function updateUI() {
 function toggleCart() {
  document.getElementById('cartOverlay').classList.toggle('open');
  document.getElementById('cartModal').classList.toggle('open');
+}
+
+function openTelegramOrder() {
+ var overlay=document.getElementById('cartOverlay');
+ if(!overlay.classList.contains('open')) toggleCart();
+ setTimeout(function(){
+  var btn=document.querySelector('.wpp-btn[onclick="sendTelegram()"]');
+  if(btn){btn.scrollIntoView({behavior:'smooth',block:'center'});btn.classList.add('telegram-focus');setTimeout(function(){btn.classList.remove('telegram-focus')},1800)}
+ },120);
 }
 
 function toggleDireccion() { document.getElementById("direccion").style.display = document.getElementById("tipoEntrega").value === "Envío a domicilio" ? "block" : "none"; }
