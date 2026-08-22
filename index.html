@@ -206,7 +206,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .abigail-widget.sitting .abigail-launcher:hover{transform:translateY(14px) rotate(8deg) scale(.89)}
 @keyframes abigailWalkAcross{0%{transform:translateX(42vw) rotate(4deg);opacity:.25}35%{transform:translateX(0) rotate(-2deg);opacity:1}65%{transform:translateX(-12vw) rotate(2deg)}100%{transform:translateX(0) rotate(0)}}
 @keyframes abigailLaugh{0%,100%{transform:rotate(0) translateY(0)}50%{transform:rotate(-5deg) translateY(-8px)}}
-@media(prefers-reduced-motion:reduce){.abigail-widget.walking .abigail-launcher,.abigail-widget.laughing .abigail-launcher,.abigail-widget.waving .abigail-launcher,.abigail-widget.pointing .abigail-launcher,.abigail-widget.dancing .abigail-launcher,.abigail-widget.surprised .abigail-launcher,.abigail-widget.cleaning .abigail-launcher,.abigail-widget.carting .abigail-launcher,.abigail-widget.cleaning .abigail-launcher:before,.abigail-widget.carting .abigail-launcher:before{animation:none!important}.abigail-widget.sitting .abigail-launcher{transform:translateY(17px) rotate(8deg) scale(.86)}}
+@media(prefers-reduced-motion:reduce){.abigail-widget.walking .abigail-launcher,.abigail-widget.laughing .abigail-launcher,.abigail-widget.waving .abigail-launcher,.abigail-widget.pointing .abigail-launcher,.abigail-widget.dancing .abigail-launcher,.abigail-widget.surprised .abigail-launcher,.abigail-widget.cleaning .abigail-launcher,.abigail-widget.carting .abigail-launcher,.abigail-widget.sweeping .abigail-launcher,.abigail-widget.bucket .abigail-launcher,.abigail-widget.bagging .abigail-launcher,.abigail-widget.cleaning .abigail-launcher:before,.abigail-widget.carting .abigail-launcher:before,.abigail-widget.sweeping .abigail-launcher:before,.abigail-widget.bucket .abigail-launcher:before,.abigail-widget.bagging .abigail-launcher:before{animation:none!important}.abigail-widget.sitting .abigail-launcher{transform:translateY(17px) rotate(8deg) scale(.86)}}
 .abigail-widget.waving .abigail-launcher{animation:abigailWave .8s ease-in-out 2}
 .abigail-widget.pointing .abigail-launcher{animation:abigailPoint .8s ease-in-out 2}
 .abigail-widget.dancing .abigail-launcher{animation:abigailDance .42s ease-in-out 5}
@@ -223,6 +223,18 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 @keyframes abigailSponge{from{transform:translate(0,0) rotate(-18deg)}to{transform:translate(-12px,-8px) rotate(22deg)}}
 @keyframes abigailCart{0%,100%{transform:translateX(0)}50%{transform:translateX(-13px) rotate(-2deg)}}
 @keyframes abigailCartWheels{from{transform:translateX(0)}to{transform:translateX(18px)}}
+.abigail-widget.sweeping .abigail-launcher{animation:abigailSweep .42s ease-in-out 6}
+.abigail-widget.sweeping .abigail-launcher:before{content:'🧹';position:absolute;z-index:6;right:-4px;bottom:15px;font-size:31px;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.22));animation:abigailBroom .42s ease-in-out 6 alternate}
+.abigail-widget.bucket .abigail-launcher{animation:abigailBucket .65s ease-in-out 4}
+.abigail-widget.bucket .abigail-launcher:before{content:'🪣';position:absolute;z-index:6;left:-4px;bottom:3px;font-size:30px;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.22));animation:abigailBucketMove .65s ease-in-out 4}
+.abigail-widget.bagging .abigail-launcher{animation:abigailBag .55s ease-in-out 4}
+.abigail-widget.bagging .abigail-launcher:before{content:'🛍️';position:absolute;z-index:6;right:-5px;bottom:4px;font-size:31px;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.22));animation:abigailBagMove .55s ease-in-out 4}
+@keyframes abigailSweep{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg) translateY(-5px)}}
+@keyframes abigailBroom{from{transform:rotate(-28deg) translate(4px,0)}to{transform:rotate(25deg) translate(-13px,-7px)}}
+@keyframes abigailBucket{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(5deg)}}
+@keyframes abigailBucketMove{from{transform:translateX(0) rotate(-8deg)}to{transform:translateX(12px) rotate(8deg)}}
+@keyframes abigailBag{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-6deg)}}
+@keyframes abigailBagMove{from{transform:rotate(-10deg) translateY(2px)}to{transform:rotate(10deg) translateY(-5px)}}
 </style>
 </head>
 <body class="notranslate">
@@ -884,7 +896,7 @@ var ABIGAIL_PRODUCTS = [
  var messages=document.getElementById('abigailMessages'), input=document.getElementById('abigailInput'), nudge=document.getElementById('abigailNudge');
  var started=false,talkTimer,welcomeTimer,awaiting='',motionTimer,poseTimer;
  function poseAbigail(name,duration){
-  clearTimeout(poseTimer);['waving','pointing','dancing','surprised','laughing','cleaning','carting'].forEach(function(c){widget.classList.remove(c)});widget.classList.remove('sitting');void launcher.offsetWidth;widget.classList.add(name);
+  clearTimeout(poseTimer);['waving','pointing','dancing','surprised','laughing','cleaning','carting','sweeping','bucket','bagging'].forEach(function(c){widget.classList.remove(c)});widget.classList.remove('sitting');void launcher.offsetWidth;widget.classList.add(name);
   poseTimer=setTimeout(function(){widget.classList.remove(name);if(name!=='dancing'&&name!=='surprised')widget.classList.add('sitting')},duration||1700);
  }
  function walkAbigail(){
@@ -895,7 +907,7 @@ var ABIGAIL_PRODUCTS = [
   widget.classList.remove('sitting','laughing');void launcher.offsetWidth;widget.classList.add('laughing');
   setTimeout(function(){widget.classList.remove('laughing')},1700);
  }
- window.abigailAnimate={walk:walkAbigail,laugh:laughAbigail,wave:function(){poseAbigail('waving',1700)},point:function(){poseAbigail('pointing',1700)},dance:function(){poseAbigail('dancing',2200)},surprise:function(){poseAbigail('surprised',1100)},clean:function(){poseAbigail('cleaning',2600)},cart:function(){poseAbigail('carting',2600)}};
+ window.abigailAnimate={walk:walkAbigail,laugh:laughAbigail,wave:function(){poseAbigail('waving',1700)},point:function(){poseAbigail('pointing',1700)},dance:function(){poseAbigail('dancing',2200)},surprise:function(){poseAbigail('surprised',1100)},clean:function(){poseAbigail('cleaning',2600)},cart:function(){poseAbigail('carting',2600)},sweep:function(){poseAbigail('sweeping',2600)},bucket:function(){poseAbigail('bucket',2600)},bag:function(){poseAbigail('bagging',2600)}};
 
  function isEn(){return typeof currentLanguage!=='undefined'&&currentLanguage==='en'}
  function tx(es,en){return isEn()?en:es}
@@ -956,7 +968,7 @@ var ABIGAIL_PRODUCTS = [
   if(/(jabon|jabones|jab$)/.test(q)&&!/(ropa|olor|perfum|pan)/.test(q)){
    awaiting='soap';optionBubble(tx('¿Qué tipo de jabón necesitás?','What kind of soap do you need?'),[{label:tx('Para lavar ropa','For washing clothes'),value:'jabón para lavar ropa'},{label:tx('Jabón perfumado','Scented soap'),value:'jabón perfumado'}]);return;
   }
-  var query=raw;if(/(esponja|limpieza|limpiar|trapo)/.test(q))poseAbigail('cleaning',2600);if(/(dentif|dentri|pasta dental|pasta de dientes)/.test(q))query='pasta dental';
+  var query=raw;if(/(esponja|limpieza|limpiar|trapo)/.test(q))poseAbigail('cleaning',2600);if(/(escoba|barrer|barrido)/.test(q))poseAbigail('sweeping',2600);if(/(balde|cubeta)/.test(q))poseAbigail('bucket',2600);if(/(bolsa|bolsita|compras)/.test(q))poseAbigail('bagging',2600);if(/(dentif|dentri|pasta dental|pasta de dientes)/.test(q))query='pasta dental';
   if(/(lavandina|bleach)/.test(q))query='lavandina';
   var results=search(query);
   if(results.length){revealCatalog(results);poseAbigail('pointing',1700);productBubble(results);followUp();return;}
