@@ -492,6 +492,10 @@ body.has-abigail .abigail-contact-actions{display:none}
   <div class="abigail-suggestions" id="abigailSuggestions">
    <button type="button" data-abigail-prompt="Buscar detergente">Detergentes</button>
    <button type="button" data-abigail-prompt="Mostrar ofertas">Ofertas</button>
+   <button type="button" data-abigail-prompt="Misión baño">🛁 Baño</button>
+   <button type="button" data-abigail-prompt="Misión cocina">🍳 Cocina</button>
+   <button type="button" data-abigail-prompt="Misión ropa">👕 Ropa</button>
+   <button type="button" data-abigail-prompt="Misión toda la casa">🏠 Casa</button>
    <button type="button" data-abigail-prompt="Ver mi pedido">Mi pedido</button>
   </div>
   <form class="abigail-form" id="abigailForm">
@@ -968,9 +972,9 @@ var ABIGAIL_PRODUCTS = [
  function optionBubble(prompt,options){clearAssistant();var bubble=say(prompt);var choices=document.createElement('div');choices.className='abigail-options';options.forEach(function(opt){var b=document.createElement('button');b.type='button';b.className='abigail-option';b.textContent=opt.label;b.onclick=function(){process(opt.value)};choices.appendChild(b)});bubble.appendChild(choices);return bubble}
  function revealCatalog(list){if(!list.length)return;var cat=list[0].category||'';var searchTerm=cat;if(norm(cat).indexOf('pasta')>=0)searchTerm='pasta';if(norm(cat).indexOf('jabone')>=0)searchTerm='jabon';var field=document.getElementById('searchInput');if(field)field.value=searchTerm;if(typeof buscar==='function')buscar(searchTerm);var first=document.querySelector('.product-card[data-hidden="false"]');if(first&&first.closest('.cat-section'))first.closest('.cat-section').scrollIntoView({behavior:'smooth',block:'start'})}
  function followUp(){setTimeout(function(){replaceSay(tx('¿Qué otra cosa necesitás?','What else do you need?'))},4200)}
- function productBubble(list){
+ function productBubble(list,message){
   var bubble=document.createElement('div');bubble.className='abigail-bubble';
-  var intro=document.createElement('div');intro.textContent=tx('Mirá lo que encontré:','Here is what I found:');bubble.appendChild(intro);
+  var intro=document.createElement('div');intro.textContent=message||tx('Mirá lo que encontré:','Here is what I found:');bubble.appendChild(intro);
   var rows=document.createElement('div');rows.className='abigail-result-list';
   list.forEach(function(p){
    var row=document.createElement('div');row.className='abigail-result';
@@ -981,7 +985,7 @@ var ABIGAIL_PRODUCTS = [
    var add=document.createElement('button');add.className='abigail-result-add';add.type='button';add.textContent='+';add.setAttribute('aria-label',tx('Agregar '+p.name,'Add '+displayName(p)));add.onclick=function(){choose(p.code)};
    row.appendChild(info);row.appendChild(add);rows.appendChild(row);
   });
-  bubble.appendChild(rows);messages.appendChild(bubble);messages.scrollTop=messages.scrollHeight;
+  bubble.appendChild(rows);messages.appendChild(bubble);messages.scrollTop=messages.scrollHeight;return bubble;
  }
  function choose(code){
   var p=ABIGAIL_PRODUCTS.find(function(x){return x.code===code});if(!p)return;
@@ -999,6 +1003,16 @@ var ABIGAIL_PRODUCTS = [
  }
  function showOffers(){return ABIGAIL_PRODUCTS.slice().sort(function(a,b){var ae=norm(a.level).indexOf('econom')>=0?0:1,be=norm(b.level).indexOf('econom')>=0?0:1;return ae-be||a.price-b.price}).slice(0,6)}
  function categoryResults(term){var t=norm(term);return ABIGAIL_PRODUCTS.filter(function(p){return norm([p.name,p.category,p.desc].join(' ')).indexOf(t)>=0}).slice(0,8)}
+ function missionProducts(terms){
+  var scored=ABIGAIL_PRODUCTS.map(function(p){var text=norm([p.name,p.brand,p.category,p.desc].join(' ')),score=0;terms.forEach(function(term){var t=norm(term);if(text.indexOf(t)>=0)score+=norm(p.category).indexOf(t)>=0?7:3});return {p:p,score:score}}).filter(function(x){return x.score>0}).sort(function(a,b){return b.score-a.score||a.p.price-b.p.price});
+  var out=[],cats={};scored.forEach(function(x){var key=norm(x.p.category);if(!cats[key]&&out.length<5){cats[key]=true;out.push(x.p)}});return out;
+ }
+ function startMission(label,terms,pose){
+  var list=missionProducts(terms);if(!list.length){replaceSay(tx('Todavía no tengo un combo para esa misión, pero puedo mostrarte el catálogo.','I do not have a combo for that mission yet, but I can show you the catalog.'));return;}
+  if(pose)poseAbigail(pose,2600);revealCatalog(list);clearAssistant();var total=list.reduce(function(sum,p){return sum+Number(p.price||0)},0);var bubble=productBubble(list,tx('Para '+label+' te recomiendo este combo:','For '+label+' I recommend this combo:'));
+  var note=document.createElement('div');note.style.cssText='margin-top:7px;font-size:11px;font-weight:800;color:#128c7e';note.textContent=tx('Combo sugerido · total aproximado '+money(total),'Suggested combo · approximate total '+money(total));bubble.appendChild(note);
+  var addAll=document.createElement('button');addAll.type='button';addAll.className='abigail-option';addAll.textContent=tx('➕ Agregar combo al pedido','➕ Add combo to order');addAll.onclick=function(){list.forEach(function(p){addToCart(p.code,p.name,p.price,iconFor(p))});poseAbigail('carting',2600);replaceSay(tx('¡Listo! Preparé tu combo de '+label+' 🛒','Done! I prepared your '+label+' combo 🛒'))};bubble.appendChild(addAll);
+ }
  function process(text){
   var raw=String(text||'').trim(), q=norm(raw);if(!raw)return;
   say(raw,'user');widget.classList.add('thinking');setTimeout(function(){widget.classList.remove('thinking')},520);
@@ -1009,6 +1023,10 @@ var ABIGAIL_PRODUCTS = [
   if(/\b(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)\b/.test(q)){
    replaceSay(tx('Hola 😊 Soy Abigail, tu asistente de limpieza.','Hello 😊 I am Abigail, your cleaning assistant.'));setTimeout(function(){replaceSay(tx('¿Qué producto estás buscando?','What product are you looking for?'))},2100);return;
   }
+  if(/(baño|bano|mision baño|mision bano)/.test(q)){startMission('el baño',['lavandina','detergente','esponja','quitamanchas'],'bucket');return;}
+  if(/(cocina|grasa|mision cocina)/.test(q)){startMission('la cocina',['desengrasante','detergente','esponja','rollo de cocina'],'cleaning');return;}
+  if(/(ropa|lavar|mision ropa)/.test(q)){startMission('la ropa',['jabon','jabón líquido','suavizante','quitamanchas'],'cleaning');return;}
+  if(/(toda la casa|casa completa|mision toda la casa|mision casa)/.test(q)){startMission('toda la casa',['detergente','lavandina','esponja','jabon','papel'],'sweeping');return;}
   if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){poseAbigail('carting',2600);replaceSay(tx('Te abro tu pedido para que revises las cantidades y el total.','I will open your order so you can review the quantities and total.'));toggleCart();return;}
   if(/(oferta|ofertas|econom|barato|baratos|ahorro)/.test(q)){var offers=showOffers();poseAbigail('surprised',1100);productBubble(offers);followUp();return;}
   if(/(gracias|genial|perfecto)/.test(q)){replaceSay(tx('¡De nada! Estoy acá para ayudarte.','You are welcome! I am here to help.'));return;}
