@@ -236,11 +236,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 @keyframes abigailBag{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-6deg)}}
 @keyframes abigailBagMove{from{transform:rotate(-10deg) translateY(2px)}to{transform:rotate(10deg) translateY(-5px)}}
 /* Telegram flotante: queda arriba de Abigail para que siempre sea visible */
-.float-telegram{position:fixed;right:18px;bottom:218px;z-index:360;display:flex;align-items:center;gap:6px;border:0;border-radius:50px;background:linear-gradient(135deg,#229ed9,#168ac4);color:#fff;padding:10px 13px;font-size:12px;font-weight:850;cursor:pointer;box-shadow:0 5px 17px rgba(22,138,196,.38);transition:transform .2s,box-shadow .2s}
-.float-telegram:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(22,138,196,.48)}
+.float-telegram{position:fixed;right:18px;bottom:218px;z-index:360;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:linear-gradient(135deg,#229ed9,#168ac4);color:#fff;padding:0;cursor:pointer;box-shadow:0 5px 17px rgba(22,138,196,.38);transition:transform .2s,box-shadow .2s}
+.float-telegram svg{width:31px;height:31px;fill:currentColor;display:block}
+.float-telegram:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 8px 22px rgba(22,138,196,.48)}
 .float-telegram:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
 .telegram-focus{animation:telegramFocus .55s ease-in-out 3!important}@keyframes telegramFocus{50%{transform:scale(1.04);filter:brightness(1.12)}}
-@media(max-width:599px){.float-telegram{right:9px;bottom:202px;padding:9px 11px;font-size:11px}}
+@media(max-width:599px){.float-telegram{right:9px;bottom:202px;width:50px;height:50px}.float-telegram svg{width:28px;height:28px}}
 </style>
 </head>
 <body class="notranslate">
@@ -448,7 +449,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
 {% if catalogo.slug == 'limpieza-abigail' %}
 <!-- Telegram queda separado y arriba de Abigail para que sea fácil de tocar -->
-<button class="float-telegram" type="button" onclick="openTelegramOrder()" aria-label="Abrir pedido para enviarlo por Telegram">✈️ Telegram</button>
+<button class="float-telegram" type="button" onclick="openTelegramOrder()" aria-label="Abrir pedido para enviarlo por Telegram" title="Telegram">
+ <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 2.3 2.2 9.8c-.9.35-.9 1.55.03 1.85l4.95 1.62 1.7 5.2c.23.71 1.14.91 1.65.36l2.5-2.7 4.8 3.5c.63.46 1.53.13 1.7-.63l3.2-15.4c.2-.96-.54-1.65-1.03-1.3ZM9.65 17.6l-.98-3.05 8.9-8.3-7.5 7.55-.42 3.8Zm7.95.4-5.22-3.8 7.4-9.15-2.18 12.95Z"/></svg>
+</button>
 <!-- ABIGAIL: vendedora virtual flotante -->
 <div class="abigail-widget" id="abigailWidget">
  <button type="button" class="abigail-nudge" id="abigailNudge">🔎 Tocá la búsqueda y escribí el producto que necesitás</button>
