@@ -206,7 +206,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .abigail-widget.sitting .abigail-launcher:hover{transform:translateY(14px) rotate(8deg) scale(.89)}
 @keyframes abigailWalkAcross{0%{transform:translateX(42vw) rotate(4deg);opacity:.25}35%{transform:translateX(0) rotate(-2deg);opacity:1}65%{transform:translateX(-12vw) rotate(2deg)}100%{transform:translateX(0) rotate(0)}}
 @keyframes abigailLaugh{0%,100%{transform:rotate(0) translateY(0)}50%{transform:rotate(-5deg) translateY(-8px)}}
-@media(prefers-reduced-motion:reduce){.abigail-widget.walking .abigail-launcher,.abigail-widget.laughing .abigail-launcher,.abigail-widget.waving .abigail-launcher,.abigail-widget.pointing .abigail-launcher,.abigail-widget.dancing .abigail-launcher,.abigail-widget.surprised .abigail-launcher{animation:none!important}.abigail-widget.sitting .abigail-launcher{transform:translateY(17px) rotate(8deg) scale(.86)}}
+@media(prefers-reduced-motion:reduce){.abigail-widget.walking .abigail-launcher,.abigail-widget.laughing .abigail-launcher,.abigail-widget.waving .abigail-launcher,.abigail-widget.pointing .abigail-launcher,.abigail-widget.dancing .abigail-launcher,.abigail-widget.surprised .abigail-launcher,.abigail-widget.cleaning .abigail-launcher,.abigail-widget.carting .abigail-launcher,.abigail-widget.cleaning .abigail-launcher:before,.abigail-widget.carting .abigail-launcher:before{animation:none!important}.abigail-widget.sitting .abigail-launcher{transform:translateY(17px) rotate(8deg) scale(.86)}}
 .abigail-widget.waving .abigail-launcher{animation:abigailWave .8s ease-in-out 2}
 .abigail-widget.pointing .abigail-launcher{animation:abigailPoint .8s ease-in-out 2}
 .abigail-widget.dancing .abigail-launcher{animation:abigailDance .42s ease-in-out 5}
@@ -215,6 +215,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 @keyframes abigailPoint{0%,100%{transform:translateX(0) rotate(0)}40%{transform:translateX(-10px) rotate(-6deg)}70%{transform:translateX(5px) rotate(4deg)}}
 @keyframes abigailDance{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-10px) rotate(-7deg)}50%{transform:translateY(0) rotate(7deg)}75%{transform:translateY(-7px) rotate(-5deg)}}
 @keyframes abigailSurprise{0%,100%{transform:scale(1)}35%{transform:scale(1.12) translateY(-8px)}65%{transform:scale(.96)}}
+.abigail-widget.cleaning .abigail-launcher{animation:abigailClean .38s ease-in-out 6}
+.abigail-widget.cleaning .abigail-launcher:before{content:'🧽';position:absolute;z-index:6;right:2px;bottom:16px;font-size:28px;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.22));animation:abigailSponge .38s ease-in-out 6 alternate}
+.abigail-widget.carting .abigail-launcher{animation:abigailCart .55s ease-in-out 4}
+.abigail-widget.carting .abigail-launcher:before{content:'🛒';position:absolute;z-index:6;left:-4px;bottom:2px;font-size:31px;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.22));animation:abigailCartWheels .55s linear 4}
+@keyframes abigailClean{0%,100%{transform:rotate(0) translateY(0)}50%{transform:rotate(-4deg) translateY(-4px)}}
+@keyframes abigailSponge{from{transform:translate(0,0) rotate(-18deg)}to{transform:translate(-12px,-8px) rotate(22deg)}}
+@keyframes abigailCart{0%,100%{transform:translateX(0)}50%{transform:translateX(-13px) rotate(-2deg)}}
+@keyframes abigailCartWheels{from{transform:translateX(0)}to{transform:translateX(18px)}}
 </style>
 </head>
 <body class="notranslate">
@@ -876,7 +884,7 @@ var ABIGAIL_PRODUCTS = [
  var messages=document.getElementById('abigailMessages'), input=document.getElementById('abigailInput'), nudge=document.getElementById('abigailNudge');
  var started=false,talkTimer,welcomeTimer,awaiting='',motionTimer,poseTimer;
  function poseAbigail(name,duration){
-  clearTimeout(poseTimer);['waving','pointing','dancing','surprised','laughing'].forEach(function(c){widget.classList.remove(c)});widget.classList.remove('sitting');void launcher.offsetWidth;widget.classList.add(name);
+  clearTimeout(poseTimer);['waving','pointing','dancing','surprised','laughing','cleaning','carting'].forEach(function(c){widget.classList.remove(c)});widget.classList.remove('sitting');void launcher.offsetWidth;widget.classList.add(name);
   poseTimer=setTimeout(function(){widget.classList.remove(name);if(name!=='dancing'&&name!=='surprised')widget.classList.add('sitting')},duration||1700);
  }
  function walkAbigail(){
@@ -887,7 +895,7 @@ var ABIGAIL_PRODUCTS = [
   widget.classList.remove('sitting','laughing');void launcher.offsetWidth;widget.classList.add('laughing');
   setTimeout(function(){widget.classList.remove('laughing')},1700);
  }
- window.abigailAnimate={walk:walkAbigail,laugh:laughAbigail,wave:function(){poseAbigail('waving',1700)},point:function(){poseAbigail('pointing',1700)},dance:function(){poseAbigail('dancing',2200)},surprise:function(){poseAbigail('surprised',1100)}};
+ window.abigailAnimate={walk:walkAbigail,laugh:laughAbigail,wave:function(){poseAbigail('waving',1700)},point:function(){poseAbigail('pointing',1700)},dance:function(){poseAbigail('dancing',2200)},surprise:function(){poseAbigail('surprised',1100)},clean:function(){poseAbigail('cleaning',2600)},cart:function(){poseAbigail('carting',2600)}};
 
  function isEn(){return typeof currentLanguage!=='undefined'&&currentLanguage==='en'}
  function tx(es,en){return isEn()?en:es}
@@ -919,7 +927,8 @@ var ABIGAIL_PRODUCTS = [
  function choose(code){
   var p=ABIGAIL_PRODUCTS.find(function(x){return x.code===code});if(!p)return;
   addToCart(p.code,p.name,p.price,iconFor(p));
-  poseAbigail('dancing',2200);
+  poseAbigail('carting',2600);
+  setTimeout(function(){poseAbigail('dancing',2200)},2700);
   replaceSay(tx('¡Listo! Agregué '+p.name+' al pedido.','Done! I added '+displayName(p)+' to your order.'));setTimeout(function(){replaceSay(tx('¿Qué otra cosa necesitás?','What else do you need?'))},2200);
  }
  window.abigailChoose=choose;
@@ -941,13 +950,13 @@ var ABIGAIL_PRODUCTS = [
   if(/\b(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)\b/.test(q)){
    replaceSay(tx('Hola 😊 Soy Abigail, tu asistente de limpieza.','Hello 😊 I am Abigail, your cleaning assistant.'));setTimeout(function(){replaceSay(tx('¿Qué producto estás buscando?','What product are you looking for?'))},2100);return;
   }
-  if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){replaceSay(tx('Te abro tu pedido para que revises las cantidades y el total.','I will open your order so you can review the quantities and total.'));toggleCart();return;}
+  if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){poseAbigail('carting',2600);replaceSay(tx('Te abro tu pedido para que revises las cantidades y el total.','I will open your order so you can review the quantities and total.'));toggleCart();return;}
   if(/(oferta|ofertas|econom|barato|baratos|ahorro)/.test(q)){var offers=showOffers();poseAbigail('surprised',1100);productBubble(offers);followUp();return;}
   if(/(gracias|genial|perfecto)/.test(q)){replaceSay(tx('¡De nada! Estoy acá para ayudarte.','You are welcome! I am here to help.'));return;}
   if(/(jabon|jabones|jab$)/.test(q)&&!/(ropa|olor|perfum|pan)/.test(q)){
    awaiting='soap';optionBubble(tx('¿Qué tipo de jabón necesitás?','What kind of soap do you need?'),[{label:tx('Para lavar ropa','For washing clothes'),value:'jabón para lavar ropa'},{label:tx('Jabón perfumado','Scented soap'),value:'jabón perfumado'}]);return;
   }
-  var query=raw;if(/(dentif|dentri|pasta dental|pasta de dientes)/.test(q))query='pasta dental';
+  var query=raw;if(/(esponja|limpieza|limpiar|trapo)/.test(q))poseAbigail('cleaning',2600);if(/(dentif|dentri|pasta dental|pasta de dientes)/.test(q))query='pasta dental';
   if(/(lavandina|bleach)/.test(q))query='lavandina';
   var results=search(query);
   if(results.length){revealCatalog(results);poseAbigail('pointing',1700);productBubble(results);followUp();return;}
