@@ -342,12 +342,6 @@ body.has-abigail .abigail-contact-actions{display:none}
  </div>
 </header>
 
-<!-- Buscador flotante: aparece al desplazarse para buscar sin volver arriba -->
-<div class="floating-search" id="floatingSearch" role="search" aria-label="Buscador flotante">
- <input type="text" id="floatingSearchInput" placeholder="🔍 Buscar producto..." oninput="sincronizarBusquedaFlotante(this.value)" onkeydown="if(event.key==='Enter'){ejecutarBusquedaFlotante();}">
- <button type="button" aria-label="Buscar" title="Buscar" onclick="ejecutarBusquedaFlotante();">➜</button>
-</div>
-
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
@@ -749,35 +743,16 @@ function actualizarLimpiarBusqueda() {
 }
 function limpiarBusqueda() {
  var input = document.getElementById('searchInput');
- var floating = document.getElementById('floatingSearchInput');
  if (!input) return;
  input.value = '';
- if (floating) floating.value = '';
  buscar('');
  actualizarLimpiarBusqueda();
  input.focus();
 }
-function sincronizarBusquedaFlotante(value) {
- var input = document.getElementById('searchInput');
- var floating = document.getElementById('floatingSearchInput');
- if (input) input.value = value;
- if (floating && floating.value !== value) floating.value = value;
- buscar(value);
- actualizarLimpiarBusqueda();
-}
 function buscarRapido(q) {
  var input = document.getElementById('searchInput');
- var floating = document.getElementById('floatingSearchInput');
  if (input) input.value = q;
- if (floating) floating.value = q;
  ejecutarBusquedaTradicional();
-}
-function ejecutarBusquedaFlotante() {
- var floating = document.getElementById('floatingSearchInput');
- var input = document.getElementById('searchInput');
- if (floating && input) input.value = floating.value;
- ejecutarBusquedaTradicional();
- if (floating) floating.blur();
 }
 function normalizarBusqueda(value) {
  return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
@@ -785,8 +760,6 @@ function normalizarBusqueda(value) {
 function ejecutarBusquedaTradicional() {
  var input = document.getElementById('searchInput');
  var q = input ? input.value : '';
- var floating = document.getElementById('floatingSearchInput');
- if (floating) floating.value = q;
  buscar(q);
  actualizarLimpiarBusqueda();
  var first = document.querySelector('.product-card[data-hidden="false"]');
@@ -817,9 +790,6 @@ function buscar(q) {
  document.getElementById('noResults').style.display = ((terms.length || level) && visible === 0) ? 'block' : 'none';
 }
 
-window.addEventListener('scroll', function(){
- document.body.classList.toggle('search-floating', window.scrollY > 280);
-}, {passive:true});
 function toggleBrand(btn) {
  btn.classList.toggle('open');
  btn.nextElementSibling.classList.toggle('open');
