@@ -327,8 +327,8 @@ body.has-abigail .abigail-contact-actions{display:none}
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
  <div class="search-bar">
- <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value)" onkeydown="if(event.key==='Enter'){buscar(this.value);this.blur();}">
- <button type="button" class="search-submit" aria-label="Buscar" title="Buscar" onclick="buscar(document.getElementById('searchInput').value);document.getElementById('searchInput').blur();">➜</button>
+ <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value)" onkeydown="if(event.key==='Enter'){ejecutarBusquedaTradicional();}">
+ <button type="button" class="search-submit" aria-label="Buscar" title="Buscar" onclick="ejecutarBusquedaTradicional();">➜</button>
  <select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
  </div>
 </header>
@@ -512,7 +512,7 @@ body.has-abigail .abigail-contact-actions{display:none}
    <button type="submit" aria-label="Enviar">➤</button>
   </form>
  </div>
- <button class="abigail-launcher" id="abigailLauncher" aria-label="Abrir asistente de Abigail" aria-expanded="false">
+ <button class="abigail-launcher" id="abigailLauncher" aria-label="Abrir asistente de Abigail para buscar productos" title="Tocá a Abigail para buscar productos" aria-expanded="false">
   <svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza">
    <image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/>
 
@@ -727,23 +727,39 @@ function buscarCombo(q) {
  }
 }
 
+function normalizarBusqueda(value) {
+ return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function ejecutarBusquedaTradicional() {
+ var input = document.getElementById('searchInput');
+ var q = input ? input.value : '';
+ buscar(q);
+ var first = document.querySelector('.product-card[data-hidden="false"]');
+ if (first) {
+  var section = first.closest('.cat-section');
+  if (section) section.scrollIntoView({behavior:'smooth', block:'start'});
+ }
+ if (input) input.blur();
+}
 function buscar(q) {
- q = (q || '').toLowerCase().trim();
+ var query = normalizarBusqueda(q);
+ var terms = query ? query.split(/\s+/).filter(Boolean) : [];
  var level = document.getElementById('priceFilter').value;
  var cards = document.querySelectorAll('.product-card');
  var visible = 0;
  cards.forEach(function(c){
- var matchText = !q || c.dataset.name.indexOf(q) !== -1;
- var matchLevel = !level || c.dataset.level === level;
- var match = matchText && matchLevel;
- c.dataset.hidden = match ? 'false' : 'true';
- if (match) visible++;
- if ((q || level) && match) {
- var bp = c.closest('.brand-products');
- if (bp) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
- }
+  var searchable = normalizarBusqueda(c.dataset.name || '');
+  var matchText = !terms.length || terms.every(function(term){ return searchable.indexOf(term) !== -1; });
+  var matchLevel = !level || c.dataset.level === level;
+  var match = matchText && matchLevel;
+  c.dataset.hidden = match ? 'false' : 'true';
+  if (match) visible++;
+  if ((terms.length || level) && match) {
+   var bp = c.closest('.brand-products');
+   if (bp) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
+  }
  });
- document.getElementById('noResults').style.display = ((q || level) && visible === 0) ? 'block' : 'none';
+ document.getElementById('noResults').style.display = ((terms.length || level) && visible === 0) ? 'block' : 'none';
 }
 
 function toggleBrand(btn) {
@@ -1071,7 +1087,7 @@ var ABIGAIL_PRODUCTS = [
   nudgeStepTimers.push(setTimeout(hideNudge,12500));
   nudgeCycleTimer=setTimeout(runNudgeCycle,120000);
  }
- if(nudge){nudge.onclick=function(){clearNudgeSteps();hideNudge();open()};setTimeout(runNudgeCycle,8000)}
+ if(nudge){nudge.onclick=function(){clearNudgeSteps();hideNudge();open()};setTimeout(runNudgeCycle,1500)}
  setTimeout(walkAbigail,1200);
  function open(){chat.classList.add('open');chat.setAttribute('aria-hidden','false');launcher.setAttribute('aria-expanded','true');clearNudgeSteps();if(nudge)hideNudge();welcome();laughAbigail();setTimeout(function(){input.focus()},80)}
  function close(){chat.classList.remove('open');chat.setAttribute('aria-hidden','true');launcher.setAttribute('aria-expanded','false')}
