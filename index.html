@@ -323,10 +323,6 @@ body.has-abigail .abigail-contact-actions{display:none}
  <span>{{ catalogo.subtitulo }}</span>
  </div>
  </div>
- <div class="language-switch" role="group" aria-label="{{ 'Language' if request.args.get('lang') == 'en' else 'Idioma' }}">
-  <a href="/c/{{ catalogo.slug }}?v=20260809-separate-es" class="{{ 'active' if request.args.get('lang') != 'en' else '' }}" aria-label="{{ 'Spanish' if request.args.get('lang') == 'en' else 'Español' }}">🇪🇸 ES</a>
-  <a href="/c/{{ catalogo.slug }}?lang=en&v=20260809-separate-en" class="{{ 'active' if request.args.get('lang') == 'en' else '' }}" aria-label="{{ 'English' if request.args.get('lang') == 'en' else 'Inglés' }}">🇬🇧 EN</a>
- </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
  <div class="search-bar">
@@ -862,7 +858,7 @@ function toggleBrand(btn) {
 
 /* Selector de idioma: el español queda como idioma inicial. */
 // Catálogos separados: el enlace normal es español; ?lang=en es inglés.
-var currentLanguage = /(?:^|&)lang=en(?:&|$)/i.test(window.location.search.replace(/^\?/,'') ) ? 'en' : 'es';
+var currentLanguage = 'es';
 var EN = {
  'Todos':'All','Todo':'All','Económico':'Budget','Estándar':'Standard','Premium':'Premium','Idioma':'Language','Catálogo digital':'Digital catalog','Limpieza del hogar':'Home cleaning','Consultar por WhatsApp':'Contact us on WhatsApp','💬 Consultar por WhatsApp':'💬 Contact us on WhatsApp','Todo de un vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Todo de a vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Compra de forma fácil y segura':'Shop easily and safely','Compra de forma easy y segura':'Shop easily and safely','Recoger en tienda':'Pick up in store','Consultar sobre el delivery':'Ask about delivery','Transferencia bancaria':'Bank transfer','Bank transfer bancaria':'Bank transfer','Paquetes destacados':'Featured bundles','Paquete de rollos de cocina':'Paper towel bundle','Paquete of rolls of cocina':'Paper towel bundle','Paquete of rolls de cocina':'Paper towel bundle','A mayor cantidad, mejor precio.':'More quantity, better price.','A mayor cantidad, mejor precio':'More quantity, better price','Elige el paquete por marca y tamaño.':'Choose a pack by brand and size.','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORÍA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORIA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','Buscar producto o marca...':'Search product or brand...','Buscar producto o marca':'Search product or brand','Precio por rollo':'Price per roll','Precio por pack':'Price per pack','Precio por fardo':'Price per bundle','Precio':'Price',
  'NAV CATEGORÍAS':'CATEGORIES','Idioma':'Language','Filtrar nivel de precio':'Filter price level','Acciones rápidas':'Quick actions','Categorías del catálogo':'Catalog categories','Categorías disponibles':'Available categories','Pasos para hacer un pedido':'Steps to place an order','Información de compra':'Shopping information','Combos destacados':'Featured bundles','Vidriera visual':'Visual storefront','Ver categoría':'View category','Ver pedido':'View order','Consultar por WhatsApp':'Contact us on WhatsApp','Contacto rápido por WhatsApp':'Quick WhatsApp contact','¿Necesitás ayuda?':'Need help?',
