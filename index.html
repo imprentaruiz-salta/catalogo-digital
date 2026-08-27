@@ -41,7 +41,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .cart-btn:hover{background:rgba(255,255,255,.35)}
 .search-bar{padding:0 16px 12px;display:flex;gap:8px;align-items:center}
 .search-bar input{flex:1;min-width:0;width:auto;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.search-submit{border:0;background:#f59e0b;color:#fff;border-radius:50px;padding:10px 13px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap}.search-submit:hover{background:#d97706}.search-submit:focus-visible{outline:3px solid #fde68a;outline-offset:2px}
+.search-submit{border:0;background:#f59e0b;color:#fff;border-radius:50px;padding:10px 13px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap}.search-submit:hover{background:#d97706}.search-submit:focus-visible{outline:3px solid #fde68a;outline-offset:2px}.search-clear{display:none;border:0;background:#e2e8f0;color:#475569;width:34px;height:34px;border-radius:50%;font-size:17px;font-weight:800;cursor:pointer;flex:none}.search-clear.show{display:block}.search-clear:hover{background:#cbd5e1}.search-clear:focus-visible{outline:3px solid #bae6fd;outline-offset:2px}.search-shortcuts{display:flex;align-items:center;gap:6px;padding:0 16px 10px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}.search-shortcuts::-webkit-scrollbar{display:none}.search-shortcuts span{font-size:11px;color:#64748b;font-weight:700}.search-shortcut{border:1px solid #bae6fd;background:#f0f9ff;color:#075985;border-radius:50px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer}.search-shortcut:hover{background:#e0f2fe}.search-shortcut:focus-visible{outline:3px solid #7dd3fc;outline-offset:2px}
 
 /* CAT NAV */
 .cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:7px 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100;display:block}.cat-nav .category-track{display:flex;flex:0 0 auto;width:max-content;gap:7px;will-change:transform}
@@ -327,9 +327,18 @@ body.has-abigail .abigail-contact-actions{display:none}
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
  <div class="search-bar">
- <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value)" onkeydown="if(event.key==='Enter'){ejecutarBusquedaTradicional();}">
+ <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){ejecutarBusquedaTradicional();}">
+ <button type="button" class="search-clear" id="searchClear" aria-label="Borrar búsqueda" title="Borrar búsqueda" onclick="limpiarBusqueda();">×</button>
  <button type="button" class="search-submit" aria-label="Buscar" title="Buscar" onclick="ejecutarBusquedaTradicional();">➜</button>
  <select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
+ </div>
+ <div class="search-shortcuts" aria-label="Búsquedas rápidas">
+  <span>Buscar rápido:</span>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('detergente')">Detergentes</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('jabon')">Jabones</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('lavandina')">Lavandina</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('papel')">Papel</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('esponja')">Esponjas</button>
  </div>
 </header>
 
@@ -727,6 +736,24 @@ function buscarCombo(q) {
  }
 }
 
+function actualizarLimpiarBusqueda() {
+ var input = document.getElementById('searchInput');
+ var clear = document.getElementById('searchClear');
+ if (clear && input) clear.classList.toggle('show', input.value.trim().length > 0);
+}
+function limpiarBusqueda() {
+ var input = document.getElementById('searchInput');
+ if (!input) return;
+ input.value = '';
+ buscar('');
+ actualizarLimpiarBusqueda();
+ input.focus();
+}
+function buscarRapido(q) {
+ var input = document.getElementById('searchInput');
+ if (input) input.value = q;
+ ejecutarBusquedaTradicional();
+}
 function normalizarBusqueda(value) {
  return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
