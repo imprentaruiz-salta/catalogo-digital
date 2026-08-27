@@ -328,7 +328,7 @@ body.has-abigail .abigail-contact-actions{display:none}
  </div>
  <div class="search-bar">
  <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value)" onkeydown="if(event.key==='Enter'){buscar(this.value);this.blur();}">
- <button type="button" class="search-submit" onclick="buscar(document.getElementById('searchInput').value);document.getElementById('searchInput').blur();">🔍 Buscar</button>
+ <button type="button" class="search-submit" aria-label="Buscar" title="Buscar" onclick="buscar(document.getElementById('searchInput').value);document.getElementById('searchInput').blur();">➜</button>
  <select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
  </div>
 </header>
