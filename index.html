@@ -39,8 +39,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .language-switch{display:flex;gap:4px;align-items:center;margin-left:auto;margin-right:8px}.language-switch button,.language-switch a{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.13);color:#fff;border-radius:20px;padding:6px 8px;font-size:11px;font-weight:800;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}.language-switch button.active,.language-switch a.active,.language-switch button:hover,.language-switch a:hover{background:#fff;color:var(--gd)}
 .cart-btn:hover{background:rgba(255,255,255,.35)}
-.search-bar{padding:0 16px 12px}
-.search-bar input{width:100%;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.search-bar{padding:0 16px 12px;display:flex;gap:8px;align-items:center}
+.search-bar input{flex:1;min-width:0;width:auto;padding:10px 16px;border-radius:50px;border:none;font-size:14px;outline:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.search-submit{border:0;background:#f59e0b;color:#fff;border-radius:50px;padding:10px 13px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap}.search-submit:hover{background:#d97706}.search-submit:focus-visible{outline:3px solid #fde68a;outline-offset:2px}
 
 /* CAT NAV */
 .cat-nav{background:#fff;border-bottom:2px solid var(--brd);overflow-x:auto;white-space:nowrap;padding:7px 8px;scrollbar-width:none;position:sticky;top:108px;z-index:100;display:block}.cat-nav .category-track{display:flex;flex:0 0 auto;width:max-content;gap:7px;will-change:transform}
@@ -326,7 +327,9 @@ body.has-abigail .abigail-contact-actions{display:none}
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
  <div class="search-bar">
- <input type="text" id="searchInput" placeholder="🔍 Buscar producto o marca..." oninput="buscar(this.value)"><select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
+ <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value)" onkeydown="if(event.key==='Enter'){buscar(this.value);this.blur();}">
+ <button type="button" class="search-submit" onclick="buscar(document.getElementById('searchInput').value);document.getElementById('searchInput').blur();">🔍 Buscar</button>
+ <select id="priceFilter" class="price-filter" onchange="buscar(document.getElementById('searchInput').value)" aria-label="Filtrar nivel de precio"><option value="">Todos</option><option value="Económico">Económico</option><option value="Estándar">Estándar</option><option value="Premium">Premium</option></select>
  </div>
 </header>
 
