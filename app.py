@@ -360,18 +360,16 @@ def fleming_property_preview(number):
     response.headers['Cache-Control']='no-cache, max-age=0'
     return response
 
-@app.route('/fleming')
-@app.route('/fleming/')
-def fleming_brochure():
+def _render_fleming_page(selected=''):
     html=render_template('fleming.html')
-    selected=request.args.get('ubicacion','').strip()
+    selected=(selected or '').strip()
     if selected.isdigit():
         number=int(selected)
         import re, html as html_module
         chosen=None
-        for match in re.finditer(r'<article class=\"property-card\b[^>]*>[\s\S]*?</article>',html):
+        for match in re.finditer(r'<article class="property-card\b[^>]*>[\s\S]*?</article>',html):
             block=match.group(0)
-            label_match=re.search(r'<div class=\"card-label\">([\s\S]*?)</div>',block)
+            label_match=re.search(r'<div class="card-label">([\s\S]*?)</div>',block)
             if not label_match: continue
             label=re.sub(r'<[^>]+>','',label_match.group(1)).strip()
             prefix=re.match(r'0?([0-9]+)\s*[·.]',label)
@@ -381,21 +379,31 @@ def fleming_brochure():
                 chosen=(label,title,block); break
         if chosen:
             label,title,chosen_block=chosen
-            # Render a truly individual page in the server response, not only by hiding cards with JavaScript.
-            # This keeps shared links correct even when a browser or messaging app does not run scripts.
-            html=re.sub(r'(<section class=\"catalog-grid\" id=\"venta\">)[\s\S]*?(</section>)',r'\1'+chosen_block+r'\2',html,count=1)
+            # Shared pages are server-rendered with one card only; this remains correct even without JavaScript.
+            html=re.sub(r'(<section class="catalog-grid" id="venta">)[\s\S]*?(</section>)',r'\1'+chosen_block+r'\2',html,count=1)
             safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
             safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
-            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}&preview=3',quote=True)
-            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v=3',quote=True)
+            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/inmueble/propiedad-{number}?preview=4',quote=True)
+            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v=4',quote=True)
             html=re.sub(r'(<title>)[\s\S]*?(</title>)',r'\1'+safe_title+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"description\")',r'\1'+safe_desc+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:title\")',r'\1'+safe_title+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:description\")',r'\1'+safe_desc+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:url\")',r'\1'+share_url+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:image\")',r'\1'+preview_image+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"twitter:image\")',r'\1'+preview_image+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+name="description")',r'\1'+safe_desc+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:title")',r'\1'+safe_title+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:description")',r'\1'+safe_desc+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:url")',r'\1'+share_url+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:image")',r'\1'+preview_image+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=")[^"]*("\s+name="twitter:image")',r'\1'+preview_image+r'\2',html,count=1)
     return html
+
+@app.route('/fleming')
+@app.route('/fleming/')
+def fleming_brochure():
+    return _render_fleming_page(request.args.get('ubicacion',''))
+
+@app.route('/fleming/inmueble/<slug>')
+def fleming_property_page(slug):
+    import re
+    match=re.search(r'(?:propiedad-|p)([0-9]+)',(slug or '').lower())
+    return _render_fleming_page(match.group(1) if match else '')
 
 @app.route('/fleming/cargar')
 @app.route('/fleming/cargar/')
