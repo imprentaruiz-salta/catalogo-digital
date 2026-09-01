@@ -378,9 +378,12 @@ def fleming_brochure():
             if prefix and int(prefix.group(1))==number:
                 title_match=re.search(r'<h2>([\s\S]*?)</h2>',block)
                 title=re.sub(r'<[^>]+>','',title_match.group(1)).strip() if title_match else label
-                chosen=(label,title); break
+                chosen=(label,title,block); break
         if chosen:
-            label,title=chosen
+            label,title,chosen_block=chosen
+            # Render a truly individual page in the server response, not only by hiding cards with JavaScript.
+            # This keeps shared links correct even when a browser or messaging app does not run scripts.
+            html=re.sub(r'(<section class=\"catalog-grid\" id=\"venta\">)[\s\S]*?(</section>)',r'\1'+chosen_block+r'\2',html,count=1)
             safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
             safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
             share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}&preview=3',quote=True)
