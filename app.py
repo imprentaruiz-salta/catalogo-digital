@@ -316,6 +316,50 @@ def fleming_video_list():
 def fleming_video_file(filename):
     return send_from_directory(VIDEO_FOLDER, filename, conditional=True)
 
+@app.route('/fleming/preview/<int:number>.jpg')
+def fleming_property_preview(number):
+    if number < 1 or number > 999:
+        return ('',404)
+    import re, base64, textwrap
+    from PIL import Image, ImageDraw, ImageFont, ImageOps
+    template=render_template('fleming.html')
+    chosen=None
+    for match in re.finditer(r'<article class=\"property-card\b[^>]*>[\s\S]*?</article>',template):
+        block=match.group(0)
+        lm=re.search(r'<div class=\"card-label\">([\s\S]*?)</div>',block)
+        if not lm: continue
+        label=re.sub(r'<[^>]+>','',lm.group(1)).strip()
+        prefix=re.match(r'0?([0-9]+)\s*[·.]',label)
+        if prefix and int(prefix.group(1))==number:
+            hm=re.search(r'<h2>([\s\S]*?)</h2>',block)
+            title=re.sub(r'<[^>]+>','',hm.group(1)).strip() if hm else label
+            im=re.search(r'<img[^>]+src=\"data:image/[^;]+;base64,([^\"]+)',block)
+            chosen=(label,title,im.group(1) if im else '')
+            break
+    if not chosen: return ('',404)
+    label,title,encoded=chosen
+    canvas=Image.new('RGB',(1080,1080),'#f8fbf9')
+    if encoded:
+        try:
+            photo=Image.open(io.BytesIO(base64.b64decode(encoded))).convert('RGB')
+            photo=ImageOps.fit(photo,(1080,650),method=Image.Resampling.LANCZOS)
+            canvas.paste(photo,(0,0))
+        except Exception:
+            pass
+    draw=ImageDraw.Draw(canvas)
+    bold=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',42)
+    title_font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',43)
+    small=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',27)
+    draw.rectangle((0,650,1080,1080),fill='#3e5a54')
+    draw.text((58,695),f'PROPIEDAD {number:02d}',font=bold,fill='#d9c18a')
+    lines=textwrap.wrap(title,width=31)[:3]
+    draw.multiline_text((58,765),'\n'.join(lines),font=title_font,fill='white',spacing=8)
+    draw.text((58,965),'Inmobiliaria Fleming & Asociados · Salta',font=small,fill='#e8eee9')
+    out=io.BytesIO(); canvas.save(out,format='JPEG',quality=88,optimize=True); out.seek(0)
+    response=send_file(out,mimetype='image/jpeg',max_age=0,download_name=f'fleming-propiedad-{number}.jpg')
+    response.headers['Cache-Control']='no-cache, max-age=0'
+    return response
+
 @app.route('/fleming')
 @app.route('/fleming/')
 def fleming_brochure():
@@ -339,13 +383,15 @@ def fleming_brochure():
             label,title=chosen
             safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
             safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
-            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}',quote=True)
+            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}&preview=2',quote=True)
+            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v=2',quote=True)
             html=re.sub(r'(<title>)[\s\S]*?(</title>)',r'\1'+safe_title+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"description\")',r'\1'+safe_desc+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:title\")',r'\1'+safe_title+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:description\")',r'\1'+safe_desc+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:url\")',r'\1'+share_url+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"twitter:image\")',r'\1'+share_url+r'\2',html,count=0)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:image\")',r'\1'+preview_image+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"twitter:image\")',r'\1'+preview_image+r'\2',html,count=1)
     return html
 
 @app.route('/fleming/cargar')
