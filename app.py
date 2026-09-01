@@ -319,7 +319,34 @@ def fleming_video_file(filename):
 @app.route('/fleming')
 @app.route('/fleming/')
 def fleming_brochure():
-    return render_template('fleming.html')
+    html=render_template('fleming.html')
+    selected=request.args.get('ubicacion','').strip()
+    if selected.isdigit():
+        number=int(selected)
+        import re, html as html_module
+        chosen=None
+        for match in re.finditer(r'<article class=\"property-card\"[\s\S]*?</article>',html):
+            block=match.group(0)
+            label_match=re.search(r'<div class=\"card-label\">([\s\S]*?)</div>',block)
+            if not label_match: continue
+            label=re.sub(r'<[^>]+>','',label_match.group(1)).strip()
+            prefix=re.match(r'0?([0-9]+)\s*[·.]',label)
+            if prefix and int(prefix.group(1))==number:
+                title_match=re.search(r'<h2>([\s\S]*?)</h2>',block)
+                title=re.sub(r'<[^>]+>','',title_match.group(1)).strip() if title_match else label
+                chosen=(label,title); break
+        if chosen:
+            label,title=chosen
+            safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
+            safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
+            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}',quote=True)
+            html=re.sub(r'(<title>)[\s\S]*?(</title>)',r'\1'+safe_title+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"description\")',r'\1'+safe_desc+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:title\")',r'\1'+safe_title+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:description\")',r'\1'+safe_desc+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:url\")',r'\1'+share_url+r'\2',html,count=1)
+            html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"twitter:image\")',r'\1'+share_url+r'\2',html,count=0)
+    return html
 
 @app.route('/fleming/cargar')
 @app.route('/fleming/cargar/')
