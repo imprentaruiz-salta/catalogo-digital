@@ -325,7 +325,7 @@ def fleming_brochure():
         number=int(selected)
         import re, html as html_module
         chosen=None
-        for match in re.finditer(r'<article class=\"property-card\"[\s\S]*?</article>',html):
+        for match in re.finditer(r'<article class=\"property-card\b[^>]*>[\s\S]*?</article>',html):
             block=match.group(0)
             label_match=re.search(r'<div class=\"card-label\">([\s\S]*?)</div>',block)
             if not label_match: continue
