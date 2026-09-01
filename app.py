@@ -383,8 +383,8 @@ def fleming_brochure():
             label,title=chosen
             safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
             safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
-            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}&preview=2',quote=True)
-            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v=2',quote=True)
+            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming?ubicacion={number}&preview=3',quote=True)
+            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v=3',quote=True)
             html=re.sub(r'(<title>)[\s\S]*?(</title>)',r'\1'+safe_title+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+name=\"description\")',r'\1'+safe_desc+r'\2',html,count=1)
             html=re.sub(r'(<meta\s+content=\")[^\"]*(\"\s+property=\"og:title\")',r'\1'+safe_title+r'\2',html,count=1)
