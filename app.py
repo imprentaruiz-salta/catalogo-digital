@@ -470,9 +470,9 @@ def fleming_analytics_event():
 def _fleming_analytics_summary(days=1):
     days=max(1,min(90,int(days or 1)))
     with get_db() as db:
-        totals=db.execute("SELECT evento,COUNT(*) AS cantidad FROM fleming_analytics WHERE creado >= datetime('now', ?) GROUP BY evento ORDER BY cantidad DESC",(f'-{days} day',)).fetchall()
-        props=db.execute("SELECT property_id,COUNT(*) AS cantidad FROM fleming_analytics WHERE evento='property_view' AND property_id!='' AND creado >= datetime('now', ?) GROUP BY property_id ORDER BY cantidad DESC LIMIT 12",(f'-{days} day',)).fetchall()
-        visitors=db.execute("SELECT COUNT(DISTINCT session_id) AS cantidad FROM fleming_analytics WHERE session_id!='' AND creado >= datetime('now', ?)",(f'-{days} day',)).fetchone()['cantidad']
+        totals=db.execute("SELECT evento,COUNT(*) AS cantidad FROM fleming_analytics WHERE session_id!='verify-session' AND creado >= datetime('now', ?) GROUP BY evento ORDER BY cantidad DESC",(f'-{days} day',)).fetchall()
+        props=db.execute("SELECT property_id,COUNT(*) AS cantidad FROM fleming_analytics WHERE session_id!='verify-session' AND evento='property_view' AND property_id!='' AND creado >= datetime('now', ?) GROUP BY property_id ORDER BY cantidad DESC LIMIT 12",(f'-{days} day',)).fetchall()
+        visitors=db.execute("SELECT COUNT(DISTINCT session_id) AS cantidad FROM fleming_analytics WHERE session_id!='' AND session_id!='verify-session' AND creado >= datetime('now', ?)",(f'-{days} day',)).fetchone()['cantidad']
     return {'days':days,'visitors':visitors,'events':{r['evento']:r['cantidad'] for r in totals},'top_properties':[dict(r) for r in props]}
 
 @app.route('/api/fleming/analytics/summary')
@@ -487,7 +487,7 @@ def fleming_analytics_summary_api():
 def fleming_analytics_dashboard():
     summary=_fleming_analytics_summary(7)
     with get_db() as db:
-        daily=db.execute("SELECT date(creado) AS dia, COUNT(*) AS eventos, COUNT(DISTINCT session_id) AS visitantes FROM fleming_analytics WHERE creado >= datetime('now','-30 day') GROUP BY date(creado) ORDER BY dia DESC").fetchall()
+        daily=db.execute("SELECT date(creado) AS dia, COUNT(*) AS eventos, COUNT(DISTINCT session_id) AS visitantes FROM fleming_analytics WHERE session_id!='verify-session' AND creado >= datetime('now','-30 day') GROUP BY date(creado) ORDER BY dia DESC").fetchall()
     return render_template('fleming_analytics.html',summary=summary,daily=[dict(r) for r in daily])
 
 @app.route('/api/pedido-telegram',methods=['POST'])
