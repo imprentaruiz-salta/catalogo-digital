@@ -1,6 +1,6 @@
 import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse
 from datetime import datetime
-from flask import (Flask, render_template, request, redirect,
+from flask import (Flask, render_template, render_template_string, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -169,6 +169,9 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1)")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_videos (property_id TEXT PRIMARY KEY, filename TEXT NOT NULL, title TEXT DEFAULT '', uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP)")
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
+        db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_creado ON fleming_analytics(creado)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_evento ON fleming_analytics(evento)")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
@@ -447,6 +450,46 @@ def catalogo_publico(slug):
         pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
         return render_template('pizzeria.html',cats=pizzas,catalogo=cfg)
     return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
+@app.route('/api/fleming/analytics', methods=['POST'])
+def fleming_analytics_event():
+    """Store anonymous interaction events for the Fleming catalog."""
+    data=request.get_json(silent=True) or {}
+    allowed={'page_view','property_view','assistant_open','whatsapp_click','telegram_click','map_open','facade_open','video_open','email_click','assistant_chat_open'}
+    evento=str(data.get('evento') or '').strip()[:40]
+    if evento not in allowed:
+        return jsonify(ok=False),400
+    session_id=str(data.get('session_id') or '').strip()[:80]
+    property_id=str(data.get('property_id') or '').strip()[:20]
+    pagina=str(data.get('pagina') or '/fleming').strip()[:160]
+    meta=str(data.get('meta') or '').strip()[:240]
+    with get_db() as db:
+        db.execute('INSERT INTO fleming_analytics(session_id,evento,property_id,pagina,meta) VALUES(?,?,?,?,?)',(session_id,evento,property_id,pagina,meta))
+        db.commit()
+    return jsonify(ok=True)
+
+def _fleming_analytics_summary(days=1):
+    days=max(1,min(90,int(days or 1)))
+    with get_db() as db:
+        totals=db.execute("SELECT evento,COUNT(*) AS cantidad FROM fleming_analytics WHERE creado >= datetime('now', ?) GROUP BY evento ORDER BY cantidad DESC",(f'-{days} day',)).fetchall()
+        props=db.execute("SELECT property_id,COUNT(*) AS cantidad FROM fleming_analytics WHERE evento='property_view' AND property_id!='' AND creado >= datetime('now', ?) GROUP BY property_id ORDER BY cantidad DESC LIMIT 12",(f'-{days} day',)).fetchall()
+        visitors=db.execute("SELECT COUNT(DISTINCT session_id) AS cantidad FROM fleming_analytics WHERE session_id!='' AND creado >= datetime('now', ?)",(f'-{days} day',)).fetchone()['cantidad']
+    return {'days':days,'visitors':visitors,'events':{r['evento']:r['cantidad'] for r in totals},'top_properties':[dict(r) for r in props]}
+
+@app.route('/api/fleming/analytics/summary')
+def fleming_analytics_summary_api():
+    """Aggregate-only endpoint used by the owner's daily briefing; no raw data."""
+    try: days=int(request.args.get('days','1'))
+    except ValueError: days=1
+    return jsonify(_fleming_analytics_summary(days))
+
+@app.route('/fleming/estadisticas')
+@login_required
+def fleming_analytics_dashboard():
+    summary=_fleming_analytics_summary(7)
+    with get_db() as db:
+        daily=db.execute("SELECT date(creado) AS dia, COUNT(*) AS eventos, COUNT(DISTINCT session_id) AS visitantes FROM fleming_analytics WHERE creado >= datetime('now','-30 day') GROUP BY date(creado) ORDER BY dia DESC").fetchall()
+    return render_template('fleming_analytics.html',summary=summary,daily=[dict(r) for r in daily])
+
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
     """Send a catalog order directly to the owner's Telegram bot chat."""
