@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, re, urllib.request, urllib.error, urllib.parse
 from datetime import datetime
 from flask import (Flask, render_template, render_template_string, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
@@ -17,7 +17,8 @@ DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
 UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
 BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
 VIDEO_FOLDER=os.path.join(DATA_DIR,"fleming_videos")
-os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True); os.makedirs(VIDEO_FOLDER,exist_ok=True)
+ZIP_STAGE=os.path.join(DATA_DIR,"zip_staging")
+os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True); os.makedirs(VIDEO_FOLDER,exist_ok=True); os.makedirs(ZIP_STAGE,exist_ok=True)
 ALLOWED_VIDEO_EXT={"mp4","webm","mov","m4v"}
 MAX_VIDEO_BYTES=80*1024*1024
 
@@ -616,6 +617,109 @@ def admin_login():
     return render_template('login.html',error=error)
 @app.route('/admin/logout')
 def admin_logout(): session.clear(); return redirect(url_for('admin_login'))
+def _compact_name(value):
+    return ''.join(ch for ch in _norm(value) if ch.isalnum())
+
+def _zip_batch_dir(batch):
+    safe=secure_filename(str(batch or ''))
+    return os.path.join(ZIP_STAGE,safe) if safe and safe==str(batch) else None
+
+def _zip_product_match(stem, products):
+    key=_compact_name(re.sub(r'^\d+[-_ ]*','',stem))
+    if not key: return 0
+    for product in products:
+        if key in {_compact_name(product['codigo']),_compact_name(product['nombre'])}:
+            return product['id']
+    return 0
+
+def _zip_view(batch, message=None, error=None):
+    folder=_zip_batch_dir(batch)
+    if not folder or not os.path.exists(os.path.join(folder,'manifest.json')):
+        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=message,error=error or 'El ZIP ya no está disponible. Subilo nuevamente.')
+    with open(os.path.join(folder,'manifest.json'),encoding='utf-8') as fh: manifest=json.load(fh)
+    with get_db() as db:
+        products=[dict(row) for row in db.execute('SELECT id,codigo,nombre FROM productos WHERE catalogo_slug=? AND activo=1 ORDER BY nombre',(manifest.get('slug') or current_slug(),)).fetchall()]
+    return render_template('cargar_zip.html',batch=batch,items=manifest.get('items',[]),products=products,message=message,error=error)
+
+@app.route('/admin/cargar-fotos-zip',methods=['GET','POST'])
+@login_required
+def admin_cargar_fotos_zip():
+    if request.method=='GET': return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error=None)
+    uploaded=request.files.get('archivo')
+    if not uploaded or not uploaded.filename or not uploaded.filename.lower().endswith('.zip'):
+        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error='Elegí un archivo ZIP válido.')
+    batch=uuid.uuid4().hex[:12]; folder=os.path.join(ZIP_STAGE,batch); os.makedirs(folder,exist_ok=True)
+    items=[]
+    try:
+        with zipfile.ZipFile(uploaded.stream) as archive:
+            names=archive.infolist()
+            if len(names)>60: raise ValueError('El ZIP puede contener como máximo 60 archivos.')
+            with get_db() as db: products=[dict(row) for row in db.execute('SELECT id,codigo,nombre FROM productos WHERE catalogo_slug=? AND activo=1 ORDER BY nombre',(current_slug(),)).fetchall()]
+            for index,info in enumerate(names,1):
+                original=info.filename.replace('\\','/')
+                if info.is_dir() or original.startswith('/') or '..' in original.split('/') or not allowed_file(original): continue
+                if info.file_size>MAX_IMAGE_BYTES: continue
+                safe=secure_filename(os.path.basename(original)) or f'foto-{index}.jpg'
+                stored=f'{index:03d}-{safe}'
+                raw=archive.read(info)
+                if len(raw)>MAX_IMAGE_BYTES: continue
+                with open(os.path.join(folder,stored),'wb') as fh: fh.write(raw)
+                stem=os.path.splitext(os.path.basename(original))[0]
+                items.append({'file':stored,'original':original,'match_id':_zip_product_match(stem,products)})
+        if not items: raise ValueError('No encontré imágenes válidas dentro del ZIP.')
+        with open(os.path.join(folder,'manifest.json'),'w',encoding='utf-8') as fh: json.dump({'slug':current_slug(),'items':items},fh,ensure_ascii=False)
+        return _zip_view(batch)
+    except (zipfile.BadZipFile,ValueError) as exc:
+        shutil.rmtree(folder,ignore_errors=True)
+        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error=str(exc) or 'No se pudo leer el ZIP.')
+    except Exception:
+        shutil.rmtree(folder,ignore_errors=True)
+        app.logger.exception('No se pudo preparar el ZIP de fotos')
+        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error='No se pudo leer el ZIP. Probá nuevamente.')
+
+@app.route('/admin/cargar-fotos-zip/preview/<batch>/<path:filename>')
+@login_required
+def admin_cargar_fotos_zip_preview(batch,filename):
+    folder=_zip_batch_dir(batch); safe=secure_filename(os.path.basename(filename))
+    if not folder or not safe or safe!=os.path.basename(filename): return 'No encontrado',404
+    return send_from_directory(folder,safe)
+
+@app.route('/admin/cargar-fotos-zip/aplicar',methods=['POST'])
+@login_required
+def admin_aplicar_fotos_zip():
+    batch=request.form.get('batch',''); folder=_zip_batch_dir(batch)
+    if not folder or not os.path.exists(os.path.join(folder,'manifest.json')): return _zip_view(None,error='El ZIP ya no está disponible. Subilo nuevamente.')
+    with open(os.path.join(folder,'manifest.json'),encoding='utf-8') as fh: manifest=json.load(fh)
+    selected=[]; duplicate_ids=set()
+    for index,item in enumerate(manifest.get('items',[])):
+        try: pid=int(request.form.get(f'product_{index}','0') or 0)
+        except ValueError: pid=0
+        if pid: selected.append((pid,item))
+    seen=set(); unique=[]
+    for pid,item in selected:
+        if pid in seen: duplicate_ids.add(pid); continue
+        seen.add(pid); unique.append((pid,item))
+    if not unique: return _zip_view(batch,error='Elegí al menos un producto para cargar.')
+    backup_db('antes-carga-fotos-zip'); updated=0
+    try:
+        with get_db() as db:
+            for pid,item in unique:
+                product=db.execute('SELECT id FROM productos WHERE id=? AND catalogo_slug=? AND activo=1',(pid,manifest.get('slug') or current_slug())).fetchone()
+                if not product: continue
+                source=os.path.join(folder,item['file'])
+                if not os.path.exists(source): continue
+                with open(source,'rb') as fh: photo_name=save_optimized_image(io.BytesIO(fh.read()))
+                db.execute('UPDATE productos SET foto=? WHERE id=?',(photo_name,pid)); updated+=1
+            db.commit()
+        cloud_sync(); log_change('fotos-zip',manifest.get('slug') or current_slug(),f'{updated} fotos desde {batch}')
+        shutil.rmtree(folder,ignore_errors=True)
+        extra=f' Se omitieron {len(duplicate_ids)} asignaciones repetidas.' if duplicate_ids else ''
+        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=f'Se cargaron {updated} fotos al catálogo.{extra}',error=None)
+    except Exception:
+        app.logger.exception('No se pudieron aplicar las fotos del ZIP')
+        return _zip_view(batch,error='No se pudieron cargar las fotos. Revisá el ZIP e intentá nuevamente.')
+
+
 @app.route('/admin')
 @app.route('/admin/')
 @login_required
