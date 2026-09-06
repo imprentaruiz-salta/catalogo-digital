@@ -642,8 +642,8 @@ def _zip_view(batch, message=None, error=None):
     return render_template('cargar_zip.html',batch=batch,items=manifest.get('items',[]),products=products,message=message,error=error)
 
 @app.route('/admin/cargar-fotos-zip',methods=['GET','POST'])
-@login_required
 def admin_cargar_fotos_zip():
+    return redirect(url_for('cargar_collage'))
     if request.method=='GET': return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error=None)
     uploaded=request.files.get('archivo')
     if not uploaded or not uploaded.filename or not uploaded.filename.lower().endswith('.zip'):
@@ -719,6 +719,56 @@ def admin_aplicar_fotos_zip():
         app.logger.exception('No se pudieron aplicar las fotos del ZIP')
         return _zip_view(batch,error='No se pudieron cargar las fotos. Revisá el ZIP e intentá nuevamente.')
 
+
+@app.route('/cargar-collage',methods=['GET','POST'])
+@app.route('/cargar-collage/',methods=['GET','POST'])
+def cargar_collage():
+    if request.method=='GET': return render_template('cargar_collage.html',link=None,image_url=None,error=None)
+    uploaded=request.files.get('archivo')
+    if not uploaded or not uploaded.filename or not uploaded.filename.lower().endswith('.zip'):
+        return render_template('cargar_collage.html',link=None,image_url=None,error='Elegí un archivo ZIP válido.')
+    batch=uuid.uuid4().hex[:16]; tiles=[]; total=0
+    try:
+        with zipfile.ZipFile(uploaded.stream) as archive:
+            entries=archive.infolist()
+            if len(entries)>60: raise ValueError('El ZIP puede contener como máximo 60 imágenes.')
+            for info in entries:
+                original=info.filename.replace('\\','/')
+                if info.is_dir() or original.startswith('/') or '..' in original.split('/') or not allowed_file(original): continue
+                if info.file_size>MAX_IMAGE_BYTES: continue
+                raw=archive.read(info); total+=len(raw)
+                if total>120*1024*1024: raise ValueError('El total de imágenes es demasiado grande.')
+                try:
+                    with Image.open(io.BytesIO(raw)) as source:
+                        image=ImageOps.exif_transpose(source).convert('RGB')
+                        image.thumbnail((300,300),Image.Resampling.LANCZOS)
+                        tile=Image.new('RGB',(320,350),'white')
+                        x=(320-image.width)//2; y=12+(300-image.height)//2
+                        tile.paste(image,(x,y)); tiles.append(tile)
+                except (UnidentifiedImageError,OSError,ValueError): continue
+        if not tiles: raise ValueError('No encontré imágenes válidas dentro del ZIP.')
+        columns=4; rows=(len(tiles)+columns-1)//columns; collage=Image.new('RGB',(columns*320,rows*350),(241,247,245))
+        for index,tile in enumerate(tiles): collage.paste(tile,((index%columns)*320,(index//columns)*350))
+        filename=f'collage-{batch}.webp'; collage.save(os.path.join(UPLOAD_FOLDER,filename),'WEBP',quality=88,method=6); cloud_sync()
+        link=url_for('collage_view',batch=batch,_external=True); image_url=url_for('collage_image',batch=batch,_external=True)
+        return render_template('cargar_collage.html',link=link,image_url=image_url,error=None)
+    except (zipfile.BadZipFile,ValueError) as exc:
+        return render_template('cargar_collage.html',link=None,image_url=None,error=str(exc) or 'No se pudo leer el ZIP.')
+    except Exception:
+        app.logger.exception('No se pudo armar el collage')
+        return render_template('cargar_collage.html',link=None,image_url=None,error='No se pudo armar el collage. Probá nuevamente.')
+
+@app.route('/collage/<batch>')
+def collage_view(batch):
+    filename=f'collage-{secure_filename(batch)}.webp'
+    if not batch or secure_filename(batch)!=batch or not os.path.exists(os.path.join(UPLOAD_FOLDER,filename)): return 'Collage no encontrado',404
+    return render_template('collage_view.html',image_url=url_for('collage_image',batch=batch,_external=True))
+
+@app.route('/collage/<batch>/imagen')
+def collage_image(batch):
+    filename=f'collage-{secure_filename(batch)}.webp'
+    if not batch or secure_filename(batch)!=batch: return 'Imagen no encontrada',404
+    return send_from_directory(UPLOAD_FOLDER,filename)
 
 @app.route('/admin')
 @app.route('/admin/')
