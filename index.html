@@ -10,19 +10,20 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">
 <link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
-{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/social_preview_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
-{% set share_description = catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.' %}
+{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/banner_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
+{% set share_image_url = request.url_root.rstrip('/') ~ share_image if share_image else '' %}
+{% set share_description = 'Catálogo online de Librería Comercial Ruiz — útiles escolares, librería y oficina. Mirá los productos y hacé tu pedido.' if catalogo.slug == 'libreria-ruiz' else (catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.') %}
 <meta name="description" content="{{ share_description }}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ catalogo.nombre }} — Catálogo digital">
 <meta property="og:description" content="{{ share_description }}">
 <meta property="og:url" content="{{ request.url }}">
-{% if share_image %}<meta property="og:image" content="{{ share_image }}">
+{% if share_image %}<meta property="og:image" content="{{ share_image_url }}">
 <meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
 <meta name="twitter:description" content="{{ share_description }}">
-{% if share_image %}<meta name="twitter:image" content="{{ share_image }}">{% endif %}
+{% if share_image %}<meta name="twitter:image" content="{{ share_image_url }}">{% endif %}
 <title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
