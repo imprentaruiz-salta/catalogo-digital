@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">
 <link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
-{% set share_image = 'https://catalogo-app-zm3w.onrender.com/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/social_preview_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
 {% set share_description = catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.' %}
 <meta name="description" content="{{ share_description }}">
 <meta property="og:type" content="website">
@@ -26,6 +26,18 @@
 <title>{{ catalogo.nombre }} — Catálogo digital</title>
 <style>
 :root{--g:#25D366;--gd:#128C7E;--acc:#FF6B35;--bg:#f0f2f5;--card:#fff;--txt:#1a1a2e;--mut:#6b7280;--brd:#e5e7eb;--r:14px}
+/* Identidad propia de Librería Comercial Ruiz: mismo recorrido de Abigail, nueva vidriera */
+body.catalog-libreria-ruiz{--g:#1d70b8;--gd:#102a43;--acc:#ff7a45;--bg:#f3f6fb;--card:#fffdf8;--txt:#102a43;--mut:#60758a;--brd:#dce5ee}
+body.catalog-libreria-ruiz header{background:linear-gradient(135deg,#102a43,#1d70b8)}
+body.catalog-libreria-ruiz .search-submit{background:#ff7a45}
+body.catalog-libreria-ruiz .search-shortcut{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}
+body.catalog-libreria-ruiz .quick-category{border-color:#bfdbfe;background:#f8fbff;color:#102a43}
+body.catalog-libreria-ruiz .quick-category:hover{border-color:#1d70b8;background:#eff6ff}
+body.catalog-libreria-ruiz .info-strip{border-color:#bfdbfe;background:#f8fbff}
+body.catalog-libreria-ruiz .showcase-progress-bar{background:linear-gradient(90deg,#ff7a45,#1d70b8)}
+body.catalog-libreria-ruiz .catalog-section-title{color:#102a43;border-color:#ff7a45}
+body.catalog-libreria-ruiz .add-btn{background:linear-gradient(135deg,#ff7a45,#1d70b8)}
+body.catalog-libreria-ruiz .float-whatsapp{background:#1d70b8}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
@@ -275,7 +287,7 @@ body.has-abigail .abigail-contact-actions{display:none}
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
 </head>
-<body class="notranslate{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% endif %}">
+<body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
@@ -318,7 +330,7 @@ body.has-abigail .abigail-contact-actions{display:none}
 <header>
  <div class="hdr-top">
  <div class="logo-area">
- <img src="{{ catalogo.logo or 'https://share.zapia.com/lw6ro8nz7tp7k487va08fu' }}" alt="{{ catalogo.nombre }}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;background:#111">
+ <img src="{{ '/static/logo_libreria_ruiz.png' if catalogo.slug == 'libreria-ruiz' else (catalogo.logo or 'https://share.zapia.com/lw6ro8nz7tp7k487va08fu') }}" alt="{{ catalogo.nombre }}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;background:#111">
  <div class="logo-text">
  <h1>{{ catalogo.nombre }}</h1>
  <span>{{ catalogo.subtitulo }}</span>
@@ -334,11 +346,19 @@ body.has-abigail .abigail-contact-actions{display:none}
  </div>
  <div class="search-shortcuts" aria-label="Búsquedas rápidas">
   <span>Buscar rápido:</span>
+  {% if catalogo.slug == 'libreria-ruiz' %}
+  <button type="button" class="search-shortcut" onclick="buscarRapido('birome')">Biromes</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('cuaderno')">Cuadernos</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('carpeta')">Carpetas</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('resaltador')">Resaltadores</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('escolar')">Escolar</button>
+  {% else %}
   <button type="button" class="search-shortcut" onclick="buscarRapido('detergente')">Detergentes</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('jabon')">Jabones</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('lavandina')">Lavandina</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('papel')">Papel</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('esponja')">Esponjas</button>
+  {% endif %}
  </div>
 </header>
 
@@ -392,18 +412,18 @@ body.has-abigail .abigail-contact-actions{display:none}
 
  <!-- HERO -->
  <div class="hero">
- {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else catalogo.banner %}
+ {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/banner_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
  {% if banner_url %}<div class="hero-banner"><img src="{{ banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
  <div class="hero-copy">
  <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
  <h2>{{ catalogo.nombre }}</h2>
- <p>Todo se entiende de un vistazo: foto, marca y precio.</p>
+ <p>{% if catalogo.slug == 'libreria-ruiz' %}Útiles para la escuela, la oficina y todos los días.{% else %}Todo se entiende de un vistazo: foto, marca y precio.{% endif %}</p>
  <div class="hero-steps" aria-label="Pasos para hacer un pedido"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">🛒 Pedí</span></div>
  </div>
  </div>
 
  <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
- <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid" id="comboRail"><div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div></div><div class="combo-progress">Deslizá ↔ · mirá todos los combos</div></div>
+ <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid" id="comboRail">{% if catalogo.slug == 'libreria-ruiz' %}<div class="combo-card"><h3>Combo Escolar</h3><p>Birome + lápiz + goma + sacapuntas.</p><button onclick="buscarCombo('escolar')">Ver combo</button></div><div class="combo-card"><h3>Combo Oficina</h3><p>Resma + carpeta + resaltador + birome.</p><button onclick="buscarCombo('oficina')">Ver combo</button></div><div class="combo-card"><h3>Combo Estudio</h3><p>Cuaderno + resaltador + adhesivo.</p><button onclick="buscarCombo('estudio')">Ver combo</button></div>{% else %}<div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div>{% endif %}</div><div class="combo-progress">Deslizá ↔ · mirá todos los combos</div></div>
 
  {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
  <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
@@ -412,11 +432,11 @@ body.has-abigail .abigail-contact-actions{display:none}
 
  {% if showcase.total %}
  <section class="showcase-wrap" aria-label="Vidriera visual">
- {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">✨</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.destacados|length }}</span></div></div>{% endif %}
- {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🆕</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.novedades|length }}</span></div></div>{% endif %}
- {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🏷️</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.ofertas|length }}</span></div></div>{% endif %}
- {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">💡</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.recomendaciones|length }}</span></div></div>{% endif %}
- {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">🔥</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.pedidos|length }}</span></div></div>{% endif %}
+ {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '📚' if catalogo.slug == 'libreria-ruiz' else '✨' }}</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.destacados|length }}</span></div></div>{% endif %}
+ {% if showcase.novedades %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '✏️' if catalogo.slug == 'libreria-ruiz' else '🆕' }}</span> Novedades</h2><span class="showcase-note">Lo último</span></div><div class="showcase-rail">{% for p in showcase.novedades %}{{ showcase_card(p, 'Nuevo' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.novedades|length }}</span></div></div>{% endif %}
+ {% if showcase.ofertas %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '💙' if catalogo.slug == 'libreria-ruiz' else '🏷️' }}</span> Ofertas</h2><span class="showcase-note">Precios convenientes</span></div><div class="showcase-rail">{% for p in showcase.ofertas %}{{ showcase_card(p, 'Oferta' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.ofertas|length }}</span></div></div>{% endif %}
+ {% if showcase.recomendaciones %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '🎨' if catalogo.slug == 'libreria-ruiz' else '💡' }}</span> Recomendaciones</h2><span class="showcase-note">Mirá estas ideas</span></div><div class="showcase-rail">{% for p in showcase.recomendaciones %}{{ showcase_card(p) }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.recomendaciones|length }}</span></div></div>{% endif %}
+ {% if showcase.pedidos %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '⭐' if catalogo.slug == 'libreria-ruiz' else '🔥' }}</span> Productos más pedidos</h2><span class="showcase-note">Los favoritos</span></div><div class="showcase-rail">{% for p in showcase.pedidos %}{{ showcase_card(p, 'Favorito' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.pedidos|length }}</span></div></div>{% endif %}
  </section>
  {% endif %}
  <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
