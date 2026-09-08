@@ -175,6 +175,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 /* BOTÓN FLOTANTE WHATSAPP */
 .float-whatsapp{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 5px 18px rgba(18,140,126,.45);z-index:350;transition:transform .2s,box-shadow .2s;animation:waPulse 2.5s infinite}
 .float-whatsapp:hover{transform:scale(1.08);box-shadow:0 7px 24px rgba(18,140,126,.6)}
+/* Telegram de Ruiz arriba del botón de WhatsApp */
+.float-telegram.ruiz-telegram{position:fixed;right:12px;bottom:76px;z-index:360;width:50px;height:50px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:linear-gradient(135deg,#229ed9,#168ac4);color:#fff;padding:0;cursor:pointer;box-shadow:0 5px 17px rgba(22,138,196,.38);transition:transform .2s,box-shadow .2s}
+.float-telegram.ruiz-telegram svg{width:28px;height:28px;fill:currentColor;display:block}
+.float-telegram.ruiz-telegram:hover{transform:scale(1.08);box-shadow:0 8px 22px rgba(22,138,196,.48)}
+@media(max-width:599px){.float-telegram.ruiz-telegram{right:9px;bottom:72px;width:50px;height:50px}}
 .float-whatsapp svg{width:31px;height:31px;fill:currentColor}
 .float-whatsapp .wa-label{position:absolute;right:68px;white-space:nowrap;background:#fff;color:var(--txt);font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);opacity:0;transform:translateX(6px);pointer-events:none;transition:.2s}
 .float-whatsapp:hover .wa-label{opacity:1;transform:translateX(0)}
@@ -382,6 +387,12 @@ body.has-abigail .abigail-contact-actions{display:none}
  <span class="wa-label">¿Necesitás ayuda?</span>
  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>
 </a>
+{% if catalogo.slug != 'limpieza-abigail' %}
+<!-- Telegram arriba de WhatsApp para Librería Comercial Ruiz -->
+<button class="float-telegram ruiz-telegram" type="button" onclick="openTelegramOrder()" aria-label="Hacer pedido por Telegram" title="Telegram">
+ <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 2.3 2.2 9.8c-.9.35-.9 1.55.03 1.85l4.95 1.62 1.7 5.2c.23.71 1.14.91 1.65.36l2.5-2.7 4.8 3.5c.63.46 1.53.13 1.7-.63l3.2-15.4c.2-.96-.54-1.65-1.03-1.3ZM9.65 17.6l-.98-3.05 8.9-8.3-7.5 7.55-.42 3.8Zm7.95.4-5.22-3.8 7.4-9.15-2.18 12.95Z"/></svg>
+</button>
+{% endif %}
 
 <main>
  {% macro showcase_card(p, tag='') -%}
