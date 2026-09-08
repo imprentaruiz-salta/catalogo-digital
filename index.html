@@ -890,6 +890,8 @@ function toggleBrand(btn) {
 
 /* Carrusel automático de categorías: avance lento, continuo y paus-able (15 px/s). */
 (function(){
+ /* Las categorías quedan con desplazamiento manual: evita repetirlas y facilita elegir en el celular. */
+ return;
  var SPEED=15; // px/s: visible en móvil sin resultar invasivo
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
