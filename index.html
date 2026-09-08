@@ -186,6 +186,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .float-whatsapp:hover .wa-label{opacity:1;transform:translateX(0)}
 @keyframes waPulse{0%,70%,100%{box-shadow:0 5px 18px rgba(18,140,126,.45)}35%{box-shadow:0 5px 0 9px rgba(37,211,102,.12),0 5px 22px rgba(18,140,126,.55)}}
 
+/* Victoria Ruiz LiveAvatar: asistente hablante de librería */
+.victoria-ruiz-fab{position:fixed;right:18px;bottom:144px;z-index:365;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,#173f48,#236875);color:#fff;font-size:12px;font-weight:800;letter-spacing:.02em;box-shadow:0 7px 24px rgba(15,45,53,.32);cursor:pointer;transition:transform .2s,box-shadow .2s}.victoria-ruiz-fab:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(15,45,53,.4)}.victoria-ruiz-dot{width:9px;height:9px;border-radius:50%;background:#72df9d;box-shadow:0 0 0 4px rgba(114,223,157,.18)}.victoria-ruiz-panel{display:none;position:fixed;right:18px;bottom:204px;z-index:366;width:min(350px,calc(100vw - 28px));height:min(470px,calc(100vh - 260px));overflow:hidden;border:1px solid rgba(23,63,72,.22);border-radius:18px;background:#f7faf8;box-shadow:0 18px 60px rgba(15,45,53,.3)}.victoria-ruiz-panel.is-open{display:flex;flex-direction:column;animation:victoriaRuizIn .25s ease-out}.victoria-ruiz-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:linear-gradient(135deg,#173f48,#236875);color:#fff}.victoria-ruiz-title{display:flex;align-items:center;gap:9px}.victoria-ruiz-avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#f1d6b7;color:#173f48;font:700 14px Georgia,serif;border:2px solid rgba(255,255,255,.7)}.victoria-ruiz-title strong{display:block;font-size:13px}.victoria-ruiz-title span{display:block;margin-top:2px;color:#c9e8df;font-size:10px}.victoria-ruiz-close{border:1px solid rgba(255,255,255,.6);border-radius:50%;width:28px;height:28px;background:transparent;color:#fff;font-size:19px;line-height:22px;cursor:pointer}.victoria-ruiz-frame{flex:1;min-height:0;border:0;width:100%;background:#102f35}.victoria-ruiz-foot{padding:8px 12px;background:#fff;color:#667579;font-size:10px;line-height:1.3;text-align:center;border-top:1px solid #e5ece9}.victoria-ruiz-foot strong{color:#173f48}@keyframes victoriaRuizIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}@media(max-width:599px){.victoria-ruiz-fab{right:12px;bottom:136px;padding:11px 13px}.victoria-ruiz-panel{right:12px;bottom:190px;width:min(330px,calc(100vw - 24px));height:min(430px,52vh);border-radius:16px}}
+
 /* TOAST */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;opacity:0;transition:.3s;z-index:600;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -540,6 +543,18 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 2.3 2.2 9.8c-.9.35-.9 1.55.03 1.85l4.95 1.62 1.7 5.2c.23.71 1.14.91 1.65.36l2.5-2.7 4.8 3.5c.63.46 1.53.13 1.7-.63l3.2-15.4c.2-.96-.54-1.65-1.03-1.3ZM9.65 17.6l-.98-3.05 8.9-8.3-7.5 7.55-.42 3.8Zm7.95.4-5.22-3.8 7.4-9.15-2.18 12.95Z"/></svg>
 </button>
 {% endif %}
+{% if catalogo.slug == 'libreria-ruiz' %}
+<!-- Victoria hablante de LiveAvatar, educada con el catálogo de Librería Ruiz -->
+<div class="victoria-ruiz-widget" id="victoriaRuizWidget">
+ <button aria-controls="victoriaRuizPanel" aria-expanded="false" class="victoria-ruiz-fab" id="victoriaRuizFab" type="button"><span class="victoria-ruiz-dot" aria-hidden="true"></span> Hablar con Victoria</button>
+ <section aria-hidden="true" aria-label="Victoria Ruiz, vendedora virtual" class="victoria-ruiz-panel" id="victoriaRuizPanel">
+  <header class="victoria-ruiz-head"><div class="victoria-ruiz-title"><span class="victoria-ruiz-avatar" aria-hidden="true">V</span><div><strong>Victoria Ruiz</strong><span>Vendedora virtual · Librería</span></div></div><button aria-label="Cerrar Victoria" class="victoria-ruiz-close" id="victoriaRuizClose" type="button">×</button></header>
+  <iframe allow="microphone; autoplay" allowfullscreen class="victoria-ruiz-frame" src="https://embed.liveavatar.com/v1/7fcfb148-7702-4ed2-bf70-862adb484d02?orientation=horizontal" title="Victoria Ruiz, vendedora virtual de Librería Ruiz"></iframe>
+  <div class="victoria-ruiz-foot"><strong>Preguntale por productos y precios</strong> · útiles · oficina · combos · pedidos</div>
+ </section>
+</div>
+<script>(function(){var fab=document.getElementById('victoriaRuizFab'),panel=document.getElementById('victoriaRuizPanel'),close=document.getElementById('victoriaRuizClose'),frame=panel&&panel.querySelector('.victoria-ruiz-frame');if(!fab||!panel||!close)return;var src=frame.getAttribute('src');function open(){panel.classList.add('is-open');panel.setAttribute('aria-hidden','false');fab.setAttribute('aria-expanded','true')}function shut(){panel.classList.remove('is-open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');if(frame)frame.setAttribute('src',src)}fab.addEventListener('click',function(){panel.classList.contains('is-open')?shut():open()});close.addEventListener('click',shut);document.addEventListener('keydown',function(e){if(e.key==='Escape')shut()})})();</script>
+{% else %}
 <!-- Asistente de catálogo -->
 <div class="abigail-widget" id="abigailWidget">
  <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Victoria Ruiz{% else %}Espumita{% endif %}</span></div>
@@ -566,6 +581,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 </div>
 {% endif %}
 
+{% endif %}
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
  🛒 Ver pedido · <span id="floatTotal">$0</span>
