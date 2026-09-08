@@ -283,7 +283,7 @@ body.has-abigail .abigail-widget>.abigail-launcher{position:relative;right:auto;
 body.has-abigail .abigail-contact-actions{display:none}
 @media(max-width:599px){body.has-abigail .abigail-widget{width:auto;height:auto;right:70px;bottom:58px}body.has-abigail .abigail-widget>.abigail-launcher{right:auto}}
 /* Asistente de Librería Comercial Ruiz: misma experiencia, identidad propia */
-body.has-ruiz .abigail-widget{right:18px;bottom:88px}
+body.has-ruiz .abigail-widget{right:18px;bottom:144px}
 body.has-ruiz .abigail-launcher{width:68px!important;height:68px!important;background:linear-gradient(145deg,#2563eb,#0ea5e9);box-shadow:0 8px 26px rgba(37,99,235,.35);border-radius:50%;align-items:center;justify-content:center;overflow:visible}
 body.has-ruiz .abigail-launcher:hover{transform:scale(1.07)}
 body.has-ruiz .ruiz-assistant-icon{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:3px solid rgba(255,255,255,.9);border-radius:50%;background:#fff;font-size:32px;line-height:1}
@@ -294,7 +294,7 @@ body.has-ruiz .abigail-head .ruiz-avatar{display:flex;align-items:center;justify
 body.has-ruiz .abigail-bubble{background:#eff6ff;color:#1e3a8a;box-shadow:0 1px 5px rgba(30,64,175,.08)}
 body.has-ruiz .abigail-suggestions button{border-color:#93c5fd;background:#eff6ff;color:#1d4ed8}
 body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-form button{background:#2563eb}
-@media(max-width:599px){body.has-ruiz .abigail-widget{right:12px;bottom:74px}body.has-ruiz .abigail-chat{bottom:73px;width:min(360px,calc(100vw - 24px))}}
+@media(max-width:599px){body.has-ruiz .abigail-widget{right:12px;bottom:136px}body.has-ruiz .abigail-chat{bottom:73px;width:min(360px,calc(100vw - 24px))}}
 /* Ayudante pequeño y carrito mágico de Abigail */
 .abigail-helper{position:absolute;left:-72px;bottom:105px;z-index:6;display:none;align-items:center;gap:3px;padding:5px 7px;border:2px solid #6f4941;border-radius:14px;background:#fffdfb;color:#55332f;font-size:9px;font-weight:850;box-shadow:2px 3px 0 rgba(92,58,50,.14);animation:helperPop .35s ease-out}
 .abigail-helper.show{display:flex}.abigail-helper-icon{font-size:26px;line-height:1;animation:helperBounce .65s ease-in-out infinite alternate}
@@ -556,7 +556,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   </div>
   <form class="abigail-form" id="abigailForm"><input id="abigailInput" autocomplete="off" placeholder="{% if catalogo.slug == 'libreria-ruiz' %}¿Qué artículo buscás?{% else %}¿Qué estás buscando?{% endif %}" aria-label="Escribí qué producto buscás"><button type="submit" aria-label="Enviar">➤</button></form>
  </div>
- <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Abrir Asistente Ruiz" title="Preguntale al asistente de librería{% else %}Abrir asistente de Abigail para buscar productos" title="Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
+ <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Abrir Asistente Ruiz{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Preguntale al asistente de librería{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">📚</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
  </button>
 </div>
