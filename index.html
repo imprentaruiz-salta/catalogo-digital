@@ -357,6 +357,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </div>
  <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
  </div>
+{% if catalogo.slug != 'libreria-ruiz' %}
  <div class="search-bar">
  <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){ejecutarBusquedaTradicional();}">
  <button type="button" class="search-clear" id="searchClear" aria-label="Borrar búsqueda" title="Borrar búsqueda" onclick="limpiarBusqueda();">×</button>
@@ -380,6 +381,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   {% endif %}
  </div>
  <div class="search-status" id="searchStatus" aria-live="polite"></div>
+{% endif %}
 </header>
 
 <!-- NAV CATEGORÍAS -->
@@ -394,7 +396,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 </nav>
 <div class="quick-action-row" aria-label="Acciones rápidas">
  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
- <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>
+{% if catalogo.slug != 'libreria-ruiz' %} <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>{% endif %}
 </div>
 
 <!-- Contacto rápido por WhatsApp -->
@@ -540,12 +542,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 <!-- Asistente de catálogo -->
 <div class="abigail-widget" id="abigailWidget">
- <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Asistente Ruiz{% else %}Espumita{% endif %}</span></div>
+ <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Victoria Ruiz{% else %}Espumita{% endif %}</span></div>
  <div class="abigail-magic-cart" id="abigailMagicCart" aria-label="Carrito mágico"><span class="magic-cart-icon">🛒</span><span class="magic-cart-count" id="magicCartCount">0</span><span class="magic-cart-items" id="magicCartItems"></span></div>
  <button type="button" class="abigail-nudge" id="abigailNudge">{% if catalogo.slug == 'libreria-ruiz' %}🔎 Buscá un producto y te ayudo{% else %}🔎 Tocá la búsqueda y escribí el producto que necesitás{% endif %}</button>
- <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con el Asistente Ruiz{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
+ <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con Victoria Ruiz{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
   <div class="abigail-head">
-   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-avatar" aria-hidden="true">📚</span><div><strong>Asistente Ruiz</strong><small>Tu asistente de librería</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
+   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-avatar" aria-hidden="true">📚</span><div><strong>Victoria Ruiz</strong><small>Vendedora virtual · Librería</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
    <button class="abigail-close" id="abigailClose" aria-label="Cerrar chat">×</button>
   </div>
   <div class="abigail-messages" id="abigailMessages" aria-live="polite"></div>
@@ -556,10 +558,10 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
    <button type="button" data-abigail-prompt="Buscar detergente">Detergentes</button><button type="button" data-abigail-prompt="Mostrar ofertas">Ofertas</button><button type="button" data-abigail-prompt="Misión baño">🛁 Baño</button><button type="button" data-abigail-prompt="Misión cocina">🍳 Cocina</button><button type="button" data-abigail-prompt="Misión ropa">👕 Ropa</button><button type="button" data-abigail-prompt="Misión toda la casa">🏠 Casa</button><button type="button" data-abigail-prompt="Ver mi pedido">Mi pedido</button>
    {% endif %}
   </div>
-  <form class="abigail-form" id="abigailForm"><input id="abigailInput" autocomplete="off" placeholder="{% if catalogo.slug == 'libreria-ruiz' %}¿Qué artículo buscás?{% else %}¿Qué estás buscando?{% endif %}" aria-label="Escribí qué producto buscás"><button type="submit" aria-label="Enviar">➤</button></form>
+  <form class="abigail-form" id="abigailForm"><input id="abigailInput" autocomplete="off" placeholder="{% if catalogo.slug == 'libreria-ruiz' %}¿Qué querés comprar?{% else %}¿Qué estás buscando?{% endif %}" aria-label="Escribí qué producto buscás"><button type="submit" aria-label="Enviar">➤</button></form>
  </div>
- <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Abrir Asistente Ruiz{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Preguntale al asistente de librería{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
-  {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">📚</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
+ <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Hablar con Victoria Ruiz{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Pedile a Victoria que te arme el pedido{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
+  {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">V</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
  </button>
 </div>
 {% endif %}
@@ -822,7 +824,8 @@ function actualizarEstadoBusqueda(visible,total,filtered,level){
 function buscar(q) {
  var query = normalizarBusqueda(q);
  var terms = query ? query.split(/\s+/).filter(Boolean) : [];
- var level = document.getElementById('priceFilter').value;
+ var priceFilter=document.getElementById('priceFilter');
+ var level = priceFilter ? priceFilter.value : '';
  var cards = document.querySelectorAll('.product-card');
  var filtered = terms.length || level;
  var visible = 0;
@@ -1134,7 +1137,7 @@ var ABIGAIL_PRODUCTS = [
   say(raw,'user');widget.classList.add('thinking');setTimeout(function(){widget.classList.remove('thinking')},520);
   clearTimeout(welcomeTimer);
   if(RUIZ_ASSISTANT){
-   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy el Asistente Ruiz, tu asistente de librería. ¿Qué artículo estás buscando?');return;}
+   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy Victoria Ruiz, tu vendedora virtual de librería. ¿Qué querés comprar?');return;}
    if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){replaceSay('Te abro tu pedido para que revises las cantidades y el total.');toggleCart();return;}
    if(/(oferta|ofertas|econom|barato|baratos|ahorro)/.test(q)){var roffers=showOffers();productBubble(roffers,'Mirá estas opciones:');followUp();return;}
    var rquery=raw;if(/(combo escolar|escuela|escolar)/.test(q))rquery='escolar';if(/(oficina|oficina)/.test(q))rquery='oficina';if(/(estudio|estudiar)/.test(q))rquery='cuaderno';
@@ -1163,7 +1166,7 @@ var ABIGAIL_PRODUCTS = [
   if(results.length){revealCatalog(results);poseAbigail('pointing',1700);productBubble(results);followUp();return;}
   replaceSay(tx('No encontré ese producto en el catálogo actual. No quiero inventarte un precio. ¿Querés probar con detergente, jabón, papel, dentífrico o lavandina?','I could not find that product in the current catalog. I do not want to make up a price. Would you like to try dish soap, soap, paper, toothpaste or bleach?'));
  }
- function welcome(){if(started)return;started=true;widget.classList.add('welcoming');poseAbigail('waving',1700);setTimeout(function(){widget.classList.remove('welcoming')},1300);replaceSay(RUIZ_ASSISTANT?'Hola 😊 Soy el Asistente Ruiz, tu asistente de librería.':'Hola, soy Abigail, tu asistente de limpieza. 😊');welcomeTimer=setTimeout(function(){replaceSay(RUIZ_ASSISTANT?'¿Qué artículo de librería estás buscando?':tx('¿Qué producto estás buscando?','What product are you looking for?'))},2300)}
+ function welcome(){if(started)return;started=true;widget.classList.add('welcoming');poseAbigail('waving',1700);setTimeout(function(){widget.classList.remove('welcoming')},1300);replaceSay(RUIZ_ASSISTANT?'Hola 😊 Soy Victoria Ruiz, tu vendedora virtual de librería.':'Hola, soy Abigail, tu asistente de limpieza. 😊');welcomeTimer=setTimeout(function(){replaceSay(RUIZ_ASSISTANT?'¿Qué artículo de librería querés comprar?':tx('¿Qué producto estás buscando?','What product are you looking for?'))},2300)}
  var nudgeCycleTimer=null,nudgeStepTimers=[];
  function clearNudgeSteps(){nudgeStepTimers.forEach(function(t){clearTimeout(t)});nudgeStepTimers=[]}
  function hideNudge(){if(nudge)nudge.classList.remove('show')}
@@ -1172,9 +1175,9 @@ var ABIGAIL_PRODUCTS = [
   clearNudgeSteps();
   if(!nudge)return;
   if(chat.classList.contains('open')){nudgeCycleTimer=setTimeout(runNudgeCycle,120000);return}
-  showNudgeText(RUIZ_ASSISTANT?{es:'👋 Hola, soy el Asistente Ruiz.',en:'👋 Hi, I am Ruiz Assistant.'}:{es:'👋 Hola, soy Abigail, tu asistente de limpieza.',en:'👋 Hi, I am Abigail, your cleaning assistant.'});
+  showNudgeText(RUIZ_ASSISTANT?{es:'👋 Hola, soy Victoria Ruiz.',en:'👋 Hi, I am Victoria Ruiz.'}:{es:'👋 Hola, soy Abigail, tu asistente de limpieza.',en:'👋 Hi, I am Abigail, your cleaning assistant.'});
   nudgeStepTimers.push(setTimeout(function(){showNudgeText({es:'Hacé clic acá y te ayudo.',en:'Click here and I will help you.'})},3600));
-  nudgeStepTimers.push(setTimeout(function(){showNudgeText(RUIZ_ASSISTANT?{es:'🔎 Buscá un artículo de librería y te ayudo.',en:'🔎 Search for a stationery item and I will help.'}:{es:'🔎 Tocá la búsqueda y escribí el producto que necesitás.',en:'🔎 Tap search and write the product you need.'})},7200));
+  nudgeStepTimers.push(setTimeout(function(){showNudgeText(RUIZ_ASSISTANT?{es:'🛒 Decime qué necesitás y te armo el pedido.',en:'🛒 Tell me what you need and I will build your order.'}:{es:'🔎 Tocá la búsqueda y escribí el producto que necesitás.',en:'🔎 Tap search and write the product you need.'})},7200));
   nudgeStepTimers.push(setTimeout(hideNudge,12500));
   nudgeCycleTimer=setTimeout(runNudgeCycle,120000);
  }
