@@ -146,7 +146,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .cart-overlay.open{display:block}
 .cart-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:80vh;overflow-y:auto;z-index:500;transform:translateY(100%);transition:.35s cubic-bezier(.4,0,.2,1)}
 .cart-modal.open{transform:translateY(0)}
-.cart-modal h3{font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.cart-modal h3{font-size:18px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}.cart-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.cart-summary{font-size:11px;color:var(--mut);font-weight:700;margin-left:auto}.clear-cart-btn{border:0;background:#fff1f2;color:#be123c;border-radius:50px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}.clear-cart-btn:hover{background:#ffe4e6}.cart-item-icon{font-size:24px;width:34px;text-align:center;flex:none}.cart-item-main{min-width:0;flex:1}.cart-item-main strong{display:block;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cart-item-main small{display:block;color:var(--mut);font-size:10px;margin-top:3px}.cart-item-actions{display:flex;align-items:center;gap:8px}.remove-item-btn{border:0;background:transparent;color:#94a3b8;font-size:18px;cursor:pointer;padding:3px}.remove-item-btn:hover{color:#e11d48}.search-status{min-height:18px;padding:0 16px 9px;color:#64748b;font-size:11px;font-weight:700}.search-status strong{color:#1d4ed8}.empty-cart-cta{border:0;background:#eff6ff;color:#1d4ed8;border-radius:50px;padding:9px 14px;font-size:12px;font-weight:800;cursor:pointer;margin-top:10px}.empty-cart-cta:hover{background:#dbeafe}.cat-section.search-hidden,.brand-block.search-hidden{display:none}
 .cart-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--brd)}
 .cart-item-name{font-size:13px;font-weight:600;flex:1}
 .cart-item-price{font-size:13px;color:var(--gd);font-weight:700;margin:0 10px}
@@ -205,7 +205,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
  .brand-products.open{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}
  .product-card{min-width:0;border-radius:11px}.prod-img{height:126px;font-size:40px}.prod-body{padding:8px}.prod-code{font-size:9px}.prod-name{font-size:13px;min-height:34px}.prod-desc{font-size:10px;line-height:1.25;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-price{font-size:16px}.add-btn{width:34px;height:34px;font-size:21px}
  .float-cart{bottom:14px;padding:12px 20px;font-size:14px;max-width:calc(100% - 130px);overflow:hidden;text-overflow:ellipsis}.float-whatsapp{right:12px;bottom:14px;width:50px;height:50px}.float-whatsapp svg{width:27px;height:27px}.float-whatsapp .wa-label{display:none}
- .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
+ .cart-modal{max-height:90vh;padding:18px 14px calc(18px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}.cart-modal h3{font-size:17px}.cart-summary{font-size:10px}.clear-cart-btn{padding:6px 8px}.cart-item-icon{font-size:20px;width:28px}.cart-item-main strong{font-size:12px}.cart-item-actions{gap:4px}.cart-item{gap:6px}.cart-item-name{font-size:12px}.pay-opts{gap:6px}.pay-opt{padding:8px 10px;font-size:11px}.nombre-input{font-size:15px;padding:12px 14px;margin-bottom:10px}.wpp-btn{font-size:15px;padding:14px}.toast{max-width:calc(100% - 30px);text-align:center;white-space:normal;bottom:78px}
 }
 
 @media(min-width:600px){
@@ -379,6 +379,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   <button type="button" class="search-shortcut" onclick="buscarRapido('esponja')">Esponjas</button>
   {% endif %}
  </div>
+ <div class="search-status" id="searchStatus" aria-live="polite"></div>
 </header>
 
 <!-- NAV CATEGORÍAS -->
@@ -573,7 +574,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 
 <!-- CARRITO MODAL -->
 <div class="cart-modal" id="cartModal">
- <h3>🛒 Tu pedido</h3>
+ <div class="cart-heading"><h3>🛒 Tu pedido</h3><span class="cart-summary" id="cartSummary">0 productos</span><button type="button" class="clear-cart-btn" onclick="clearCart()">Vaciar</button></div>
  <div id="cartItems"><div class="empty-cart">Todavía no agregaste productos 😊</div></div>
  <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
 
@@ -616,6 +617,11 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 var cart = {};
 var payMethod = '';
 var WPP = '{{ catalogo.whatsapp }}';
+var CART_STORAGE_KEY = 'catalog_cart_{{ catalogo.slug }}_v2';
+function saveCart(){try{localStorage.setItem(CART_STORAGE_KEY,JSON.stringify(cart))}catch(e){}}
+function loadCart(){try{var saved=JSON.parse(localStorage.getItem(CART_STORAGE_KEY)||'{}');if(saved&&typeof saved==='object')cart=saved}catch(e){cart={}}}
+function clearCart(){if(!Object.keys(cart).length)return;if(!window.confirm('¿Querés vaciar todo el pedido?'))return;cart={};payMethod='';saveCart();updateUI();showToast('Pedido vacío')}
+function removeFromCart(code){if(!cart[code])return;delete cart[code];saveCart();updateUI();showToast('Producto quitado del pedido')}
 
 function enviarSugerencia(){var p=document.getElementById('suggestProduct').value.trim(),n=document.getElementById('suggestName').value.trim(),q=document.getElementById('suggestQty').value,c=document.getElementById('suggestComment').value.trim(),m=document.getElementById('suggestMsg');if(!p){m.textContent='Escribí qué producto necesitás';return}fetch('/api/sugerencia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:p,nombre:n,cantidad:q,comentario:c,catalogo_slug:'{{ catalogo.slug }}'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'✅ Pedido anotado. Si alguien más lo pide, suma votos.':'No se pudo guardar';if(d.ok)document.getElementById('suggestProduct').value=''})}
 
@@ -629,6 +635,7 @@ function showAbigailHelper(){var helper=document.getElementById('abigailHelper')
 function addToCart(code, name, price, icon) {
  if (!cart[code]) cart[code] = {name:name, price:price, icon:icon, qty:1};
  else cart[code].qty++;
+ saveCart();
  updateUI();
  updateMagicCart();popMagicCart();flyToMagicCart(code,icon);
  showToast('✅ ' + name + ' agregado');
@@ -638,6 +645,7 @@ function changeQty(code, delta) {
  if (!cart[code]) return;
  cart[code].qty += delta;
  if (cart[code].qty <= 0) delete cart[code];
+ saveCart();
  updateUI();updateMagicCart();
 }
 
@@ -652,13 +660,14 @@ function updateUI() {
  document.getElementById('floatCart').classList.toggle('visible', count > 0);
  document.querySelector('.cart-btn').classList.toggle('has-items', count > 0);
  document.getElementById('quickCartText').textContent = count ? 'Ver pedido · $' + formatNum(total) : 'Ver pedido';
+ var summaryEl=document.getElementById('cartSummary'); if(summaryEl) summaryEl.textContent=count+(count===1?' producto':' productos')+' · '+keys.length+(keys.length===1?' artículo':' artículos');
 
  var itemsEl = document.getElementById('cartItems');
  var totalEl = document.getElementById('cartTotal');
  var formEl = document.getElementById('cartForm');
 
  if (keys.length === 0) {
- itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊</div>';
+ itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊<br><button type="button" class="empty-cart-cta" onclick="toggleCart();document.getElementById(\'searchInput\').focus()">🔎 Buscar productos</button></div>';
  totalEl.style.display = 'none';
  formEl.style.display = 'none';
  if(window.applyLanguage) applyLanguage();
@@ -669,13 +678,14 @@ function updateUI() {
  keys.forEach(function(k){
  var it = cart[k];
  html += '<div class="cart-item">';
- html += '<div class="cart-item-name">' + it.icon + ' ' + it.name + '</div>';
- html += '<div class="cart-item-price">$' + formatNum(it.price * it.qty) + '</div>';
+ html += '<div class="cart-item-icon">' + it.icon + '</div>';
+ html += '<div class="cart-item-main"><strong>' + it.name + '</strong><small>$' + formatNum(it.price) + ' c/u</small></div>';
+ html += '<div class="cart-item-actions"><div class="cart-item-price">$' + formatNum(it.price * it.qty) + '</div>';
  html += '<div class="qty-ctrl">';
- html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',-1)">−</button>';
+ html += '<button class="qty-btn" aria-label="Restar una unidad" onclick="changeQty(\'' + k + '\',-1)">−</button>';
  html += '<span class="qty-val">' + it.qty + '</span>';
- html += '<button class="qty-btn" onclick="changeQty(\'' + k + '\',1)">+</button>';
- html += '</div></div>';
+ html += '<button class="qty-btn" aria-label="Sumar una unidad" onclick="changeQty(\'' + k + '\',1)">+</button>';
+ html += '</div><button class="remove-item-btn" aria-label="Quitar producto" onclick="removeFromCart(\'' + k + '\')">×</button></div></div>';
  });
  itemsEl.innerHTML = html;
  document.getElementById('totalAmt').textContent = '$' + formatNum(total);
@@ -778,6 +788,7 @@ function limpiarBusqueda() {
  var input = document.getElementById('searchInput');
  if (!input) return;
  input.value = '';
+ var pf=document.getElementById('priceFilter');if(pf)pf.value='';
  buscar('');
  actualizarLimpiarBusqueda();
  input.focus();
@@ -802,11 +813,18 @@ function ejecutarBusquedaTradicional() {
  }
  if (input) input.blur();
 }
+function actualizarEstadoBusqueda(visible,total,filtered,level){
+ var status=document.getElementById('searchStatus');if(!status)return;
+ if(!filtered){status.innerHTML='<strong>'+total+'</strong> artículos disponibles';return;}
+ var label=visible===1?'resultado':'resultados';var extra=level?' · '+level:'';
+ status.innerHTML='<strong>'+visible+'</strong> '+label+' encontrados'+extra;
+}
 function buscar(q) {
  var query = normalizarBusqueda(q);
  var terms = query ? query.split(/\s+/).filter(Boolean) : [];
  var level = document.getElementById('priceFilter').value;
  var cards = document.querySelectorAll('.product-card');
+ var filtered = terms.length || level;
  var visible = 0;
  cards.forEach(function(c){
   var searchable = normalizarBusqueda(c.dataset.name || '');
@@ -815,12 +833,15 @@ function buscar(q) {
   var match = matchText && matchLevel;
   c.dataset.hidden = match ? 'false' : 'true';
   if (match) visible++;
-  if ((terms.length || level) && match) {
-   var bp = c.closest('.brand-products');
-   if (bp) { bp.classList.add('open'); bp.previousElementSibling.classList.add('open'); }
-  }
+  var bp = c.closest('.brand-block');
+  if(bp){bp.classList.toggle('search-hidden',!!filtered && !match);if(filtered && match){bp.classList.remove('search-hidden');bp.querySelector('.brand-products').classList.add('open');bp.querySelector('.brand-header').classList.add('open')}}
  });
- document.getElementById('noResults').style.display = ((terms.length || level) && visible === 0) ? 'block' : 'none';
+ document.querySelectorAll('.cat-section').forEach(function(section){
+  var hasMatch=section.querySelector('.product-card[data-hidden="false"]');
+  section.classList.toggle('search-hidden',!!filtered && !hasMatch);
+ });
+ document.getElementById('noResults').style.display = (filtered && visible === 0) ? 'block' : 'none';
+ actualizarEstadoBusqueda(visible,cards.length,filtered,level);
 }
 
 function toggleBrand(btn) {
@@ -1165,6 +1186,10 @@ var ABIGAIL_PRODUCTS = [
  document.getElementById('abigailForm').onsubmit=function(e){e.preventDefault();var value=input.value;input.value='';process(value)};
  document.querySelectorAll('[data-abigail-prompt]').forEach(function(btn){btn.onclick=function(){process(btn.getAttribute('data-abigail-prompt'))}});
 })();
+
+loadCart();
+updateUI();
+buscar('');
 
 /* Aplica el idioma guardado al abrir el catálogo. */
 applyLanguage();
