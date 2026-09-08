@@ -396,7 +396,7 @@ body.has-abigail .abigail-contact-actions{display:none}
  <div class="showcase-brand">{{ p.marca }} · {{ 'rollo de cocina' if p.categoria|lower == 'pañuelitos' else p.categoria }}</div>
  <div class="price-note">{{ price_label(p) }}</div>
  <div class="stock-note">✅ Disponible</div>
- <div class="showcase-bottom"><span class="showcase-price">${{ "{:,.0f}".format(p.precio).replace(",", ".") }}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+ <div class="showcase-bottom"><span class="showcase-price">{% if p.precio|float > 0 %}${{ "{:,.0f}".format(p.precio).replace(",", ".") }}{% else %}Consultar{% endif %}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
  </div>
  </article>
  {%- endmacro %}
@@ -484,7 +484,7 @@ body.has-abigail .abigail-contact-actions{display:none}
  <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
  {% if p.desc_ %}<div class="prod-desc">{{ p.desc_|product_name }}</div>{% endif %}
  <div class="prod-footer">
- <div class="prod-price">${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small></div>
+ <div class="prod-price">{% if p.precio|float > 0 %}${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small>{% else %}Consultar<small>precio</small>{% endif %}</div>
  <div class="prod-actions"><button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
  </div>
  </div>
@@ -977,7 +977,7 @@ function openProduct(code,name,brand,category,price,desc,image,icon){
  document.getElementById('modalProductName').textContent=shownName;
  document.getElementById('modalProductBrand').textContent=shownBrand+' · '+shownCategory;
  document.getElementById('modalProductDesc').textContent=shownDesc;
- document.getElementById('modalProductPrice').textContent='$'+formatNum(currentProduct.price)+' '+(currentLanguage==='en'?'each':'c/u');
+ document.getElementById('modalProductPrice').textContent=currentProduct.price>0?('$'+formatNum(currentProduct.price)+' '+(currentLanguage==='en'?'each':'c/u')):(currentLanguage==='en'?'Price to confirm':'Precio a confirmar');
  document.getElementById('modalBuyBtn').onclick=function(){buyNow(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon)};
  document.getElementById('modalAddBtn').onclick=function(){addToCart(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon);closeProduct()};
  document.getElementById('productOverlay').classList.add('open');document.body.style.overflow='hidden';
