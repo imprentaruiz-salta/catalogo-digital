@@ -888,32 +888,14 @@ function toggleBrand(btn) {
  start();
 })();
 
-/* Carrusel automático de categorías: avance lento, continuo y paus-able (15 px/s). */
+/* Carrusel automático de categorías: avance lento, sin duplicar tarjetas y paus-able. */
 (function(){
- /* Las categorías quedan con desplazamiento manual: evita repetirlas y facilita elegir en el celular. */
- return;
  var SPEED=15; // px/s: visible en móvil sin resultar invasivo
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
   var track=rail.querySelector('.category-track');
   if(!track || !track.children.length) return;
-  var original=Array.prototype.slice.call(track.children);
-  /* Duplicar la pista permite volver al inicio sin salto y conserva todos los íconos. */
-  original.forEach(function(card){
-   var clone=card.cloneNode(true);
-   clone.setAttribute('aria-hidden','true');
-   clone.setAttribute('tabindex','-1');
-   track.appendChild(clone);
-  });
-  var paused=false, loopWidth=0, lastTime=0, position=0, resumeTimer;
-  function measure(){
-   var first=track.children[0], second=track.children[original.length];
-   if(!first || !second) return;
-   loopWidth=second.offsetLeft-first.offsetLeft;
-   if(!loopWidth) loopWidth=Math.max(1,track.scrollWidth/2);
-   rail.classList.add('auto-marquee');
-   rail.style.scrollSnapType='none';
-  }
+  var paused=false, lastTime=0, position=rail.scrollLeft, resumeTimer;
   function pause(){position=rail.scrollLeft;paused=true;clearTimeout(resumeTimer);}
   function resumeSoon(){
    clearTimeout(resumeTimer);
@@ -923,15 +905,14 @@ function toggleBrand(btn) {
    if(!lastTime) lastTime=now;
    var elapsed=Math.min(now-lastTime,100);
    lastTime=now;
-   if(!paused && loopWidth>0 && rail.scrollWidth>rail.clientWidth+8){
+   if(!paused && rail.scrollWidth>rail.clientWidth+8){
     position += SPEED*elapsed/1000;
-    if(position>=loopWidth) position=position%loopWidth;
+    var max=rail.scrollWidth-rail.clientWidth;
+    if(position>=max) position=0;
     rail.scrollLeft=position;
    }
    requestAnimationFrame(tick);
   }
-  measure();
-  window.addEventListener('resize',measure,{passive:true});
   rail.addEventListener('pointerdown',pause,{passive:true});
   rail.addEventListener('pointerup',resumeSoon,{passive:true});
   rail.addEventListener('pointercancel',resumeSoon,{passive:true});
