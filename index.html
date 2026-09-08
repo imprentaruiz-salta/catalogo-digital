@@ -890,7 +890,7 @@ function toggleBrand(btn) {
 
 /* Carrusel automático de categorías: avance lento, sin duplicar tarjetas y paus-able. */
 (function(){
- var SPEED=15; // px/s: visible en móvil sin resultar invasivo
+ var SPEED=26; // px/s: movimiento ágil, pero fácil de seguir en móvil
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
   var track=rail.querySelector('.category-track');
