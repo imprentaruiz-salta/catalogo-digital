@@ -479,7 +479,7 @@ def index():
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
     # Abigail and every auxiliary catalog remain stored for recovery, but are not public.
-    if slug != 'libreria-ruiz': return ('Catálogo no disponible', 404)
+    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries'}: return ('Catálogo no disponible', 404)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     if slug == 'pizzeria-demo':
