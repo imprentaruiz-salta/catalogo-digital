@@ -91,7 +91,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .showcase-card .showcase-img{height:132px;background:#f4f7f5;display:flex;align-items:center;justify-content:center;font-size:42px}
 .showcase-card .showcase-img img{width:100%;height:100%;object-fit:contain;background:#fff}
 .showcase-card-body{padding:9px}
-.showcase-card-name{font-size:13px;font-weight:800;line-height:1.25;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.showcase-card-name{font-size:13px;font-weight:800;line-height:1.25;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.showcase-detail-btn{width:100%;margin-top:8px;border:1px solid #b7ebc6;background:#f0fdf4;color:#166534;border-radius:10px;padding:8px;font-size:11px;font-weight:800;cursor:pointer}.showcase-detail-btn:hover{background:#dcfce7}
 .showcase-brand{font-size:10px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .showcase-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:8px}
 .showcase-price{font-size:15px;color:var(--gd);font-weight:850;white-space:nowrap}
@@ -434,6 +434,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="price-note">{{ price_label(p) }}</div>
  <div class="stock-note">✅ Disponible</div>
  <div class="showcase-bottom"><span class="showcase-price">{% if p.precio|float > 0 %}${{ "{:,.0f}".format(p.precio).replace(",", ".") }}{% else %}Consultar{% endif %}</span><button class="add-btn showcase-add" aria-label="Agregar {{ p.nombre|product_name }}" onclick='addToCart({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button></div>
+ {% if p.desc_ %}<button class="showcase-detail-btn" type="button" onclick='openProduct({{ p.codigo|tojson }},{{ (p.nombre|product_name)|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})'>Ver características</button>{% endif %}
  </div>
  </article>
  {%- endmacro %}
