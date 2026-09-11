@@ -138,7 +138,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 }
 
 /* FLOAT CART */
-.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}.float-whatsapp{right:20px;bottom:20px}.quick-action-row{display:flex;gap:9px;margin:0 12px 16px}.quick-action{flex:1;border:0;border-radius:13px;padding:12px 9px;font-weight:850;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.1)}.quick-action-cart{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.quick-action-wa{background:#fff;border:2px solid #25d366;color:#128c7e}
+.float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}.float-whatsapp{right:20px;bottom:20px}.quick-action-row{display:flex;gap:9px;margin:0 12px 16px}.quick-action{flex:1;border:0;border-radius:13px;padding:12px 9px;font-weight:850;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.1)}.quick-action-cart{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.quick-action-wa{background:#fff;border:2px solid #25d366;color:#128c7e}.quick-action-telegram{background:#eef8ff;border:2px solid #229ed9;color:#1672a5}
 .float-cart.visible{display:flex}
 
 /* CARRITO MODAL */
@@ -402,6 +402,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <div class="quick-action-row" aria-label="Acciones rápidas">
  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
 {% if catalogo.slug != 'libreria-ruiz' %} <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>{% endif %}
+{% if catalogo.telegram %} <a class="quick-action quick-action-telegram" href="https://t.me/{{ catalogo.telegram|replace('@','') }}" target="_blank" rel="noopener">✈️ Telegram</a>{% endif %}
 </div>
 
 <!-- Contacto rápido por WhatsApp -->
