@@ -19,7 +19,13 @@
 <meta property="og:description" content="{{ share_description }}">
 <meta property="og:url" content="{{ request.url }}">
 {% if share_image %}<meta property="og:image" content="{{ share_image_url }}">
+<meta property="og:image:secure_url" content="{{ share_image_url }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="455">
 <meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
+<meta property="og:site_name" content="{{ catalogo.nombre }}">
+<meta property="og:locale" content="es_AR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ catalogo.nombre }} — Catálogo digital">
 <meta name="twitter:description" content="{{ share_description }}">
