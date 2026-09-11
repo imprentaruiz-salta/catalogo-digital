@@ -86,7 +86,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .showcase-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:850;letter-spacing:-.2px}
 .showcase-title .showcase-icon{font-size:25px}
 .showcase-note{font-size:11px;color:var(--mut);white-space:nowrap}
-.showcase-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(156px,42%);gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin;scroll-behavior:smooth}.showcase-rail.is-auto{scrollbar-width:none}.showcase-rail.is-auto::-webkit-scrollbar{display:none}.showcase-rail.is-paused{scroll-behavior:auto}.showcase-progress{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--mut);font-size:11px}.showcase-progress-track{height:5px;flex:1;background:#e5eee8;border-radius:9px;overflow:hidden}.showcase-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--gd));border-radius:9px;transition:width .25s ease}.showcase-progress-hint{white-space:nowrap}.showcase-section.is-moving .showcase-progress-bar{animation:progressPulse 1.2s ease-in-out infinite alternate}@keyframes progressPulse{from{opacity:.65}to{opacity:1}}
+.showcase-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(156px,42%);gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin;scroll-behavior:smooth}.showcase-rail.is-auto{scrollbar-width:none}.showcase-rail.is-auto{scroll-behavior:auto}.showcase-rail.is-auto::-webkit-scrollbar{display:none}.showcase-rail.is-paused{scroll-behavior:auto}.showcase-progress{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--mut);font-size:11px}.showcase-progress-track{height:5px;flex:1;background:#e5eee8;border-radius:9px;overflow:hidden}.showcase-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--gd));border-radius:9px;transition:width .25s ease}.showcase-progress-hint{white-space:nowrap}.showcase-section.is-moving .showcase-progress-bar{animation:progressPulse 1.2s ease-in-out infinite alternate}@keyframes progressPulse{from{opacity:.65}to{opacity:1}}
 .showcase-card{scroll-snap-align:start;min-width:0;background:#fbfffc;border:1px solid #e5eee8;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative}
 .showcase-card .showcase-img{height:132px;background:#f4f7f5;display:flex;align-items:center;justify-content:center;font-size:42px}
 .showcase-card .showcase-img img{width:100%;height:100%;object-fit:contain;background:#fff}
@@ -942,38 +942,44 @@ function toggleBrand(btn) {
  });
 })();
 
-/* Carruseles de vidriera: avance suave, pausado al tocar/deslizar */
+/* Carruseles de vidriera: movimiento continuo y suave, en bucle infinito. */
 (function(){
  var rails=document.querySelectorAll('.showcase-rail');
  if(!rails.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
  rails.forEach(function(rail){
- var section=rail.closest('.showcase-section'), progress=section&&section.querySelector('.showcase-progress'), bar=progress&&progress.querySelector('.showcase-progress-bar'), count=progress&&progress.querySelector('.showcase-progress-count');
- function updateProgress(){
- if(!progress) return;
- var max=Math.max(rail.scrollWidth-rail.clientWidth,1), pct=Math.min(100,Math.max(0,rail.scrollLeft/max*100));
- bar.style.width=Math.max(8,pct)+'%';
- var cards=rail.querySelectorAll('.showcase-card'), cardW=cards[0]?cards[0].getBoundingClientRect().width+10:1, pos=Math.min(cards.length,Math.floor(rail.scrollLeft/cardW)+1);
- count.textContent=pos+'/'+cards.length;
- }
- rail.addEventListener('scroll',updateProgress,{passive:true}); updateProgress();
- if(rail.scrollWidth <= rail.clientWidth + 8) return;
- rail.classList.add('is-auto');
- var paused=false, timer;
- function step(){
- if(paused) return;
- var cards=rail.querySelectorAll('.showcase-card');
- var card=cards[0];
- if(!card) return;
- var next=rail.scrollLeft + card.getBoundingClientRect().width + 10;
- if(next >= rail.scrollWidth - rail.clientWidth - 4) next=0;
- rail.scrollTo({left:next,behavior:'smooth'});
- }
- function pause(){paused=true;section.classList.add('is-moving');rail.classList.add('is-paused');clearInterval(timer);setTimeout(function(){if(paused){paused=false;section.classList.remove('is-moving');rail.classList.remove('is-paused');timer=setInterval(step,5200);}},7000);}
- rail.addEventListener('pointerdown',pause,{passive:true});
- rail.addEventListener('wheel',pause,{passive:true});
- rail.addEventListener('mouseenter',function(){paused=true;section.classList.add('is-moving');clearInterval(timer);});
- rail.addEventListener('mouseleave',function(){paused=false;section.classList.remove('is-moving');timer=setInterval(step,5200);});
- timer=setInterval(step,5200);
+  var section=rail.closest('.showcase-section'), progress=section&&section.querySelector('.showcase-progress'), bar=progress&&progress.querySelector('.showcase-progress-bar'), count=progress&&progress.querySelector('.showcase-progress-count');
+  var original=Array.prototype.slice.call(rail.querySelectorAll('.showcase-card'));
+  if(original.length<2) return;
+  original.forEach(function(card){var clone=card.cloneNode(true);clone.setAttribute('aria-hidden','true');clone.querySelectorAll('button').forEach(function(btn){btn.tabIndex=-1});rail.appendChild(clone);});
+  rail.classList.add('is-auto');
+  rail.style.scrollBehavior='auto';
+  var loopWidth=0, paused=false, resumeTimer, last=0, position=rail.scrollLeft, speed=24;
+  function measure(){loopWidth=rail.scrollWidth/2;position=rail.scrollLeft%Math.max(loopWidth,1);}
+  function updateProgress(){
+   if(!progress || !loopWidth) return;
+   var pct=Math.min(100,Math.max(0,position/Math.max(loopWidth-rail.clientWidth,1)*100));
+   if(bar) bar.style.width=Math.max(8,pct)+'%';
+   var cardW=original[0].getBoundingClientRect().width+10, pos=Math.min(original.length,Math.floor(position/cardW)+1);
+   if(count) count.textContent=pos+'/'+original.length;
+  }
+  function pause(){paused=true;clearTimeout(resumeTimer);rail.classList.add('is-paused');}
+  function resume(){clearTimeout(resumeTimer);resumeTimer=setTimeout(function(){paused=false;rail.classList.remove('is-paused');},1600);}
+  function tick(now){
+   if(!last) last=now;
+   var elapsed=Math.min(now-last,80);last=now;
+   if(!paused && loopWidth){position+=speed*elapsed/1000;if(position>=loopWidth) position-=loopWidth;rail.scrollLeft=position;updateProgress();}
+   requestAnimationFrame(tick);
+  }
+  measure();
+  window.addEventListener('resize',function(){var ratio=loopWidth?position/loopWidth:0;measure();position=ratio*loopWidth;},{passive:true});
+  rail.addEventListener('pointerdown',pause,{passive:true});
+  rail.addEventListener('pointerup',resume,{passive:true});
+  rail.addEventListener('pointercancel',resume,{passive:true});
+  rail.addEventListener('touchstart',pause,{passive:true});
+  rail.addEventListener('touchend',resume,{passive:true});
+  rail.addEventListener('touchcancel',resume,{passive:true});
+  rail.addEventListener('wheel',function(){pause();resume();},{passive:true});
+  updateProgress();requestAnimationFrame(tick);
  });
 })();
 
