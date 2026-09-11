@@ -795,6 +795,7 @@ def editar_catalogo():
     slug=request.form.get('slug','')
     with get_db() as db:
         db.execute('UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=? WHERE slug=?',(request.form.get('nombre','').strip(),request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp',''),request.form.get('telegram','').lstrip('@'),request.form.get('banner',''),slug)); db.commit()
+    cloud_sync()
     session['catalogo_slug']=slug
     return redirect(url_for('admin_index'))
 @app.route('/admin/catalogo/nuevo',methods=['POST'])
