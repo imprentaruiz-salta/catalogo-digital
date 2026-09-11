@@ -375,6 +375,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   <button type="button" class="search-shortcut" onclick="buscarRapido('carpeta')">Carpetas</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('resaltador')">Resaltadores</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('escolar')">Escolar</button>
+  {% elif catalogo.slug == 'vivero-los-colibries' %}
+  <button type="button" class="search-shortcut" onclick="buscarRapido('plantin')">Plantines</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('árbol')">Árboles</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('maceta')">Macetas</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('tierra')">Tierra</button>
+  <button type="button" class="search-shortcut" onclick="buscarRapido('frutal')">Frutales</button>
   {% else %}
   <button type="button" class="search-shortcut" onclick="buscarRapido('detergente')">Detergentes</button>
   <button type="button" class="search-shortcut" onclick="buscarRapido('jabon')">Jabones</button>
@@ -448,13 +454,13 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="hero-copy">
  <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
  <h2>{{ catalogo.nombre }}</h2>
- <p>{% if catalogo.slug == 'libreria-ruiz' %}Útiles para la escuela, la oficina y todos los días.{% else %}Todo se entiende de un vistazo: foto, marca y precio.{% endif %}</p>
+ <p>{% if catalogo.slug == 'libreria-ruiz' %}Útiles para la escuela, la oficina y todos los días.{% elif catalogo.slug == 'vivero-los-colibries' %}Plantas, árboles, macetas y tierra para llenar de vida tu espacio.{% else %}Todo se entiende de un vistazo: foto, marca y precio.{% endif %}</p>
  <div class="hero-steps" aria-label="Pasos para hacer un pedido"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">🛒 Pedí</span></div>
  </div>
  </div>
 
  <div class="info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>
- <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 Combos destacados</strong><div class="combo-grid" id="comboRail">{% if catalogo.slug == 'libreria-ruiz' %}<div class="combo-card"><h3>Combo Escolar</h3><p>Birome + lápiz + goma + sacapuntas.</p><button onclick="buscarCombo('escolar')">Ver combo</button></div><div class="combo-card"><h3>Combo Oficina</h3><p>Resma + carpeta + resaltador + birome.</p><button onclick="buscarCombo('oficina')">Ver combo</button></div><div class="combo-card"><h3>Combo Estudio</h3><p>Cuaderno + resaltador + adhesivo.</p><button onclick="buscarCombo('estudio')">Ver combo</button></div>{% else %}<div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div>{% endif %}</div><div class="combo-progress">Deslizá ↔ · mirá todos los combos</div></div>
+ <div class="info-strip" style="border-color:#fed7aa;background:#fff7ed" aria-label="Combos destacados"><strong style="color:#c2410c">🔥 {% if catalogo.slug == 'vivero-los-colibries' %}Ideas para tu jardín{% else %}Combos destacados{% endif %}</strong><div class="combo-grid" id="comboRail">{% if catalogo.slug == 'libreria-ruiz' %}<div class="combo-card"><h3>Combo Escolar</h3><p>Birome + lápiz + goma + sacapuntas.</p><button onclick="buscarCombo('escolar')">Ver combo</button></div><div class="combo-card"><h3>Combo Oficina</h3><p>Resma + carpeta + resaltador + birome.</p><button onclick="buscarCombo('oficina')">Ver combo</button></div><div class="combo-card"><h3>Combo Estudio</h3><p>Cuaderno + resaltador + adhesivo.</p><button onclick="buscarCombo('estudio')">Ver combo</button></div>{% elif catalogo.slug == 'vivero-los-colibries' %}<div class="combo-card"><h3>Rincón verde</h3><p>Plantín + maceta + tierra.</p><button onclick="buscarCombo('plantin')">Ver opciones</button></div><div class="combo-card"><h3>Jardín frutal</h3><p>Frutal + tierra para empezar.</p><button onclick="buscarCombo('frutal')">Ver opciones</button></div><div class="combo-card"><h3>Jardín completo</h3><p>Árboles + herbáceas + macetas.</p><button onclick="buscarCombo('árbol')">Ver opciones</button></div>{% else %}<div class="combo-card"><h3>Fardo de papel higiénico</h3><p>Presentaciones económicas para ahorrar.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Fardo de rollo de cocina</h3><p>Más cantidad, mejor precio.</p><button onclick="buscarCombo('fardo')">Ver fardos</button></div><div class="combo-card"><h3>Pack económico</h3><p>Elegí packs por marca y presentación.</p><button onclick="buscarCombo('pack')">Ver packs</button></div>{% endif %}</div><div class="combo-progress">Deslizá ↔ · {% if catalogo.slug == 'vivero-los-colibries' %}elegí una idea para tu espacio{% else %}mirá todos los combos{% endif %}</div></div>
 
  {% if cats %}<div class="quick-categories" aria-label="Categorías disponibles">
  <div class="quick-categories-title">👇 PRODUCTOS DISPONIBLES · ELEGÍ UNA CATEGORÍA</div>
