@@ -403,10 +403,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% endfor %}
  </div>
 </nav>
+{% if catalogo.slug != 'vivero-los-colibries' %}
 <div class="quick-action-row" aria-label="Acciones rápidas">
  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
 {% if catalogo.slug != 'libreria-ruiz' %} <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>{% endif %}
 </div>
+{% endif %}
 
 <!-- Contacto rápido por WhatsApp -->
 <a class="float-whatsapp" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp">
