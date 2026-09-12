@@ -411,7 +411,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 </nav>
 {% if catalogo.slug != 'vivero-los-colibries' %}
 <div class="quick-action-row" aria-label="Acciones rápidas">
- <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Ver pedido</span></button>
+ <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Mi pedido</span></button>
 {% if catalogo.slug != 'libreria-ruiz' %} <a class="quick-action quick-action-wa" href="https://wa.me/{{ catalogo.whatsapp }}?text={{ 'Hola, quiero consultar por un producto del catálogo.'|urlencode }}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>{% endif %}
 </div>
 {% endif %}
@@ -589,7 +589,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <!-- Asistente de catálogo -->
 <div class="abigail-widget" id="abigailWidget">
  <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Victoria Ruiz{% else %}Espumita{% endif %}</span></div>
- <div class="abigail-magic-cart" id="abigailMagicCart" aria-label="Carrito mágico"><span class="magic-cart-icon">🛒</span><span class="magic-cart-count" id="magicCartCount">0</span><span class="magic-cart-items" id="magicCartItems"></span></div>
+ <div class="abigail-magic-cart" id="abigailMagicCart" aria-label="Mi pedido"><span class="magic-cart-icon">🛒</span><span class="magic-cart-count" id="magicCartCount">0</span><span class="magic-cart-items" id="magicCartItems"></span></div>
  <button type="button" class="abigail-nudge" id="abigailNudge">{% if catalogo.slug == 'libreria-ruiz' %}🔎 Buscá un producto y te ayudo{% else %}🔎 Tocá la búsqueda y escribí el producto que necesitás{% endif %}</button>
  <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con Victoria Ruiz{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
   <div class="abigail-head">
@@ -615,7 +615,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
- 🛒 Ver pedido · <span id="floatTotal">$0</span>
+ 🛒 Mi pedido · <span id="floatTotal">$0</span>
 </button>
 
 <!-- OVERLAY -->
@@ -713,7 +713,7 @@ function updateUI() {
  document.getElementById('floatTotal').textContent = '$' + formatNum(total);
  document.getElementById('floatCart').classList.toggle('visible', count > 0);
  document.querySelector('.cart-btn').classList.toggle('has-items', count > 0);
- document.getElementById('quickCartText').textContent = count ? 'Ver pedido · $' + formatNum(total) : 'Ver pedido';
+ document.getElementById('quickCartText').textContent = count ? 'Mi pedido · $' + formatNum(total) : 'Mi pedido';
  var summaryEl=document.getElementById('cartSummary'); if(summaryEl) summaryEl.textContent=count+(count===1?' producto':' productos')+' · '+keys.length+(keys.length===1?' artículo':' artículos');
 
  var itemsEl = document.getElementById('cartItems');
@@ -1013,7 +1013,7 @@ function toggleBrand(btn) {
 var currentLanguage = 'es';
 var EN = {
  'Todos':'All','Todo':'All','Económico':'Budget','Estándar':'Standard','Premium':'Premium','Idioma':'Language','Catálogo digital':'Digital catalog','Limpieza del hogar':'Home cleaning','Consultar por WhatsApp':'Contact us on WhatsApp','💬 Consultar por WhatsApp':'💬 Contact us on WhatsApp','Todo de un vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Todo de a vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','Compra de forma fácil y segura':'Shop easily and safely','Compra de forma easy y segura':'Shop easily and safely','Recoger en tienda':'Pick up in store','Consultar sobre el delivery':'Ask about delivery','Transferencia bancaria':'Bank transfer','Bank transfer bancaria':'Bank transfer','Paquetes destacados':'Featured bundles','Paquete de rollos de cocina':'Paper towel bundle','Paquete of rolls of cocina':'Paper towel bundle','Paquete of rolls de cocina':'Paper towel bundle','A mayor cantidad, mejor precio.':'More quantity, better price.','A mayor cantidad, mejor precio':'More quantity, better price','Elige el paquete por marca y tamaño.':'Choose a pack by brand and size.','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORÍA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','👇 PRODUCTOS DISPONIBLES · ELIGE UNA CATEGORIA':'👇 AVAILABLE PRODUCTS · CHOOSE A CATEGORY','Buscar producto o marca...':'Search product or brand...','Buscar producto o marca':'Search product or brand','Precio por rollo':'Price per roll','Precio por pack':'Price per pack','Precio por fardo':'Price per bundle','Precio':'Price',
- 'NAV CATEGORÍAS':'CATEGORIES','Idioma':'Language','Filtrar nivel de precio':'Filter price level','Acciones rápidas':'Quick actions','Categorías del catálogo':'Catalog categories','Categorías disponibles':'Available categories','Pasos para hacer un pedido':'Steps to place an order','Información de compra':'Shopping information','Combos destacados':'Featured bundles','Vidriera visual':'Visual storefront','Ver categoría':'View category','Ver pedido':'View order','Consultar por WhatsApp':'Contact us on WhatsApp','Contacto rápido por WhatsApp':'Quick WhatsApp contact','¿Necesitás ayuda?':'Need help?',
+ 'NAV CATEGORÍAS':'CATEGORIES','Idioma':'Language','Filtrar nivel de precio':'Filter price level','Acciones rápidas':'Quick actions','Categorías del catálogo':'Catalog categories','Categorías disponibles':'Available categories','Pasos para hacer un pedido':'Steps to place an order','Información de compra':'Shopping information','Combos destacados':'Featured bundles','Vidriera visual':'Visual storefront','Ver categoría':'View category','Ver pedido':'View order','Mi pedido':'My order','Consultar por WhatsApp':'Contact us on WhatsApp','Contacto rápido por WhatsApp':'Quick WhatsApp contact','¿Necesitás ayuda?':'Need help?',
  'Nuevo':'New','Oferta':'Sale','Más vendido':'Best seller','Favorito':'Favorite','Destacado':'Featured','Acondicionador':'Conditioner','Cepillos de dientes':'Toothbrushes','Cremas':'Creams','Desodorantes':'Deodorants','Detergentes':'Dish soap','Jabones en pan':'Bar soaps','Lavandinas':'Bleach','Limpieza':'Cleaning','Desengrasantes':'Degreasers','Suavizantes':'Fabric softeners','Quitamanchas':'Stain removers','Toallitas femeninas':'Feminine wipes','Jabones líquidos':'Liquid soaps','acondicionador':'conditioner','cepillos de dientes':'toothbrushes','cepillos':'toothbrushes','cremas':'creams','desodorantes':'deodorants','detergentes':'dish soap','jabones en pan':'bar soaps','lavandinas':'bleach','desengrasantes':'degreasers','suavizantes':'fabric softeners','quitamanchas':'stain removers','toallitas femeninas':'feminine wipes','jabones líquidos':'liquid soaps','máquinas de afeitar':'razors','papel higienicos':'toilet paper','pastas dentales':'toothpaste','protectores diarios':'panty liners','rollo de cocina':'paper towel roll','talcos':'body powder','Máquinas de afeitar':'Razors','Papel higiénicos':'Toilet paper','Pastas dentales':'Toothpaste','Protectores diarios':'Panty liners','Rollo de cocina':'Paper towel roll','Talcos':'Body powder','Imagen':'Image','imagen':'image','✅ Disponible':'✅ Available','c/u':'each','Comprar ahora':'Buy now',
  '✨ La vidriera de hoy':"✨ Today's showcase",'Mirá · elegí · pedí':'See · choose · order','Todo se entiende de un vistazo: foto, marca y precio.':'Everything at a glance: photo, brand and price.','👀 Mirá':'👀 See','☝️ Elegí':'☝️ Choose','🛒 Pedí':'🛒 Order',
  '🛍️ Comprá fácil y seguro':'🛍️ Shop easily and safely','🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago':'🏪 Pick up in store · 🛵 Ask about delivery · 💵 Cash · 🏦 Bank transfer · 📱 Mercado Pago',
