@@ -464,7 +464,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <!-- HERO -->
  <div class="hero">
  {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/banner_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
- {% set effective_banner_url = banner_url or ('/static/banner_vivero_los_colibries.png' if catalogo.slug == 'vivero-los-colibries' else '') %}{% if effective_banner_url %}<div class="hero-banner"><img src="{{ effective_banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"><span class="showcase-tag" style="top:12px;right:12px;left:auto;font-size:11px;background:#fff;color:var(--gd)">✨ La vidriera de hoy</span></div>{% endif %}
+ {% set effective_banner_url = banner_url or ('/static/banner_vivero_los_colibries.png' if catalogo.slug == 'vivero-los-colibries' else '') %}{% if effective_banner_url %}<div class="hero-banner"><img src="{{ effective_banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"></div>{% endif %}
  <div class="hero-copy">
  <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · pedí</div>
  <h2>{{ catalogo.nombre }}</h2>
