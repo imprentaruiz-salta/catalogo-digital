@@ -560,10 +560,10 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% endfor %}
  <!-- SUGERENCIAS, debajo de los productos -->
  <div class="hero" style="background:#fff8e1;border:1px solid #ffe082">
- <h2 style="color:#9a6700">📣 ¿Qué producto necesitás?</h2>
- <p>Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.</p>
- <div style="display:flex;gap:8px;max-width:520px;margin:12px auto 0"><input id="suggestProduct" class="nombre-input" style="margin:0" placeholder="Ej: cinta adhesiva ancha"><button class="add-btn" style="border-radius:50%;flex:none" onclick="enviarSugerencia()">➤</button></div>
- <div style="display:flex;gap:8px;max-width:520px;margin:8px auto 0"><input id="suggestQty" type="number" min="1" value="1" class="nombre-input" style="margin:0;max-width:100px" title="Cantidad"><input id="suggestName" class="nombre-input" style="margin:0" placeholder="Tu nombre (opcional)"></div><input id="suggestComment" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="Tamaño, marca o detalle (opcional)"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
+ <h2 style="color:#9a6700">{% if catalogo.slug == 'vivero-los-colibries' %}🌱 ¿No encontrás una planta?{% else %}📣 ¿Qué producto necesitás?{% endif %}</h2>
+ <p>{% if catalogo.slug == 'vivero-los-colibries' %}Pedila aunque todavía no esté en el catálogo y consultamos si podemos conseguirla.{% else %}Pedilo aunque todavía no esté en el catálogo. Si varias personas lo piden, lo incorporamos.{% endif %}</p>
+ <div style="display:flex;gap:8px;max-width:520px;margin:12px auto 0"><input id="suggestProduct" class="nombre-input" style="margin:0" placeholder="{% if catalogo.slug == 'vivero-los-colibries' %}Ej: lavanda, jazmín o romero{% else %}Ej: cinta adhesiva ancha{% endif %}"><button class="add-btn" style="border-radius:50%;flex:none" onclick="enviarSugerencia()">➤</button></div>
+ <div style="display:flex;gap:8px;max-width:520px;margin:8px auto 0"><input id="suggestQty" type="number" min="1" value="1" class="nombre-input" style="margin:0;max-width:100px" title="Cantidad"><input id="suggestName" class="nombre-input" style="margin:0" placeholder="Tu nombre (opcional)"></div><input id="suggestComment" class="nombre-input" style="max-width:520px;margin:8px auto 0" placeholder="{% if catalogo.slug == 'vivero-los-colibries' %}Tamaño, variedad o detalle (opcional){% else %}Tamaño, marca o detalle (opcional){% endif %}"><div id="suggestMsg" style="font-size:12px;color:#9a6700;margin-top:6px"></div>
  </div>
 
 </main>
