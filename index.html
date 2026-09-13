@@ -108,6 +108,15 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 
 /* SECCIONES */
 .cat-section{margin:0 12px 24px}
+body.vivero-accordion .cat-nav{overflow:visible;white-space:normal}
+body.vivero-accordion .cat-nav .category-track{display:flex!important;flex-wrap:wrap!important;width:100%!important;justify-content:center;gap:6px}
+body.vivero-accordion .cat-nav a{min-width:88px}
+body.vivero-accordion .quick-categories{display:none!important}
+body.vivero-accordion .cat-section{display:none}
+body.vivero-accordion .cat-section.category-open{display:block}
+body.vivero-accordion .cat-header{cursor:pointer}
+body.vivero-accordion .cat-header:after{content:"⌄";margin-left:auto;font-size:24px;color:var(--gd);transition:transform .2s}
+body.vivero-accordion .cat-section.category-open .cat-header:after{transform:rotate(180deg)}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:14px 16px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .cat-header .cat-emoji{font-size:42px;line-height:1;filter:saturate(1.12)}.cat-header .cat-visual{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:16px;border:1px solid #dbeafe;flex:none}
 .cat-header h2{font-size:20px;font-weight:800;color:var(--txt);letter-spacing:-.2px}
@@ -315,7 +324,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
 </head>
-<body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}">
+<body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}>
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
@@ -403,7 +412,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
  {% for cat in cats %}
- <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Ver categoría {{ cat }}" title="Ver {{ cat }}">
+ <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'sec-{{ loop.index }}')">
  {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}
  </a>
  {% endfor %}
@@ -496,7 +505,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% for cat, marcas in cats.items() %}
  {% set total = namespace(n=0) %}
  {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
- <section class="cat-section" id="sec-{{ loop.index }}">
+ <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="sec-{{ loop.index }}">
  <div class="cat-header">
  {{ cat_visual(cat, 'header') }}
  <div>
@@ -1090,6 +1099,8 @@ function showToast(msg) {
 function formatNum(n) {
  return Math.round(n).toLocaleString('es-AR');
 }
+
+function toggleCategory(ev,id){if(ev)ev.preventDefault();var sec=document.getElementById(id);if(!sec)return;var isOpen=sec.classList.contains('category-open');document.querySelectorAll('body.vivero-accordion .cat-section.category-open').forEach(function(x){x.classList.remove('category-open')});document.querySelectorAll('.cat-nav a').forEach(function(x){x.classList.remove('active')});if(!isOpen){sec.classList.add('category-open');var link=document.querySelector('.cat-nav a[href=\"#'+id+'\"]');if(link)link.classList.add('active');setTimeout(function(){sec.scrollIntoView({behavior:'smooth',block:'start'})},30);}}
 
 // Nav activo en scroll
 var sections = document.querySelectorAll('.cat-section');
