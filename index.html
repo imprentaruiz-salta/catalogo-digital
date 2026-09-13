@@ -842,6 +842,11 @@ function sendWhatsApp() {
 }
 
 function buscarCombo(q) {
+ if(document.body.classList.contains('vivero-accordion')){
+  var map={plantin:'sec-6',frutal:'sec-3','árbol':'sec-9',arbol:'sec-9'},id=map[q]||'sec-1',sec=document.getElementById(id);
+  if(sec){document.querySelectorAll('body.vivero-accordion .cat-section.category-open').forEach(function(x){x.classList.remove('category-open')});sec.classList.add('category-open');setTimeout(function(){sec.scrollIntoView({behavior:'smooth',block:'start'})},30)}
+  return;
+ }
  var input=document.getElementById('searchInput');
  if(input) input.value=q;
  buscar(q);
