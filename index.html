@@ -325,7 +325,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
 </head>
-<body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}>
+<body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
  {% set n = cat|lower %}
  {% if n == 'papel higiénico' or n == 'papel higienico' or n == 'papel higiénicos' or n == 'papel higienicos' %}
