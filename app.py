@@ -172,6 +172,9 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS fleming_videos (property_id TEXT PRIMARY KEY, filename TEXT NOT NULL, title TEXT DEFAULT '', uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP)")
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
+        db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_slug ON catalog_analytics(catalogo_slug,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_creado ON fleming_analytics(creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_evento ON fleming_analytics(evento)")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
@@ -486,7 +489,26 @@ def catalogo_publico(slug):
         grouped=get_catalogo(slug)
         pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
         return render_template('pizzeria.html',cats=pizzas,catalogo=cfg)
-    return render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg)
+    response=app.make_response(render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg))
+    if slug == 'vivero-los-colibries':
+        visitor_id=request.cookies.get('catalog_visitor_id') or uuid.uuid4().hex
+        try:
+            with get_db() as db:
+                db.execute('INSERT INTO catalog_analytics(catalogo_slug,session_id,evento,pagina) VALUES(?,?,?,?)',(slug,visitor_id,'page_view','/c/'+slug))
+                db.commit()
+        except Exception:
+            app.logger.exception('No se pudo registrar la visita del catálogo')
+        response.set_cookie('catalog_visitor_id',visitor_id,max_age=31536000,httponly=True,samesite='Lax',secure=True)
+    return response
+@app.route('/api/catalog/analytics/summary')
+def catalog_analytics_summary_api():
+    slug=str(request.args.get('slug') or '').strip().lower()
+    if slug != 'vivero-los-colibries': return jsonify(ok=False),404
+    try: hours=max(1,min(168,int(request.args.get('hours','1'))))
+    except ValueError: hours=1
+    with get_db() as db:
+        row=db.execute("SELECT COUNT(DISTINCT session_id) AS visitantes, COUNT(*) AS paginas FROM catalog_analytics WHERE catalogo_slug=? AND evento='page_view' AND creado >= datetime('now', ?)",(slug,f'-{hours} hour')).fetchone()
+    return jsonify(ok=True,catalogo=slug,hours=hours,visitors=int(row['visitantes'] or 0),page_views=int(row['paginas'] or 0))
 @app.route('/api/fleming/analytics', methods=['POST'])
 def fleming_analytics_event():
     """Store anonymous interaction events for the Fleming catalog."""
@@ -1014,3 +1036,4 @@ def admin_foto_rapida(pid):
 restore_from_cloud()
 init_db()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
+
