@@ -44,7 +44,7 @@ body.catalog-libreria-ruiz .info-strip{border-color:#bfdbfe;background:#f8fbff}
 body.catalog-libreria-ruiz .showcase-progress-bar{background:linear-gradient(90deg,#ff7a45,#1d70b8)}
 body.catalog-libreria-ruiz .catalog-section-title{color:#102a43;border-color:#ff7a45}
 body.catalog-libreria-ruiz .add-btn{background:linear-gradient(135deg,#ff7a45,#1d70b8)}
-body.catalog-libreria-ruiz .float-whatsapp{background:#1d70b8}
+body.catalog-libreria-ruiz .float-whatsapp{background:#25d366}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
@@ -448,7 +448,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
  {% for cat in cats %}
  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'sec-{{ loop.index }}')">
- {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}
+ {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
  </a>
  {% endfor %}
  </div>
@@ -506,7 +506,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
- {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+ {% if catalogo.slug != 'libreria-ruiz' and (is_new or is_offer or is_best) %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
 {%- endmacro %}
 {% macro stock_note(p) -%}
  {% if p.stock_actual|default(0)|int > 0 %}<div class="stock-note">✅ Disponible · {{ p.stock_actual }} unidades</div>{% else %}<div class="stock-note">{% if catalogo.slug == 'vivero-los-colibries' %}📋 Disponibilidad a confirmar{% elif catalogo.slug == 'libreria-ruiz' %}📋 Pendiente · precio a confirmar{% else %}✅ Disponible{% endif %}</div>{% endif %}
@@ -517,7 +517,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% set banner_url = '/static/banner_abigail.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/banner_libreria_ruiz.jpg' if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
  {% set effective_banner_url = banner_url or ('/static/banner_vivero_los_colibries.png' if catalogo.slug == 'vivero-los-colibries' else '') %}{% if effective_banner_url %}<div class="hero-banner"><img src="{{ effective_banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"></div>{% endif %}
  <div class="hero-copy">
- <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · elegí · {% if catalogo.slug == 'vivero-los-colibries' %}consultá{% else %}pedí{% endif %}</div>
+ <div class="hero-kicker"><span aria-hidden="true">👀</span> Mirá · buscá · {% if catalogo.slug == 'libreria-ruiz' %}consultá{% elif catalogo.slug == 'vivero-los-colibries' %}consultá{% else %}pedí{% endif %}</div>
  <h2>{{ catalogo.nombre }}</h2>
  <p>{% if catalogo.slug == 'libreria-ruiz' %}Útiles para la escuela, la oficina y todos los días.{% elif catalogo.slug == 'vivero-los-colibries' %}Plantas, árboles, macetas y tierra para llenar de vida tu espacio.{% else %}Todo se entiende de un vistazo: foto, marca y precio.{% endif %}</p>
  <div class="hero-steps" aria-label="Pasos para consultar"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">📩 Consultá</span></div>
@@ -557,14 +557,14 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="cat-header">
  {{ cat_visual(cat, 'header') }}
  <div>
- <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% else %}{{ cat }}{% endif %}</h2>
+ <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}</h2>
  <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
  </div>
  </div>
 
  {% for marca, productos in marcas.items() %}
- <div class="brand-block">
- <button class="brand-header" onclick="toggleBrand(this)">
+ <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
+ <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
  <div class="brand-icon">{{ marca[0] }}</div>
  <div>
@@ -574,14 +574,14 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </div>
  <span class="chevron">▼</span>
  </button>
- <div class="brand-products">
+ <div class="brand-products{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}">
  {% for p in productos %}
  {% set display_name = p.nombre|product_name %}
  <div class="product-card" data-code="{{ p.codigo }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
- {% if is_new or is_offer or is_best %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
+ {% if catalogo.slug != 'libreria-ruiz' and (is_new or is_offer or is_best) %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
  <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
  {% if p.foto %}<img src="/static/uploads/{{ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
  </div>
@@ -589,11 +589,11 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
  <div class="stock-note">{% if catalogo.slug == 'vivero-los-colibries' %}📋 Disponibilidad a confirmar{% elif catalogo.slug == 'libreria-ruiz' %}📋 Pendiente · precio a confirmar{% else %}✅ Disponible{% endif %}</div>
  <div class="price-note">{% if catalogo.slug == 'vivero-los-colibries' %}Precio a confirmar{% else %}{{ price_label(p) }}{% endif %}</div>
- <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div><span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>
+ <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div>{% if catalogo.slug != 'libreria-ruiz' %}<span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>{% endif %}
  {% if p.desc_ %}<div class="prod-desc">{{ p.desc_|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|product_name }}</div><button class="showcase-detail-btn" type="button" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|tojson }},{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }})'>Ver características</button>{% endif %}
  <div class="prod-footer">
  <div class="prod-price">{% if p.precio|float > 0 %}${{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small>{% else %}A confirmar<small>precio</small>{% endif %}</div>
- <div class="prod-actions">{% if p.precio|float > 0 %}<button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>Consultar</button>{% endif %}</div>
+ <div class="prod-actions">{% if p.precio|float > 0 %}<button class="buy-now-btn" onclick='buyNow({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>Comprar ahora</button><button class="add-btn" aria-label="Agregar {{ p.nombre }}" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}</div>
  </div>
  </div>
  </div>
