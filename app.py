@@ -174,6 +174,8 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN avisado_whatsapp INTEGER DEFAULT 0")
+        except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_slug ON catalog_analytics(catalogo_slug,creado)")
@@ -639,6 +641,27 @@ def api_libreria_pago_webhook():
     except Exception:
         app.logger.exception('Webhook de Mercado Pago no procesado')
         return jsonify(ok=True)
+
+@app.route('/api/libreria/pagos/aprobados',methods=['GET'])
+def api_libreria_pagos_aprobados():
+    key=request.args.get('key','')
+    if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
+        return jsonify(ok=False,error='No autorizado'),403
+    with get_db() as db:
+        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado='sena_confirmada' AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
+    result=[]
+    for row in rows:
+        item=dict(row); item['items']=json.loads(item.get('items') or '[]'); result.append(item)
+    return jsonify(ok=True,pedidos=result)
+
+@app.route('/api/libreria/pagos/<pedido_id>/ack',methods=['POST'])
+def api_libreria_pago_ack(pedido_id):
+    key=request.args.get('key','') or (request.get_json(silent=True) or {}).get('key','')
+    if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
+        return jsonify(ok=False,error='No autorizado'),403
+    with get_db() as db:
+        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado='sena_confirmada'",(pedido_id,)); db.commit()
+    return jsonify(ok=True,pedido_id=pedido_id)
 
 @app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
 def api_libreria_pago_estado(pedido_id):
