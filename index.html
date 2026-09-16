@@ -720,7 +720,7 @@ var payMethod = '';
 var WPP = '{{ whatsapp_contacto }}';
 var CART_STORAGE_KEY = 'catalog_cart_{{ catalogo.slug }}_v2';
 function saveCart(){try{localStorage.setItem(CART_STORAGE_KEY,JSON.stringify(cart))}catch(e){}}
-function loadCart(){try{var saved=JSON.parse(localStorage.getItem(CART_STORAGE_KEY)||'{}');if(saved&&typeof saved==='object')cart=saved}catch(e){cart={}}}
+function loadCart(){try{if({{ (catalogo.slug == 'libreria-ruiz')|tojson }}){cart={};saveCart();return}var saved=JSON.parse(localStorage.getItem(CART_STORAGE_KEY)||'{}');if(saved&&typeof saved==='object')cart=saved}catch(e){cart={}}}
 function clearCart(){if(!Object.keys(cart).length)return;if(!window.confirm('¿Querés vaciar todo el pedido?'))return;cart={};payMethod='';saveCart();updateUI();showToast('Pedido vacío')}
 function removeFromCart(code){if(!cart[code])return;delete cart[code];saveCart();updateUI();showToast('Producto quitado del pedido')}
 
