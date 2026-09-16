@@ -640,7 +640,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <button type="button" class="abigail-nudge" id="abigailNudge">{% if catalogo.slug == 'libreria-ruiz' %}🔎 Buscá un producto y te ayudo{% else %}🔎 Tocá la búsqueda y escribí el producto que necesitás{% endif %}</button>
  <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con Mercedes{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
   <div class="abigail-head">
-   {% if catalogo.slug == 'libreria-ruiz'}<span class="ruiz-avatar" aria-hidden="true">M</span><div><strong>Mercedes</strong><small>Vendedora virtual · Librería Comercial Ruiz</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
+   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-avatar" aria-hidden="true">M</span><div><strong>Mercedes</strong><small>Vendedora virtual · Librería Comercial Ruiz</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
    <button class="abigail-close" id="abigailClose" aria-label="Cerrar chat">×</button>
   </div>
   <div class="abigail-messages" id="abigailMessages" aria-live="polite"></div>
@@ -654,7 +654,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   <form class="abigail-form" id="abigailForm"><input id="abigailInput" autocomplete="off" placeholder="{% if catalogo.slug == 'libreria-ruiz' %}¿Qué querés comprar?{% else %}¿Qué estás buscando?{% endif %}" aria-label="Escribí qué producto buscás"><button type="submit" aria-label="Enviar">➤</button></form>
  </div>
  <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Hablar con Mercedes{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Pedile a Mercedes que te arme el pedido{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
-  {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">V</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
+  {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">M</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
  </button>
 </div>
 {% endif %}
