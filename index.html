@@ -232,7 +232,7 @@ body.vivero-accordion .cat-section.category-open .cat-header:after{transform:rot
 .float-whatsapp:hover .wa-label{opacity:1;transform:translateX(0)}
 @keyframes waPulse{0%,70%,100%{box-shadow:0 5px 18px rgba(18,140,126,.45)}35%{box-shadow:0 5px 0 9px rgba(37,211,102,.12),0 5px 22px rgba(18,140,126,.55)}}
 
-/* Victoria Ruiz LiveAvatar: asistente hablante de librería */
+/* Mercedes LiveAvatar: asistente hablante de Librería Comercial Ruiz */
 .victoria-ruiz-fab{position:fixed;right:18px;bottom:144px;z-index:365;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,#173f48,#236875);color:#fff;font-size:12px;font-weight:800;letter-spacing:.02em;box-shadow:0 7px 24px rgba(15,45,53,.32);cursor:pointer;transition:transform .2s,box-shadow .2s}.victoria-ruiz-fab:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(15,45,53,.4)}.victoria-ruiz-dot{width:9px;height:9px;border-radius:50%;background:#72df9d;box-shadow:0 0 0 4px rgba(114,223,157,.18)}.victoria-ruiz-panel{display:none;position:fixed;right:18px;bottom:204px;z-index:366;width:min(350px,calc(100vw - 28px));height:min(470px,calc(100vh - 260px));overflow:hidden;border:1px solid rgba(23,63,72,.22);border-radius:18px;background:#f7faf8;box-shadow:0 18px 60px rgba(15,45,53,.3)}.victoria-ruiz-panel.is-open{display:flex;flex-direction:column;animation:victoriaRuizIn .25s ease-out}.victoria-ruiz-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:linear-gradient(135deg,#173f48,#236875);color:#fff}.victoria-ruiz-title{display:flex;align-items:center;gap:9px}.victoria-ruiz-avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#f1d6b7;color:#173f48;font:700 14px Georgia,serif;border:2px solid rgba(255,255,255,.7)}.victoria-ruiz-title strong{display:block;font-size:13px}.victoria-ruiz-title span{display:block;margin-top:2px;color:#c9e8df;font-size:10px}.victoria-ruiz-close{border:1px solid rgba(255,255,255,.6);border-radius:50%;width:28px;height:28px;background:transparent;color:#fff;font-size:19px;line-height:22px;cursor:pointer}.victoria-ruiz-frame{flex:1;min-height:0;border:0;width:100%;background:#102f35}.victoria-ruiz-foot{padding:8px 12px;background:#fff;color:#667579;font-size:10px;line-height:1.3;text-align:center;border-top:1px solid #e5ece9}.victoria-ruiz-foot strong{color:#173f48}@keyframes victoriaRuizIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}@media(max-width:599px){.victoria-ruiz-fab{right:12px;bottom:136px;padding:11px 13px}.victoria-ruiz-panel{right:12px;bottom:190px;width:min(330px,calc(100vw - 24px));height:min(430px,52vh);border-radius:16px}}
 
 /* TOAST */
@@ -611,13 +611,13 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 </button>
 {% endif %}
 {% if catalogo.slug == 'libreria-ruiz' %}
-<!-- Victoria hablante de LiveAvatar, educada con el catálogo de Librería Ruiz -->
+<!-- Mercedes hablante de LiveAvatar, educada exclusivamente con el catálogo de Librería Comercial Ruiz -->
 <div class="victoria-ruiz-widget" id="victoriaRuizWidget">
- <button aria-controls="victoriaRuizPanel" aria-expanded="false" class="victoria-ruiz-fab" id="victoriaRuizFab" type="button"><span class="victoria-ruiz-dot" aria-hidden="true"></span> Hablar con Victoria</button>
- <section aria-hidden="true" aria-label="Victoria Ruiz, vendedora virtual" class="victoria-ruiz-panel" id="victoriaRuizPanel">
-  <header class="victoria-ruiz-head"><div class="victoria-ruiz-title"><span class="victoria-ruiz-avatar" aria-hidden="true">V</span><div><strong>Victoria Ruiz</strong><span>Vendedora virtual · Librería</span></div></div><button aria-label="Cerrar Victoria" class="victoria-ruiz-close" id="victoriaRuizClose" type="button">×</button></header>
-  <iframe allow="microphone; autoplay" allowfullscreen class="victoria-ruiz-frame" src="https://embed.liveavatar.com/v1/9c97e2a1-78a4-4b40-a039-c94449ba86d3?orientation=horizontal" title="Victoria Ruiz, vendedora virtual de Librería Ruiz"></iframe>
-  <div class="victoria-ruiz-foot"><strong>Preguntale por productos y precios</strong> · útiles · oficina · combos · pedidos</div>
+ <button aria-controls="victoriaRuizPanel" aria-expanded="false" class="victoria-ruiz-fab" id="victoriaRuizFab" type="button"><span class="victoria-ruiz-dot" aria-hidden="true"></span> Hablar con Mercedes</button>
+ <section aria-hidden="true" aria-label="Mercedes, vendedora virtual de Librería Comercial Ruiz" class="victoria-ruiz-panel" id="victoriaRuizPanel">
+  <header class="victoria-ruiz-head"><div class="victoria-ruiz-title"><span class="victoria-ruiz-avatar" aria-hidden="true"><img src="https://files2.heygen.ai/avatar/v3/da5cba6bc7b34c5ea139f77da98fdc04_55370/preview_talk_1.webp" alt="Mercedes, vendedora virtual" style="width:34px;height:34px;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent='M'"></span><div><strong>Mercedes</strong><span>Vendedora virtual · Librería Comercial Ruiz</span></div></div><button aria-label="Cerrar Mercedes" class="victoria-ruiz-close" id="victoriaRuizClose" type="button">×</button></header>
+  <iframe allow="microphone; autoplay" allowfullscreen class="victoria-ruiz-frame" src="https://embed.liveavatar.com/v1/13109f7c-ebc6-46fc-aa03-0a96b71bd7aa?orientation=horizontal" title="Mercedes, vendedora virtual de Librería Comercial Ruiz"></iframe>
+  <div class="victoria-ruiz-foot"><strong>Preguntale exclusivamente por Librería Comercial Ruiz</strong> · útiles · oficina · precios · combos · pedidos</div>
  </section>
 </div>
 <script>(function(){var fab=document.getElementById('victoriaRuizFab'),panel=document.getElementById('victoriaRuizPanel'),close=document.getElementById('victoriaRuizClose'),frame=panel&&panel.querySelector('.victoria-ruiz-frame');if(!fab||!panel||!close)return;var src=frame.getAttribute('src');function open(){panel.classList.add('is-open');panel.setAttribute('aria-hidden','false');fab.setAttribute('aria-expanded','true')}function shut(){panel.classList.remove('is-open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');if(frame)frame.setAttribute('src',src)}fab.addEventListener('click',function(){panel.classList.contains('is-open')?shut():open()});close.addEventListener('click',shut);document.addEventListener('keydown',function(e){if(e.key==='Escape')shut()})})();</script>
@@ -635,12 +635,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% else %}
 <!-- Asistente de catálogo -->
 <div class="abigail-widget" id="abigailWidget">
- <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Victoria Ruiz{% else %}Espumita{% endif %}</span></div>
+ <div class="abigail-helper" id="abigailHelper" aria-label="Ayudante del catálogo"><span class="abigail-helper-icon">{% if catalogo.slug == 'libreria-ruiz' %}📚{% else %}🧼{% endif %}</span><span>{% if catalogo.slug == 'libreria-ruiz' %}Mercedes{% else %}Espumita{% endif %}</span></div>
  <div class="abigail-magic-cart" id="abigailMagicCart" aria-label="Mi pedido"><span class="magic-cart-icon">🛒</span><span class="magic-cart-count" id="magicCartCount">0</span><span class="magic-cart-items" id="magicCartItems"></span></div>
  <button type="button" class="abigail-nudge" id="abigailNudge">{% if catalogo.slug == 'libreria-ruiz' %}🔎 Buscá un producto y te ayudo{% else %}🔎 Tocá la búsqueda y escribí el producto que necesitás{% endif %}</button>
- <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con Victoria Ruiz{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
+ <div class="abigail-chat" id="abigailChat" role="dialog" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Chat con Mercedes{% else %}Chat con Abigail{% endif %}" aria-hidden="true">
   <div class="abigail-head">
-   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-avatar" aria-hidden="true">📚</span><div><strong>Victoria Ruiz</strong><small>Vendedora virtual · Librería</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
+   {% if catalogo.slug == 'libreria-ruiz'}<span class="ruiz-avatar" aria-hidden="true">M</span><div><strong>Mercedes</strong><small>Vendedora virtual · Librería Comercial Ruiz</small></div>{% else %}<span class="abigail-avatar abigail-avatar-art" aria-hidden="true"><img src="/static/abigail_transparent_character.png" alt=""></span><div><strong>Abigail</strong><small>Tu vendedora de limpieza</small></div>{% endif %}
    <button class="abigail-close" id="abigailClose" aria-label="Cerrar chat">×</button>
   </div>
   <div class="abigail-messages" id="abigailMessages" aria-live="polite"></div>
@@ -653,7 +653,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
   </div>
   <form class="abigail-form" id="abigailForm"><input id="abigailInput" autocomplete="off" placeholder="{% if catalogo.slug == 'libreria-ruiz' %}¿Qué querés comprar?{% else %}¿Qué estás buscando?{% endif %}" aria-label="Escribí qué producto buscás"><button type="submit" aria-label="Enviar">➤</button></form>
  </div>
- <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Hablar con Victoria Ruiz{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Pedile a Victoria que te arme el pedido{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
+ <button class="abigail-launcher" id="abigailLauncher" aria-label="{% if catalogo.slug == 'libreria-ruiz' %}Hablar con Mercedes{% else %}Abrir asistente de Abigail para buscar productos{% endif %}" title="{% if catalogo.slug == 'libreria-ruiz' %}Pedile a Mercedes que te arme el pedido{% else %}Tocá a Abigail para buscar productos{% endif %}" aria-expanded="false">
   {% if catalogo.slug == 'libreria-ruiz' %}<span class="ruiz-assistant-icon" aria-hidden="true">V</span>{% else %}<svg class="abigail-svg" viewBox="0 0 207 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Abigail, vendedora de artículos de limpieza"><image href="/static/abigail_user_complete.png?v=original-clean-0655" x="0" y="0" width="207" height="330" preserveAspectRatio="none"/></svg>{% endif %}
  </button>
 </div>
@@ -1242,7 +1242,7 @@ var ABIGAIL_PRODUCTS = [
   say(raw,'user');widget.classList.add('thinking');setTimeout(function(){widget.classList.remove('thinking')},520);
   clearTimeout(welcomeTimer);
   if(RUIZ_ASSISTANT){
-   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy Victoria Ruiz, tu vendedora virtual de librería. ¿Qué querés comprar?');return;}
+   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy Mercedes, tu vendedora virtual de Librería Comercial Ruiz. ¿Qué querés comprar?');return;}
    if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){replaceSay('Te abro tu pedido para que revises las cantidades y el total.');toggleCart();return;}
    if(/(oferta|ofertas|econom|barato|baratos|ahorro)/.test(q)){var roffers=showOffers();productBubble(roffers,'Mirá estas opciones:');followUp();return;}
    var rquery=raw;if(/(combo escolar|escuela|escolar)/.test(q))rquery='escolar';if(/(oficina|oficina)/.test(q))rquery='oficina';if(/(estudio|estudiar)/.test(q))rquery='cuaderno';
@@ -1271,7 +1271,7 @@ var ABIGAIL_PRODUCTS = [
   if(results.length){revealCatalog(results);poseAbigail('pointing',1700);productBubble(results);followUp();return;}
   replaceSay(tx('No encontré ese producto en el catálogo actual. No quiero inventarte un precio. ¿Querés probar con detergente, jabón, papel, dentífrico o lavandina?','I could not find that product in the current catalog. I do not want to make up a price. Would you like to try dish soap, soap, paper, toothpaste or bleach?'));
  }
- function welcome(){if(started)return;started=true;widget.classList.add('welcoming');poseAbigail('waving',1700);setTimeout(function(){widget.classList.remove('welcoming')},1300);replaceSay(RUIZ_ASSISTANT?'Hola 😊 Soy Victoria Ruiz, tu vendedora virtual de librería.':'Hola, soy Abigail, tu asistente de limpieza. 😊');welcomeTimer=setTimeout(function(){replaceSay(RUIZ_ASSISTANT?'¿Qué artículo de librería querés comprar?':tx('¿Qué producto estás buscando?','What product are you looking for?'))},2300)}
+ function welcome(){if(started)return;started=true;widget.classList.add('welcoming');poseAbigail('waving',1700);setTimeout(function(){widget.classList.remove('welcoming')},1300);replaceSay(RUIZ_ASSISTANT?'Hola 😊 Soy Mercedes, tu vendedora virtual de Librería Comercial Ruiz.':'Hola, soy Abigail, tu asistente de limpieza. 😊');welcomeTimer=setTimeout(function(){replaceSay(RUIZ_ASSISTANT?'¿Qué artículo de librería querés comprar?':tx('¿Qué producto estás buscando?','What product are you looking for?'))},2300)}
  var nudgeCycleTimer=null,nudgeStepTimers=[];
  function clearNudgeSteps(){nudgeStepTimers.forEach(function(t){clearTimeout(t)});nudgeStepTimers=[]}
  function hideNudge(){if(nudge)nudge.classList.remove('show')}
@@ -1280,7 +1280,7 @@ var ABIGAIL_PRODUCTS = [
   clearNudgeSteps();
   if(!nudge)return;
   if(chat.classList.contains('open')){nudgeCycleTimer=setTimeout(runNudgeCycle,120000);return}
-  showNudgeText(RUIZ_ASSISTANT?{es:'👋 Hola, soy Victoria Ruiz.',en:'👋 Hi, I am Victoria Ruiz.'}:{es:'👋 Hola, soy Abigail, tu asistente de limpieza.',en:'👋 Hi, I am Abigail, your cleaning assistant.'});
+  showNudgeText(RUIZ_ASSISTANT?{es:'👋 Hola, soy Mercedes.',en:'👋 Hi, I am Mercedes.'}:{es:'👋 Hola, soy Abigail, tu asistente de limpieza.',en:'👋 Hi, I am Abigail, your cleaning assistant.'});
   nudgeStepTimers.push(setTimeout(function(){showNudgeText({es:'Hacé clic acá y te ayudo.',en:'Click here and I will help you.'})},3600));
   nudgeStepTimers.push(setTimeout(function(){showNudgeText(RUIZ_ASSISTANT?{es:'🛒 Decime qué necesitás y te armo el pedido.',en:'🛒 Tell me what you need and I will build your order.'}:{es:'🔎 Tocá la búsqueda y escribí el producto que necesitás.',en:'🔎 Tap search and write the product you need.'})},7200));
   nudgeStepTimers.push(setTimeout(hideNudge,12500));
