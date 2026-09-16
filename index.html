@@ -55,7 +55,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .logo-icon{font-size:28px}
 .logo-text h1{font-size:18px;font-weight:800;letter-spacing:-.3px}
 .logo-text span{font-size:11px;opacity:.85}
-.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.cart-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 14px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}.cart-btn:not(.has-items) #cartCount{display:none}.cart-btn.has-items{background:#fff;color:var(--gd);border-color:#fff;animation:cartPulse 1.8s ease-in-out infinite}@keyframes cartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .language-switch{display:flex;gap:4px;align-items:center;margin-left:auto;margin-right:8px}.language-switch button,.language-switch a{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.13);color:#fff;border-radius:20px;padding:6px 8px;font-size:11px;font-weight:800;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}.language-switch button.active,.language-switch a.active,.language-switch button:hover,.language-switch a:hover{background:#fff;color:var(--gd)}
 .cart-btn:hover{background:rgba(255,255,255,.35)}
 .search-bar{padding:0 16px 12px;display:flex;gap:8px;align-items:center}
@@ -408,7 +408,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <span>{{ catalogo.subtitulo }}</span>
  </div>
  </div>
- <button class="cart-btn" onclick="toggleCart()">🛒 Mi pedido · <span id="cartCount">0</span></button>
+ <button class="cart-btn" onclick="toggleCart()">🛒 Mi pedido <span id="cartCount">0</span></button>
  </div>
 {% if catalogo.slug not in ['vivero-los-colibries','libreria-ruiz'] %}
  <div class="search-bar">
