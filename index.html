@@ -44,7 +44,7 @@ body.catalog-libreria-ruiz .info-strip{border-color:#bfdbfe;background:#f8fbff}
 body.catalog-libreria-ruiz .showcase-progress-bar{background:linear-gradient(90deg,#ff7a45,#1d70b8)}
 body.catalog-libreria-ruiz .catalog-section-title{color:#102a43;border-color:#ff7a45}
 body.catalog-libreria-ruiz .add-btn{background:linear-gradient(135deg,#ff7a45,#1d70b8)}
-body.catalog-libreria-ruiz .float-whatsapp{background:#25d366}
+body.catalog-libreria-ruiz .float-whatsapp{background:#25d366}body.catalog-libreria-ruiz #suggestionBox{display:none!important}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
@@ -447,9 +447,11 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
  {% for cat in cats %}
- <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'sec-{{ loop.index }}')">
- {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower == 'biromes' %}
+ <a href="{{ '#sec-biromes' if catalogo.slug == 'libreria-ruiz' else '#sec-' ~ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}')">
+ {{ cat_visual(cat, 'nav') }}{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif cat|lower == 'biromes' %}Biromes{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
  </a>
+ {% endif %}
  {% endfor %}
  </div>
 </nav>
@@ -568,31 +570,34 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
  {% for cat, marcas in cats.items() %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower == 'biromes' %}
  {% set total = namespace(n=0) %}
- {% for m, prods in marcas.items() %}{% set total.n = total.n + prods|length %}{% endfor %}
- <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="sec-{{ loop.index }}">
+ {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or (m|lower == 'bic' and pp.codigo in ['BIC-NEG-2026','BIC-RO-2026']) %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
+ <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}">
  <div class="cat-header">
  {{ cat_visual(cat, 'header') }}
  <div>
- <h2>{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}</h2>
+ <h2>{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}</h2>
  <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
  </div>
  </div>
 
  {% for marca, productos in marcas.items() %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower == 'bic' %}
  <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
  <div class="brand-icon">{{ marca[0] }}</div>
  <div>
  <div>{{ marca }}</div>
- <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ productos|length }} variante{{ 's' if productos|length != 1 else '' }}</div>
+ <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ (2 if catalogo.slug == 'libreria-ruiz' else productos|length) }} variante{{ 's' if (2 if catalogo.slug == 'libreria-ruiz' else productos|length) != 1 else '' }}</div>
  </div>
  </div>
  <span class="chevron">▼</span>
  </button>
  <div class="brand-products{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}">
  {% for p in productos %}
+ {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-RO-2026'] %}
  {% set display_name = p.nombre|product_name %}
  <div class="product-card" data-code="{{ p.codigo }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
@@ -614,11 +619,14 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </div>
  </div>
  </div>
+ {% endif %}
  {% endfor %}
  </div>
  </div>
+ {% endif %}
  {% endfor %}
  </section>
+ {% endif %}
  {% endfor %}
  <!-- SUGERENCIAS, debajo de los productos -->
  <div class="hero suggestion-box" id="suggestionBox" style="background:#fff8e1;border:1px solid #ffe082">{% if catalogo.slug == 'vivero-los-colibries' %}<button class="suggestion-close" type="button" aria-label="Cerrar" onclick="toggleSuggestionBox(false)">×</button>{% endif %}
@@ -1203,9 +1211,9 @@ window.addEventListener('scroll', function(){
 /* Asistente de catálogo vivo, conversación segura y sin inventar productos. */
 var RUIZ_ASSISTANT = {{ (catalogo.slug == 'libreria-ruiz')|tojson }};
 var ABIGAIL_PRODUCTS = [
-{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}
+{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-RO-2026'] %}
 {code:{{ p.codigo|tojson }},name:{{ p.nombre|tojson }},brand:{{ p.marca|tojson }},category:{{ p.categoria|tojson }},price:{{ (p.precio|default(0))|float }},desc:{{ (p.desc_|default(''))|tojson }},level:{{ (p.nivel_precio|default('Estándar'))|tojson }},image:{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }}},
-{% endfor %}{% endfor %}{% endfor %}
+{% endif %}{% endfor %}{% endfor %}{% endfor %}
 ];
 (function(){
  var launcher=document.getElementById('abigailLauncher'), chat=document.getElementById('abigailChat'), widget=document.getElementById('abigailWidget');
