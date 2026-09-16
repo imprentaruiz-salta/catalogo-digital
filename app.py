@@ -173,6 +173,8 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
+        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_slug ON catalog_analytics(catalogo_slug,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_creado ON fleming_analytics(creado)")
@@ -548,6 +550,102 @@ def fleming_analytics_dashboard():
     with get_db() as db:
         daily=db.execute("SELECT date(creado) AS dia, COUNT(*) AS eventos, COUNT(DISTINCT session_id) AS visitantes FROM fleming_analytics WHERE session_id!='verify-session' AND creado >= datetime('now','-30 day') GROUP BY date(creado) ORDER BY dia DESC").fetchall()
     return render_template('fleming_analytics.html',summary=summary,daily=[dict(r) for r in daily])
+
+
+# ---------------------------------------------------------------------------
+# Señas de Librería Comercial Ruiz (Mercado Pago)
+# ---------------------------------------------------------------------------
+MP_ACCESS_TOKEN=os.environ.get('MERCADOPAGO_ACCESS_TOKEN','').strip()
+LIBRERIA_PUBLIC_URL='https://catalogo-app-zm3w.onrender.com/c/libreria-ruiz'
+
+def _libreria_order_id():
+    return 'LR-'+datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:4].upper()
+
+def _mp_json_request(url, method='GET', payload=None):
+    body=None
+    headers={'Authorization':'Bearer '+MP_ACCESS_TOKEN,'Accept':'application/json'}
+    if payload is not None:
+        body=json.dumps(payload,ensure_ascii=False).encode('utf-8')
+        headers['Content-Type']='application/json'
+    req=urllib.request.Request(url,data=body,headers=headers,method=method)
+    with urllib.request.urlopen(req,timeout=18) as response:
+        return json.loads(response.read().decode('utf-8'))
+
+@app.route('/api/libreria/pedido',methods=['POST'])
+def api_libreria_pedido():
+    if not MP_ACCESS_TOKEN:
+        return jsonify(ok=False,error='Mercado Pago todavía no está configurado'),503
+    data=request.get_json(silent=True) or {}
+    try:
+        total=round(float(data.get('total') or 0),2)
+        sena=round(total*0.50,2)
+    except (TypeError,ValueError):
+        return jsonify(ok=False,error='Total inválido'),400
+    items=data.get('items') or []
+    if total<=0 or not items:
+        return jsonify(ok=False,error='El pedido debe tener precios confirmados'),400
+    pedido_id=str(data.get('pedido_id') or _libreria_order_id())[:50]
+    nombre=str(data.get('nombre') or '').strip()[:120]
+    celular=str(data.get('celular') or '').strip()[:60]
+    entrega=str(data.get('entrega') or 'Retiro en el local').strip()[:80]
+    direccion=str(data.get('direccion') or '').strip()[:180]
+    observaciones=str(data.get('observaciones') or '').strip()[:300]
+    safe_items=[]
+    for it in items[:30]:
+        try:
+            qty=max(1,int(it.get('qty') or 1)); price=round(float(it.get('price') or 0),2)
+        except (TypeError,ValueError):
+            continue
+        safe_items.append({'code':str(it.get('code') or '')[:50],'name':str(it.get('name') or 'Producto')[:160],'qty':qty,'price':price})
+    if not safe_items or any(i['price']<=0 for i in safe_items):
+        return jsonify(ok=False,error='Todos los productos deben tener precio confirmado'),400
+    with get_db() as db:
+        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena'))
+        db.commit()
+    title='Seña 50% — Pedido '+pedido_id+' — Librería Comercial Ruiz'
+    try:
+        pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
+            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':sena}],
+            'external_reference':pedido_id,
+            'statement_descriptor':'LIBRERIA RUIZ',
+            'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
+            'notification_url':'https://catalogo-app-zm3w.onrender.com/api/libreria/pago/webhook',
+            'auto_return':'approved'
+        })
+        link=pref.get('init_point') or pref.get('sandbox_init_point')
+        if not link: raise RuntimeError('Mercado Pago no devolvió link')
+        with get_db() as db:
+            db.execute('UPDATE libreria_pedidos SET payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',('link_generado',pedido_id)); db.commit()
+        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,checkout_url=link,estado='pendiente_sena')
+    except Exception:
+        app.logger.exception('No se pudo crear la preferencia de Mercado Pago')
+        return jsonify(ok=False,error='No se pudo generar el link de seña'),502
+
+@app.route('/api/libreria/pago/webhook',methods=['GET','POST'])
+def api_libreria_pago_webhook():
+    payload=request.get_json(silent=True) or {}
+    payment_id=str((payload.get('data') or {}).get('id') or request.args.get('data.id') or request.args.get('id') or '').strip()
+    if not payment_id or not MP_ACCESS_TOKEN:
+        return jsonify(ok=True)
+    try:
+        payment=_mp_json_request('https://api.mercadopago.com/v1/payments/'+urllib.parse.quote(payment_id,safe=''))
+        status=str(payment.get('status') or '')
+        ref=str(payment.get('external_reference') or '').strip()
+        if ref:
+            new_state='sena_confirmada' if status=='approved' else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena')
+            with get_db() as db:
+                db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
+        return jsonify(ok=True)
+    except Exception:
+        app.logger.exception('Webhook de Mercado Pago no procesado')
+        return jsonify(ok=True)
+
+@app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
+def api_libreria_pago_estado(pedido_id):
+    with get_db() as db:
+        row=db.execute('SELECT pedido_id,total,sena,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
+    if not row: return jsonify(ok=False,error='Pedido no encontrado'),404
+    return jsonify(ok=True,**dict(row))
 
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
