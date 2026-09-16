@@ -212,7 +212,7 @@ body.vivero-accordion .cat-section.category-open .cat-header:after{transform:rot
 .nombre-input:focus{border-color:var(--g)}
 
 /* BTN WPP */
-.wpp-btn{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.sena-btn{background:linear-gradient(135deg,#ff8a3d,#e85d04)!important}.wpp-btn{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
 .close-btn{width:100%;background:var(--bg);border:none;padding:12px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer}
 
 /* EMPTY */
@@ -723,7 +723,8 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  Confirmar pedido por WhatsApp
  </button>
  <button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>
- <div style="font-size:10px;color:var(--mut);text-align:center;margin-top:8px">Se abrirá WhatsApp con el pedido listo. El cliente solo debe tocar «Enviar».</div>
+ {% if catalogo.slug == 'libreria-ruiz' %}<button class="wpp-btn sena-btn" id="senaBtn" onclick="generarSena()">💳 Generar link de seña 50%</button><div id="senaStatus" style="font-size:10px;color:var(--mut);text-align:center;margin-top:7px" aria-live="polite"></div>{% endif %}
+ <div style="font-size:10px;color:var(--mut);text-align:center;margin-top:8px">La seña se verifica con Mercado Pago. El pedido queda confirmado cuando el pago figure aprobado.</div>
  </div>
  <button class="close-btn" onclick="toggleCart()">Cerrar</button>
 </div>
@@ -792,7 +793,7 @@ function updateUI() {
  document.getElementById('floatTotal').textContent = '$' + formatNum(total);
  document.getElementById('floatCart').classList.toggle('visible', count > 0);
  document.querySelector('.cart-btn').classList.toggle('has-items', count > 0);
- document.getElementById('quickCartText').textContent = count ? 'Mi pedido · $' + formatNum(total) : 'Mi pedido';
+ document.getElementById('quickCartText').textContent = count ? 'Mi pedido · $' + formatNum(total) : 'Mi pedido'; var senaBtn=document.getElementById('senaBtn'); if(senaBtn) senaBtn.style.display=total>0?'flex':'none';
  var summaryEl=document.getElementById('cartSummary'); if(summaryEl) summaryEl.textContent=count+(count===1?' producto':' productos')+' · '+keys.length+(keys.length===1?' artículo':' artículos');
 
  var itemsEl = document.getElementById('cartItems');
@@ -847,6 +848,18 @@ function selectPay(el, method) {
  payMethod = method;
  document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
  el.classList.add('selected');
+}
+
+function generarSena(){
+ var keys=Object.keys(cart),nombre=document.getElementById('clienteNombre').value.trim(),celular=document.getElementById('clienteTelefono').value.trim(),entrega=document.getElementById('tipoEntrega').value,direccion=document.getElementById('direccion').value.trim(),observaciones=document.getElementById('clienteObservaciones').value.trim(),total=0,items=[];
+ if(!keys.length){showToast('Agregá productos primero');return}
+ if(!nombre){document.getElementById('clienteNombre').focus();showToast('Escribí tu nombre y apellido');return}
+ if(!celular){document.getElementById('clienteTelefono').focus();showToast('Escribí tu WhatsApp o celular');return}
+ if(entrega==='Envío a domicilio'&&!direccion){document.getElementById('direccion').focus();showToast('Escribí la dirección');return}
+ keys.forEach(function(k){var it=cart[k];total+=Number(it.price||0)*it.qty;items.push({code:k,name:it.name,price:Number(it.price||0),qty:it.qty})});
+ if(total<=0){showToast('Primero hay que confirmar los precios');return}
+ var btn=document.getElementById('senaBtn'),status=document.getElementById('senaStatus');if(btn){btn.disabled=true;btn.textContent='⏳ Generando link…'}if(status)status.textContent='Preparando la seña del 50%…';
+ fetch('/api/libreria/pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:items,total:total,nombre:nombre,celular:celular,entrega:entrega,direccion:direccion,observaciones:observaciones})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d}})}).then(function(result){if(result.ok&&result.data.ok){if(status)status.textContent='✅ Seña: $'+formatNum(result.data.sena)+' · pedido '+result.data.pedido_id;window.open(result.data.checkout_url,'_blank')}else{if(status)status.textContent=result.data.error||'No se pudo generar el link';showToast('No se pudo generar la seña')}}).catch(function(){if(status)status.textContent='No se pudo conectar con Mercado Pago';showToast('Reintentá en unos segundos')}).finally(function(){if(btn){btn.disabled=false;btn.textContent='💳 Generar link de seña 50%'}});
 }
 
 function makeOrderId(){var d=new Date(),pad=function(n){return String(n).padStart(2,'0')};return 'LR-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())}
