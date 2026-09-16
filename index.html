@@ -408,9 +408,9 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <span>{{ catalogo.subtitulo }}</span>
  </div>
  </div>
- <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+ <button class="cart-btn" onclick="toggleCart()">🛒 Mi pedido · <span id="cartCount">0</span></button>
  </div>
-{% if catalogo.slug != 'vivero-los-colibries' %}
+{% if catalogo.slug not in ['vivero-los-colibries','libreria-ruiz'] %}
  <div class="search-bar">
  <input type="text" id="searchInput" placeholder="🔍 Escribí un producto o marca..." oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){ejecutarBusquedaTradicional();}">
  <button type="button" class="search-clear" id="searchClear" aria-label="Borrar búsqueda" title="Borrar búsqueda" onclick="limpiarBusqueda();">×</button>
@@ -800,7 +800,7 @@ function updateUI() {
  var formEl = document.getElementById('cartForm');
 
  if (keys.length === 0) {
- itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊<br><button type="button" class="empty-cart-cta" onclick="toggleCart();document.getElementById(\'searchInput\').focus()">🔎 Buscar productos</button></div>';
+ itemsEl.innerHTML = '<div class="empty-cart">Todavía no agregaste productos 😊<br><button type="button" class="empty-cart-cta" onclick="toggleCart();var s=document.getElementById(\'searchInput\');if(s)s.focus()">🔎 Buscar productos</button></div>';
  totalEl.style.display = 'none';
  formEl.style.display = 'none';
  if(window.applyLanguage) applyLanguage();
