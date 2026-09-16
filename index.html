@@ -44,7 +44,7 @@ body.catalog-libreria-ruiz .info-strip{border-color:#bfdbfe;background:#f8fbff}
 body.catalog-libreria-ruiz .showcase-progress-bar{background:linear-gradient(90deg,#ff7a45,#1d70b8)}
 body.catalog-libreria-ruiz .catalog-section-title{color:#102a43;border-color:#ff7a45}
 body.catalog-libreria-ruiz .add-btn{background:linear-gradient(135deg,#ff7a45,#1d70b8)}
-body.catalog-libreria-ruiz .float-whatsapp{background:#25d366}body.catalog-libreria-ruiz #suggestionBox{display:none!important}
+body.catalog-libreria-ruiz .float-whatsapp{background:#25d366}body.catalog-libreria-ruiz #suggestionBox{display:none!important}body.catalog-libreria-ruiz .cart-btn,body.catalog-libreria-ruiz .quick-action-row{display:none!important}body.catalog-libreria-ruiz .float-cart{display:flex;bottom:20px}body.catalog-libreria-ruiz #floatTotal{display:none}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
@@ -185,7 +185,7 @@ body.vivero-accordion .cat-section.category-open .cat-header:after{transform:rot
 
 /* FLOAT CART */
 .float-cart{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:14px 28px;border-radius:50px;box-shadow:0 6px 24px rgba(37,211,102,.4);font-weight:700;font-size:15px;cursor:pointer;display:none;align-items:center;gap:10px;z-index:300;border:none;white-space:nowrap}.float-whatsapp{right:20px;bottom:20px}.quick-action-row{display:flex;gap:9px;margin:0 12px 16px}.quick-action{flex:1;border:0;border-radius:13px;padding:12px 9px;font-weight:850;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.1)}.quick-action-cart{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff}.quick-action-wa{background:#fff;border:2px solid #25d366;color:#128c7e}
-.float-cart.visible{display:flex}
+.float-cart.visible{display:flex}body.catalog-libreria-ruiz .float-cart{display:flex}
 
 /* CARRITO MODAL */
 .cart-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
@@ -693,7 +693,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
- 🛒 Mi pedido · <span id="floatTotal">$0</span>
+ 🛒 Mi pedido{% if catalogo.slug != 'libreria-ruiz' %} · {% endif %}<span id="floatTotal">$0</span>
 </button>
 
 <!-- OVERLAY -->
