@@ -443,9 +443,9 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
  {% for cat in cats %}
- {% if catalogo.slug != 'libreria-ruiz' or cat|lower == 'biromes' %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores'] %}
  <a href="{{ '#sec-biromes' if catalogo.slug == 'libreria-ruiz' else '#sec-' ~ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}')">
- {{ cat_visual(cat, 'nav') }}{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif cat|lower == 'biromes' %}Biromes{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
+ {{ cat_visual(cat, 'nav') }}{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif cat|lower in ['biromes','resaltadores'] %}Biromes{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
  </a>
  {% endif %}
  {% endfor %}
@@ -566,9 +566,9 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
  {% for cat, marcas in cats.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or cat|lower == 'biromes' %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores'] %}
  {% set total = namespace(n=0) %}
- {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or (m|lower == 'bic' and pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026']) %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
+ {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
  <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}">
  <div class="cat-header">
  {{ cat_visual(cat, 'header') }}
@@ -579,14 +579,14 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </div>
 
  {% for marca, productos in marcas.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or marca|lower == 'bic' %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra'] %}
  <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
  <div class="brand-icon">{{ marca[0] }}</div>
  <div>
  <div>{{ marca }}</div>
- <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ (2 if catalogo.slug == 'libreria-ruiz' else productos|length) }} variante{{ 's' if (2 if catalogo.slug == 'libreria-ruiz' else productos|length) != 1 else '' }}</div>
+ <div style="font-size:11px;font-weight:400;color:var(--mut)">{{ productos|length }} variante{{ 's' if productos|length != 1 else '' }}</div>
  </div>
  </div>
  <span class="chevron">▼</span>
