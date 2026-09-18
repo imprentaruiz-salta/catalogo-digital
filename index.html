@@ -1049,7 +1049,6 @@ function toggleBrand(btn) {
 
 /* Menús de categorías: marquesina continua, sin salto al volver a empezar. */
 (function(){
- if(document.body.classList.contains('catalog-libreria-ruiz')) return;
  var SPEED=22; // px/s: suave y fácil de leer
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
