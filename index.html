@@ -167,7 +167,7 @@ body.vivero-accordion .cat-section.category-open .cat-header:after{transform:rot
 /* PRODUCTO CARD */
 .product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);transition:.2s;min-height:245px}
 .product-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
-.product-card[data-hidden="true"]{display:none}
+.product-card[data-hidden="true"]{display:none}.product-card.menu-focus{outline:4px solid #f5b414;outline-offset:3px;box-shadow:0 8px 24px rgba(245,180,20,.35)}
 .prod-img{width:100%;height:150px;object-fit:cover;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px}
 .prod-img img{width:100%;height:100%;object-fit:contain;background:#fff}
 .prod-body{padding:10px}
@@ -442,13 +442,18 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
+ {% if catalogo.slug == 'libreria-ruiz' %}
+ <a href="#producto-BIC-NEG-2026" aria-label="Ver Birome BIC negra" title="Ver Birome BIC negra" onclick="mostrarProductoMenu('BIC-NEG-2026')">🖊️ Birome BIC negra</a>
+ <a href="#producto-BIC-AZ-2026" aria-label="Ver Birome BIC azul" title="Ver Birome BIC azul" onclick="mostrarProductoMenu('BIC-AZ-2026')">🖊️ Birome BIC azul</a>
+ <a href="#producto-RES-INTRA-AM-2026" aria-label="Ver resaltador amarillo" title="Ver resaltador amarillo" onclick="mostrarProductoMenu('RES-INTRA-AM-2026')">🖍️ Resaltador amarillo</a>
+ <a href="#producto-RES-INTRA-VE-2026" aria-label="Ver resaltador verde" title="Ver resaltador verde" onclick="mostrarProductoMenu('RES-INTRA-VE-2026')">🖍️ Resaltador verde</a>
+ {% else %}
  {% for cat in cats %}
- {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores'] %}
- <a href="{{ '#sec-biromes' if catalogo.slug == 'libreria-ruiz' else '#sec-' ~ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}')">
- {{ cat_visual(cat, 'nav') }}{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif cat|lower in ['biromes','resaltadores'] %}Biromes{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
+ <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'sec-{{ loop.index }}')">
+ {{ cat_visual(cat, 'nav') }}{% if cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}
  </a>
- {% endif %}
  {% endfor %}
+ {% endif %}
  </div>
 </nav>
 {% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
@@ -1002,6 +1007,19 @@ function buscar(q) {
  });
  document.getElementById('noResults').style.display = (filtered && visible === 0) ? 'block' : 'none';
  actualizarEstadoBusqueda(visible,cards.length,filtered,level);
+}
+
+function mostrarProductoMenu(code){
+ var card=document.querySelector('.product-card[data-code="'+code+'"]');
+ if(!card)return;
+ document.querySelectorAll('.product-card').forEach(function(c){c.dataset.hidden=(c===card?'false':'true')});
+ document.querySelectorAll('.brand-block').forEach(function(b){b.classList.add('search-hidden')});
+ var brand=card.closest('.brand-block'),section=card.closest('.cat-section');
+ if(brand){brand.classList.remove('search-hidden');var products=brand.querySelector('.brand-products');if(products)products.classList.add('open');var head=brand.querySelector('.brand-header');if(head)head.classList.add('open')}
+ if(section){section.classList.remove('search-hidden');section.scrollIntoView({behavior:'smooth',block:'start'})}
+ document.querySelectorAll('.cat-nav a').forEach(function(a){a.classList.remove('active')});
+ var link=document.querySelector('.cat-nav a[href="#producto-'+code+'"]');if(link)link.classList.add('active');
+ setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});card.classList.add('menu-focus');setTimeout(function(){card.classList.remove('menu-focus')},1200)},120);
 }
 
 function toggleBrand(btn) {
