@@ -503,7 +503,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 {% if catalogo.slug == 'vivero-los-colibries' %}<form class="inline-contact-form quick-product-form" id="quickProductForm" onsubmit="submitViveroForm(event)"><button class="form-close" type="button" aria-label="Cerrar consulta" onclick="closeQuickProductForm()">×</button><h4>Consulta rápida</h4><label class="form-label">Producto<input class="form-product" name="producto" type="text" value="" readonly></label><img id="quickProductImage" class="quick-product-preview" src="" alt="Imagen del producto"><input name="codigo" type="hidden" value=""><label class="form-label">Cantidad<input name="cantidad" type="number" min="1" step="1" value="1" required></label><label class="form-label">Tamaño<select name="tamaño" required><option value="">Elegí un tamaño</option><option>Chico</option><option>Mediano</option><option>Grande</option><option>No estoy seguro</option></select></label><input name="variedad" type="text" placeholder="Variedad (opcional)"><label class="form-label">¿En qué horario podemos llamarte?<select name="horario" required><option value="">Elegí un horario</option><option>Mañana</option><option>Mediodía</option><option>Tarde</option><option>Cualquier horario</option></select></label><input name="imagen" type="hidden" value=""><input name="nombre" type="text" placeholder="Nombre *" required><input name="apellido" type="text" placeholder="Apellido *" required><input name="celular" type="tel" placeholder="Celular *" required><input name="email" type="email" placeholder="Email (opcional)"><textarea name="mensaje" placeholder="Consulta adicional (opcional)"></textarea><div class="vivero-channel-actions"><button class="form-send" type="submit" name="canal" value="email">✉️ Gmail</button><button class="form-send whatsapp-send" type="submit" name="canal" value="whatsapp1">💬 Vivero 1<br><small>+54 9 387 403-0985</small></button><button class="form-send whatsapp-send" type="submit" name="canal" value="whatsapp2">💬 Vivero 2<br><small>+54 9 3874 42-5245</small></button><button class="form-send whatsapp-send" type="submit" name="canal" value="whatsapp3">💬 Vivero 3<br><small>+54 9 387 210-2250</small></button></div><div class="form-status" aria-live="polite"></div></form>{% endif %}
 {% if catalogo.slug == 'vivero-los-colibries' %}<button class="suggestion-fab" id="suggestionFab" type="button" aria-controls="suggestionBox" aria-expanded="false" onclick="toggleSuggestionBox()">🧑‍🌾 ¿Qué producto necesitás?</button>{% endif %}
-{% if catalogo.slug != 'limpieza-abigail' and catalogo.slug != 'vivero-los-colibries' %}
+{% if catalogo.slug != 'limpieza-abigail' and catalogo.slug != 'vivero-los-colibries' and catalogo.slug != 'libreria-ruiz' %}
 <!-- Telegram arriba de WhatsApp para Librería Ruiz -->
 <button class="float-telegram ruiz-telegram" type="button" onclick="openTelegramOrder()" aria-label="Hacer pedido por Telegram" title="Telegram">
  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 2.3 2.2 9.8c-.9.35-.9 1.55.03 1.85l4.95 1.62 1.7 5.2c.23.71 1.14.91 1.65.36l2.5-2.7 4.8 3.5c.63.46 1.53.13 1.7-.63l3.2-15.4c.2-.96-.54-1.65-1.03-1.3ZM9.65 17.6l-.98-3.05 8.9-8.3-7.5 7.55-.42 3.8Zm7.95.4-5.22-3.8 7.4-9.15-2.18 12.95Z"/></svg>
@@ -718,9 +718,13 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="cart-total" id="cartTotal" style="display:none">Total: <span id="totalAmt">$0</span></div>
 
  <div id="cartForm" style="display:none">
- <div class="cart-form-title">📋 Datos para preparar tu pedido</div>
+ <div class="cart-form-title">{% if catalogo.slug == 'libreria-ruiz' %}📲 Completá tus datos y te contactamos{% else %}📋 Datos para preparar tu pedido{% endif %}</div>
  <input class="nombre-input" type="text" id="clienteNombre" placeholder="Nombre y apellido *" required>
  <input class="nombre-input" type="tel" id="clienteTelefono" placeholder="WhatsApp o celular *" required>
+ {% if catalogo.slug == 'libreria-ruiz' %}
+ <input type="hidden" id="tipoEntrega" value="A coordinar por WhatsApp"><input type="hidden" id="direccion" value=""><input type="hidden" id="clienteObservaciones" value="">
+ <div style="font-size:11px;color:var(--mut);text-align:center;margin:7px 0 10px">Tu pedido y el total llegan directo al WhatsApp de Librería Ruiz.</div>
+ {% else %}
  <select class="nombre-input" id="tipoEntrega" onchange="toggleDireccion()"><option value="Retiro en el local">🏪 Retiro en el local</option><option value="Envío a domicilio">🛵 Envío a domicilio</option></select>
  <input class="nombre-input" type="text" id="direccion" placeholder="Dirección para el envío" style="display:none">
  <input class="nombre-input" type="text" id="clienteObservaciones" placeholder="Observación (opcional)">
@@ -730,11 +734,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="pay-opt" onclick="selectPay(this,'Transferencia')">🏦 Transferencia</div>
  <div class="pay-opt" onclick="selectPay(this,'Mercado Pago')">📱 Mercado Pago</div>
  </div>
+ {% endif %}
  <button class="wpp-btn" onclick="sendWhatsApp()">
  <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.198.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
- Confirmar pedido por WhatsApp
+ {% if catalogo.slug == 'libreria-ruiz' %}📲 Enviar pedido a Librería Ruiz{% else %}Confirmar pedido por WhatsApp{% endif %}
  </button>
- <button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>
+ {% if catalogo.slug != 'libreria-ruiz' %}<button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>{% endif %}
  {% if catalogo.slug == 'libreria-ruiz' %}<button class="wpp-btn sena-btn" id="senaBtn" onclick="generarSena()">💳 Generar link de seña 50%</button><div id="senaStatus" style="font-size:10px;color:var(--mut);text-align:center;margin-top:7px" aria-live="polite"></div>{% endif %}
  <div style="font-size:10px;color:var(--mut);text-align:center;margin-top:8px">La seña se verifica con Mercado Pago. El pedido queda confirmado cuando el pago figure aprobado.</div>
  </div>
@@ -927,7 +932,7 @@ function sendWhatsApp() {
  msg += '─────────────────\n';
  msg += '💰 *TOTAL: $' + formatNum(total) + '*\n';
  if (observaciones) msg += '📝 Observación: ' + observaciones + '\n';
- msg += '✅ Estado: pedido preparado para enviar; confirmar disponibilidad\n';
+ msg += '✅ Estado: pedido preparado; confirmar disponibilidad por WhatsApp\n';
  if (payMethod) msg += '💳 Pago: ' + payMethod + '\n';
  msg += '\n¡Gracias por tu pedido! 😊';
 
