@@ -604,12 +604,12 @@ def api_libreria_pedido():
     with get_db() as db:
         db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena'))
         db.commit()
-    title='Seña 50% — Pedido '+pedido_id+' — Librería Comercial Ruiz'
+    title='Seña 50% — Pedido '+pedido_id+' — Librería Ruiz · FIWIND'
     try:
         pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
             'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':sena}],
             'external_reference':pedido_id,
-            'statement_descriptor':'LIBRERIA RUIZ',
+            'statement_descriptor':'LIBRERIA RUIZ FIWIND',
             'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
             'notification_url':'https://catalogo-app-zm3w.onrender.com/api/libreria/pago/webhook',
             'auto_return':'approved'
