@@ -724,7 +724,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <input class="nombre-input" type="tel" id="clienteTelefono" placeholder="WhatsApp o celular *" required>
  {% if catalogo.slug == 'libreria-ruiz' %}
  <input type="hidden" id="tipoEntrega" value="A coordinar por WhatsApp"><input type="hidden" id="direccion" value=""><input type="hidden" id="clienteObservaciones" value="">
- <div class="pay-title">Medio de pago</div><div class="pay-opts"><div class="pay-opt" onclick="selectPay(this,'Mercado Pago · Librería Ruiz · FIWIND')">📱 Mercado Pago<br><small>Librería Ruiz · FIWIND</small></div><div class="pay-opt" onclick="selectPay(this,'Contado / efectivo')">💵 Contado<br><small>Pago al retirar o coordinar</small></div></div>
+ <div class="pay-title">Medio de pago</div><div class="pay-opts"><div class="pay-opt" onclick="selectPay(this,'Mercado Pago · Librería Ruiz · FIWIND · Pago total')">📱 Mercado Pago contado<br><small>Pago total · Librería Ruiz · FIWIND</small></div><div class="pay-opt" onclick="selectPay(this,'Mercado Pago · Librería Ruiz · FIWIND · Seña 50%')">📱 Mercado Pago seña<br><small>Seña del 50% · Librería Ruiz · FIWIND</small></div><div class="pay-opt" onclick="selectPay(this,'Contado / efectivo')">💵 Contado / efectivo<br><small>Pago al retirar o coordinar</small></div></div>
  <div style="font-size:11px;color:var(--mut);text-align:center;margin:7px 0 10px">Tu pedido y el total llegan directo al WhatsApp de Librería Ruiz.</div>
  {% else %}
  <select class="nombre-input" id="tipoEntrega" onchange="toggleDireccion()"><option value="Retiro en el local">🏪 Retiro en el local</option><option value="Envío a domicilio">🛵 Envío a domicilio</option></select>
@@ -742,7 +742,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% if catalogo.slug == 'libreria-ruiz' %}📲 Enviar pedido a Librería Ruiz{% else %}Confirmar pedido por WhatsApp{% endif %}
  </button>
  {% if catalogo.slug != 'libreria-ruiz' %}<button class="wpp-btn" style="background:linear-gradient(135deg,#229ED9,#168AC4)" onclick="sendTelegram()">✈️ Enviar pedido por Telegram</button>{% endif %}
- {% if catalogo.slug == 'libreria-ruiz' %}<button class="wpp-btn sena-btn" id="senaBtn" onclick="generarSena()">💳 Mercado Pago · Librería Ruiz · FIWIND — Seña 50%</button><div id="senaStatus" style="font-size:10px;color:var(--mut);text-align:center;margin-top:7px" aria-live="polite"></div>{% endif %}
+ {% if catalogo.slug == 'libreria-ruiz' %}<button class="wpp-btn sena-btn" id="senaBtn" onclick="generarSena()">💳 Elegí Mercado Pago</button><div id="senaStatus" style="font-size:10px;color:var(--mut);text-align:center;margin-top:7px" aria-live="polite"></div>{% endif %}
  <div style="font-size:10px;color:var(--mut);text-align:center;margin-top:8px">La seña se verifica con Mercado Pago. El pedido queda confirmado cuando el pago figure aprobado.</div>
  </div>
  <button class="close-btn" onclick="toggleCart()">Cerrar</button>
@@ -867,9 +867,16 @@ function selectPay(el, method) {
  payMethod = method;
  document.querySelectorAll('.pay-opt').forEach(function(o){ o.classList.remove('selected'); });
  el.classList.add('selected');
+ actualizarBotonPago();
+}
+function pagoEsTotal(){ return payMethod.indexOf('Pago total') >= 0; }
+function actualizarBotonPago(){
+ var btn=document.getElementById('senaBtn'); if(!btn)return;
+ btn.textContent=payMethod==='Contado / efectivo'?'💳 Elegí Mercado Pago':(pagoEsTotal()?'💳 Pagar total con Mercado Pago':'💳 Pagar seña 50% con Mercado Pago');
 }
 
 function generarSena(){
+ if(payMethod==='Contado / efectivo'){showToast('Para pagar por Mercado Pago, elegí una de sus dos opciones');return}
  var keys=Object.keys(cart),nombre=document.getElementById('clienteNombre').value.trim(),celular=document.getElementById('clienteTelefono').value.trim(),entrega=document.getElementById('tipoEntrega').value,direccion=document.getElementById('direccion').value.trim(),observaciones=document.getElementById('clienteObservaciones').value.trim(),total=0,items=[];
  if(!keys.length){showToast('Agregá productos primero');return}
  if(!nombre){document.getElementById('clienteNombre').focus();showToast('Escribí tu nombre y apellido');return}
@@ -877,8 +884,8 @@ function generarSena(){
  if(entrega==='Envío a domicilio'&&!direccion){document.getElementById('direccion').focus();showToast('Escribí la dirección');return}
  keys.forEach(function(k){var it=cart[k];total+=Number(it.price||0)*it.qty;items.push({code:k,name:it.name,price:Number(it.price||0),qty:it.qty})});
  if(total<=0){showToast('Primero hay que confirmar los precios');return}
- var btn=document.getElementById('senaBtn'),status=document.getElementById('senaStatus');if(btn){btn.disabled=true;btn.textContent='⏳ Generando link…'}if(status)status.textContent='Preparando la seña del 50%…';
- fetch('/api/libreria/pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:items,total:total,nombre:nombre,celular:celular,entrega:entrega,direccion:direccion,observaciones:observaciones})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d}})}).then(function(result){if(result.ok&&result.data.ok){if(status)status.textContent='✅ Seña: $'+formatNum(result.data.sena)+' · pedido '+result.data.pedido_id;window.open(result.data.checkout_url,'_blank')}else{if(status)status.textContent=result.data.error||'No se pudo generar el link';showToast('No se pudo generar la seña')}}).catch(function(){if(status)status.textContent='No se pudo conectar con Mercado Pago';showToast('Reintentá en unos segundos')}).finally(function(){if(btn){btn.disabled=false;btn.textContent='💳 Mercado Pago · Librería Ruiz · FIWIND — Seña 50%'}});
+ var esTotal=pagoEsTotal(),pagoTipo=esTotal?'total':'sena',btn=document.getElementById('senaBtn'),status=document.getElementById('senaStatus');if(btn){btn.disabled=true;btn.textContent='⏳ Generando link…'}if(status)status.textContent=esTotal?'Preparando el pago total…':'Preparando la seña del 50%…';
+ fetch('/api/libreria/pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:items,total:total,pago_tipo:pagoTipo,nombre:nombre,celular:celular,entrega:entrega,direccion:direccion,observaciones:observaciones})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d}})}).then(function(result){if(result.ok&&result.data.ok){if(status)status.textContent='✅ '+(esTotal?'Pago total':'Seña 50%')+': $'+formatNum(result.data.monto_pago||result.data.sena)+' · pedido '+result.data.pedido_id;window.open(result.data.checkout_url,'_blank')}else{if(status)status.textContent=result.data.error||'No se pudo generar el link';showToast('No se pudo generar el link de Mercado Pago')}}).catch(function(){if(status)status.textContent='No se pudo conectar con Mercado Pago';showToast('Reintentá en unos segundos')}).finally(function(){if(btn){btn.disabled=false;actualizarBotonPago()}});
 }
 
 function makeOrderId(){var d=new Date(),pad=function(n){return String(n).padStart(2,'0')};return 'LR-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())}
