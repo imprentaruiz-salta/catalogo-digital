@@ -452,6 +452,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% if catalogo.slug == 'libreria-ruiz' %}
  <a href="#producto-BIC-NEG-2026" aria-label="Ver Birome BIC negra" title="Ver Birome BIC negra" onclick="mostrarProductoMenu('BIC-NEG-2026')"><img class="ruiz-menu-thumb" src="/static/uploads/41e136db9ba141b7816fea843a961db6.webp" alt="" decoding="async"><span class="ruiz-menu-label">Birome BIC negra</span></a>
  <a href="#producto-BIC-AZ-2026" aria-label="Ver Birome BIC azul" title="Ver Birome BIC azul" onclick="mostrarProductoMenu('BIC-AZ-2026')"><img class="ruiz-menu-thumb" src="/static/uploads/4299b97ec562472c96e6b90a2589b540.webp" alt="" decoding="async"><span class="ruiz-menu-label">Birome BIC azul</span></a>
+ <a href="#producto-BIC-RO-2026" aria-label="Ver Birome BIC roja" title="Ver Birome BIC roja" onclick="mostrarProductoMenu('BIC-RO-2026')"><img class="ruiz-menu-thumb" src="/static/uploads/a10048051fc64473a3463473a8590c71.webp" alt="" decoding="async"><span class="ruiz-menu-label">Birome BIC roja</span></a>
  <a href="#producto-RES-INTRA-AM-2026" aria-label="Ver resaltador amarillo" title="Ver resaltador amarillo" onclick="mostrarProductoMenu('RES-INTRA-AM-2026')"><img class="ruiz-menu-thumb" src="/static/uploads/e08fbf6aa1c14aec83cb8545fd8e6ff2.webp" alt="" decoding="async"><span class="ruiz-menu-label">Resaltador amarillo</span></a>
  <a href="#producto-RES-INTRA-VE-2026" aria-label="Ver resaltador verde" title="Ver resaltador verde" onclick="mostrarProductoMenu('RES-INTRA-VE-2026')"><img class="ruiz-menu-thumb" src="/static/uploads/192c59213c6b45a29af4f644e0d29a00.webp" alt="" decoding="async"><span class="ruiz-menu-label">Resaltador verde</span></a>
  {% else %}
@@ -581,7 +582,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% for cat, marcas in cats.items() %}
  {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores'] %}
  {% set total = namespace(n=0) %}
- {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
+ {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
  <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' else 'sec-' ~ loop.index }}">
  <div class="cat-header">
  {{ cat_visual(cat, 'header') }}
@@ -606,7 +607,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </button>
  <div class="brand-products{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}">
  {% for p in productos %}
- {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}
  {% set display_name = p.nombre|product_name %}
  <div class="product-card" data-code="{{ p.codigo }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
@@ -1263,7 +1264,7 @@ window.addEventListener('scroll', function(){
 /* Asistente de catálogo vivo, conversación segura y sin inventar productos. */
 var RUIZ_ASSISTANT = {{ (catalogo.slug == 'libreria-ruiz')|tojson }};
 var ABIGAIL_PRODUCTS = [
-{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}
+{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026'] %}
 {code:{{ p.codigo|tojson }},name:{{ p.nombre|tojson }},brand:{{ p.marca|tojson }},category:{{ p.categoria|tojson }},price:{{ (p.precio|default(0))|float }},desc:{{ (p.desc_|default(''))|tojson }},level:{{ (p.nivel_precio|default('Estándar'))|tojson }},image:{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }}},
 {% endif %}{% endfor %}{% endfor %}{% endfor %}
 ];
