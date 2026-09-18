@@ -724,7 +724,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <input class="nombre-input" type="tel" id="clienteTelefono" placeholder="WhatsApp o celular *" required>
  {% if catalogo.slug == 'libreria-ruiz' %}
  <input type="hidden" id="tipoEntrega" value="A coordinar por WhatsApp"><input type="hidden" id="direccion" value=""><input type="hidden" id="clienteObservaciones" value="">
- <div class="pay-title">Medio de pago</div><div class="pay-opts"><div class="pay-opt" onclick="selectPay(this,'Mercado Pago · Librería Ruiz · FIWIND')">📱 Mercado Pago<br><small>Librería Ruiz · FIWIND</small></div></div>
+ <div class="pay-title">Medio de pago</div><div class="pay-opts"><div class="pay-opt" onclick="selectPay(this,'Mercado Pago · Librería Ruiz · FIWIND')">📱 Mercado Pago<br><small>Librería Ruiz · FIWIND</small></div><div class="pay-opt" onclick="selectPay(this,'Contado / efectivo')">💵 Contado<br><small>Pago al retirar o coordinar</small></div></div>
  <div style="font-size:11px;color:var(--mut);text-align:center;margin:7px 0 10px">Tu pedido y el total llegan directo al WhatsApp de Librería Ruiz.</div>
  {% else %}
  <select class="nombre-input" id="tipoEntrega" onchange="toggleDireccion()"><option value="Retiro en el local">🏪 Retiro en el local</option><option value="Envío a domicilio">🛵 Envío a domicilio</option></select>
