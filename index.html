@@ -1026,6 +1026,7 @@ function mostrarProductoMenu(code){
  if(!card)return;
  document.querySelectorAll('.product-card').forEach(function(c){c.dataset.hidden=(c===card?'false':'true')});
  document.querySelectorAll('.brand-block').forEach(function(b){b.classList.add('search-hidden')});
+ document.querySelectorAll('.cat-section').forEach(function(s){s.classList.add('search-hidden')});
  var brand=card.closest('.brand-block'),section=card.closest('.cat-section');
  if(brand){brand.classList.remove('search-hidden');var products=brand.querySelector('.brand-products');if(products)products.classList.add('open');var head=brand.querySelector('.brand-header');if(head)head.classList.add('open')}
  if(section){section.classList.remove('search-hidden');section.scrollIntoView({behavior:'smooth',block:'start'})}
