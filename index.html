@@ -1070,6 +1070,7 @@ function toggleBrand(btn) {
   if(!track || !track.children.length) return;
   var originals=Array.prototype.slice.call(track.children);
   if(originals.length<2) return;
+  if(document.body.classList.contains('catalog-libreria-ruiz')) return;
   originals.forEach(function(item){
    var clone=item.cloneNode(true); clone.setAttribute('aria-hidden','true');
    clone.querySelectorAll('a,button').forEach(function(el){el.tabIndex=-1}); track.appendChild(clone);
