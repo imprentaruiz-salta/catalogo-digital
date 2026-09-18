@@ -173,8 +173,10 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', pago_tipo TEXT NOT NULL DEFAULT 'sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
         try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN avisado_whatsapp INTEGER DEFAULT 0")
+        except sqlite3.OperationalError: pass
+        try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN pago_tipo TEXT NOT NULL DEFAULT 'sena'")
         except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
@@ -592,6 +594,8 @@ def api_libreria_pedido():
     entrega=str(data.get('entrega') or 'Retiro en el local').strip()[:80]
     direccion=str(data.get('direccion') or '').strip()[:180]
     observaciones=str(data.get('observaciones') or '').strip()[:300]
+    pago_tipo='total' if str(data.get('pago_tipo') or '').strip().lower() in {'total','contado'} else 'sena'
+    monto_pago=total if pago_tipo=='total' else sena
     safe_items=[]
     for it in items[:30]:
         try:
@@ -602,12 +606,12 @@ def api_libreria_pedido():
     if not safe_items or any(i['price']<=0 for i in safe_items):
         return jsonify(ok=False,error='Todos los productos deben tener precio confirmado'),400
     with get_db() as db:
-        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena'))
+        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,pago_tipo,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena',pago_tipo))
         db.commit()
-    title='Seña 50% — Pedido '+pedido_id+' — Librería Ruiz · FIWIND'
+    title=('Pago total' if pago_tipo=='total' else 'Seña 50%')+' — Pedido '+pedido_id+' — Librería Ruiz · FIWIND'
     try:
         pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
-            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':sena}],
+            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':monto_pago}],
             'external_reference':pedido_id,
             'statement_descriptor':'LIBRERIA RUIZ FIWIND',
             'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
@@ -618,7 +622,7 @@ def api_libreria_pedido():
         if not link: raise RuntimeError('Mercado Pago no devolvió link')
         with get_db() as db:
             db.execute('UPDATE libreria_pedidos SET payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',('link_generado',pedido_id)); db.commit()
-        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,checkout_url=link,estado='pendiente_sena')
+        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,monto_pago=monto_pago,pago_tipo=pago_tipo,checkout_url=link,estado='pendiente_sena')
     except Exception:
         app.logger.exception('No se pudo crear la preferencia de Mercado Pago')
         return jsonify(ok=False,error='No se pudo generar el link de seña'),502
@@ -634,8 +638,10 @@ def api_libreria_pago_webhook():
         status=str(payment.get('status') or '')
         ref=str(payment.get('external_reference') or '').strip()
         if ref:
-            new_state='sena_confirmada' if status=='approved' else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena')
             with get_db() as db:
+                row=db.execute('SELECT pago_tipo FROM libreria_pedidos WHERE pedido_id=?',(ref,)).fetchone()
+                tipo=(row['pago_tipo'] if row else 'sena')
+                new_state=('pago_confirmado' if tipo=='total' else 'sena_confirmada') if status=='approved' else ('pago_rechazado' if tipo=='total' and status in {'rejected','cancelled'} else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena'))
                 db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
         return jsonify(ok=True)
     except Exception:
@@ -648,7 +654,7 @@ def api_libreria_pagos_aprobados():
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado='sena_confirmada' AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
+        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,pago_tipo,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado IN ('sena_confirmada','pago_confirmado') AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
     result=[]
     for row in rows:
         item=dict(row); item['items']=json.loads(item.get('items') or '[]'); result.append(item)
@@ -660,13 +666,13 @@ def api_libreria_pago_ack(pedido_id):
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado='sena_confirmada'",(pedido_id,)); db.commit()
+        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado IN ('sena_confirmada','pago_confirmado')",(pedido_id,)); db.commit()
     return jsonify(ok=True,pedido_id=pedido_id)
 
 @app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
 def api_libreria_pago_estado(pedido_id):
     with get_db() as db:
-        row=db.execute('SELECT pedido_id,total,sena,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
+        row=db.execute('SELECT pedido_id,total,sena,pago_tipo,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
     if not row: return jsonify(ok=False,error='Pedido no encontrado'),404
     return jsonify(ok=True,**dict(row))
 
