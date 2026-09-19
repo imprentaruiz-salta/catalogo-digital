@@ -1096,14 +1096,13 @@ function toggleBrand(btn) {
 
 /* Menús de categorías: marquesina continua, sin salto al volver a empezar. */
 (function(){
- var SPEED=document.body.classList.contains('catalog-libreria-ruiz')?14:22; // Librería: más lento para leer sin apuro
+ var SPEED=document.body.classList.contains('catalog-libreria-ruiz')?7:22; // Librería: movimiento muy lento para leer sin apuro
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
   var track=rail.querySelector('.category-track');
   if(!track || !track.children.length) return;
   var originals=Array.prototype.slice.call(track.children);
   if(originals.length<2) return;
-  if(document.body.classList.contains('catalog-libreria-ruiz')) return;
   originals.forEach(function(item){
    var clone=item.cloneNode(true); clone.setAttribute('aria-hidden','true');
    clone.querySelectorAll('a,button').forEach(function(el){el.tabIndex=-1}); track.appendChild(clone);
