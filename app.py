@@ -173,14 +173,17 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', pago_tipo TEXT NOT NULL DEFAULT 'sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
         try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN avisado_whatsapp INTEGER DEFAULT 0")
         except sqlite3.OperationalError: pass
-        try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN pago_tipo TEXT NOT NULL DEFAULT 'sena'")
-        except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
+        # Anonymous catalog analytics: page views and product interactions.
+        for col,definition in [('producto_codigo',"TEXT DEFAULT ''"),('producto_nombre',"TEXT DEFAULT ''"),('meta',"TEXT DEFAULT ''")]:
+            try: db.execute(f"ALTER TABLE catalog_analytics ADD COLUMN {col} {definition}")
+            except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_slug ON catalog_analytics(catalogo_slug,creado)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_producto ON catalog_analytics(catalogo_slug,evento,producto_codigo,creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_creado ON fleming_analytics(creado)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_evento ON fleming_analytics(evento)")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
@@ -496,7 +499,7 @@ def catalogo_publico(slug):
         pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
         return render_template('pizzeria.html',cats=pizzas,catalogo=cfg)
     response=app.make_response(render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg))
-    if slug == 'vivero-los-colibries':
+    if slug in {'vivero-los-colibries','libreria-ruiz'}:
         visitor_id=request.cookies.get('catalog_visitor_id') or uuid.uuid4().hex
         try:
             with get_db() as db:
@@ -506,15 +509,48 @@ def catalogo_publico(slug):
             app.logger.exception('No se pudo registrar la visita del catálogo')
         response.set_cookie('catalog_visitor_id',visitor_id,max_age=31536000,httponly=True,samesite='Lax',secure=True)
     return response
+
+@app.route('/api/catalog/analytics',methods=['POST'])
+def catalog_analytics_event_api():
+    """Store anonymous page and product interactions for public catalogs."""
+    data=request.get_json(silent=True) or {}
+    slug=str(data.get('slug') or '').strip().lower()
+    allowed_slugs={'libreria-ruiz','vivero-los-colibries'}
+    allowed_events={'product_view','add_to_cart','whatsapp_click','category_view','assistant_open','search'}
+    evento=str(data.get('evento') or '').strip()[:40]
+    if slug not in allowed_slugs or evento not in allowed_events: return jsonify(ok=False),400
+    session_id=request.cookies.get('catalog_visitor_id') or uuid.uuid4().hex
+    code=str(data.get('producto_codigo') or '').strip()[:80]
+    name=str(data.get('producto_nombre') or '').strip()[:160]
+    pagina=str(data.get('pagina') or '').strip()[:160]
+    meta=data.get('meta') or {}
+    if not isinstance(meta,(dict,list,str,int,float,bool)): meta={}
+    meta_text=json.dumps(meta,ensure_ascii=False)[:500] if not isinstance(meta,str) else meta[:500]
+    with get_db() as db:
+        db.execute('INSERT INTO catalog_analytics(catalogo_slug,session_id,evento,pagina,producto_codigo,producto_nombre,meta) VALUES(?,?,?,?,?,?,?)',(slug,session_id,evento,pagina,code,name,meta_text))
+        db.commit()
+    resp=jsonify(ok=True)
+    resp.set_cookie('catalog_visitor_id',session_id,max_age=31536000,httponly=True,samesite='Lax',secure=True)
+    return resp
+
 @app.route('/api/catalog/analytics/summary')
 def catalog_analytics_summary_api():
     slug=str(request.args.get('slug') or '').strip().lower()
-    if slug != 'vivero-los-colibries': return jsonify(ok=False),404
-    try: hours=max(1,min(168,int(request.args.get('hours','1'))))
-    except ValueError: hours=1
+    if slug not in {'vivero-los-colibries','libreria-ruiz'}: return jsonify(ok=False),404
+    try:
+        hours=max(1,min(744,int(request.args.get('hours','168'))))
+    except ValueError: hours=168
+    since=f'-{hours} hour'
     with get_db() as db:
-        row=db.execute("SELECT COUNT(DISTINCT session_id) AS visitantes, COUNT(*) AS paginas FROM catalog_analytics WHERE catalogo_slug=? AND evento='page_view' AND creado >= datetime('now', ?)",(slug,f'-{hours} hour')).fetchone()
-    return jsonify(ok=True,catalogo=slug,hours=hours,visitors=int(row['visitantes'] or 0),page_views=int(row['paginas'] or 0))
+        row=db.execute("SELECT COUNT(DISTINCT session_id) AS visitantes, SUM(CASE WHEN evento='page_view' THEN 1 ELSE 0 END) AS paginas, SUM(CASE WHEN evento='product_view' THEN 1 ELSE 0 END) AS fichas, SUM(CASE WHEN evento='add_to_cart' THEN 1 ELSE 0 END) AS carritos, SUM(CASE WHEN evento='whatsapp_click' THEN 1 ELSE 0 END) AS whatsapp FROM catalog_analytics WHERE catalogo_slug=? AND creado >= datetime('now', ?)",(slug,since)).fetchone()
+        products=db.execute("SELECT producto_codigo AS codigo, producto_nombre AS nombre, SUM(CASE WHEN evento='product_view' THEN 1 ELSE 0 END) AS vistas, SUM(CASE WHEN evento='add_to_cart' THEN 1 ELSE 0 END) AS agregados FROM catalog_analytics WHERE catalogo_slug=? AND producto_codigo!='' AND creado >= datetime('now', ?) GROUP BY producto_codigo,producto_nombre ORDER BY vistas DESC,agregados DESC LIMIT 20",(slug,since)).fetchall()
+        days=db.execute("SELECT date(creado) AS dia, COUNT(DISTINCT session_id) AS visitantes, SUM(CASE WHEN evento='page_view' THEN 1 ELSE 0 END) AS paginas FROM catalog_analytics WHERE catalogo_slug=? AND creado >= datetime('now', ?) GROUP BY date(creado) ORDER BY dia DESC",(slug,since)).fetchall()
+    return jsonify(ok=True,catalogo=slug,hours=hours,visitors=int(row['visitantes'] or 0),page_views=int(row['paginas'] or 0),product_views=int(row['fichas'] or 0),add_to_cart=int(row['carritos'] or 0),whatsapp_clicks=int(row['whatsapp'] or 0),top_products=[dict(x) for x in products],daily=[dict(x) for x in days])
+
+@app.route('/admin/analytics/catalogo')
+@login_required
+def catalog_analytics_dashboard():
+    return render_template_string('''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Analítica de Librería Ruiz</title><style>body{font-family:Arial,sans-serif;background:#f7fafc;color:#17324d;margin:0;padding:20px}main{max-width:900px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.card,section{background:#fff;border:1px solid #dbeafe;border-radius:14px;padding:14px;box-shadow:0 2px 8px #17324d12}.card b{display:block;font-size:25px;color:#1d4ed8}.card span{font-size:12px;color:#64748b}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid #e5e7eb}th{color:#1d4ed8}.muted{color:#64748b;font-size:12px}@media(max-width:650px){.cards{grid-template-columns:repeat(2,1fr)}}button{border:0;border-radius:20px;background:#2563eb;color:white;padding:9px 13px;font-weight:bold}</style></head><body><main><div class="top"><div><h1>Analítica · Librería Ruiz</h1><div class="muted">Datos anónimos de los últimos 7 días</div></div><button onclick="load()">Actualizar</button></div><div class="cards"><div class="card"><b id="vis">—</b><span>Personas aproximadas</span></div><div class="card"><b id="pages">—</b><span>Entradas al catálogo</span></div><div class="card"><b id="views">—</b><span>Fichas abiertas</span></div><div class="card"><b id="wa">—</b><span>Clics en WhatsApp</span></div></div><section><h2>Productos más mirados</h2><table><thead><tr><th>Producto</th><th>Fichas abiertas</th><th>Agregados</th></tr></thead><tbody id="products"><tr><td colspan="3">Cargando…</td></tr></tbody></table></section><p class="muted">La medición es anónima y aproximada: una misma persona puede aparecer como otra si cambia de dispositivo o borra las cookies.</p></main><script>function load(){fetch('/api/catalog/analytics/summary?slug=libreria-ruiz&hours=168').then(r=>r.json()).then(d=>{document.getElementById('vis').textContent=d.visitors;document.getElementById('pages').textContent=d.page_views;document.getElementById('views').textContent=d.product_views;document.getElementById('wa').textContent=d.whatsapp_clicks;document.getElementById('products').innerHTML=d.top_products.length?d.top_products.map(p=>'<tr><td>'+p.nombre+'<br><small>'+p.codigo+'</small></td><td>'+p.vistas+'</td><td>'+p.agregados+'</td></tr>').join(''):'<tr><td colspan="3">Todavía no hay datos</td></tr>'}).catch(()=>{document.getElementById('products').innerHTML='<tr><td colspan="3">No se pudo cargar</td></tr>'})}load();</script></body></html>''')
 @app.route('/api/fleming/analytics', methods=['POST'])
 def fleming_analytics_event():
     """Store anonymous interaction events for the Fleming catalog."""
@@ -594,8 +630,6 @@ def api_libreria_pedido():
     entrega=str(data.get('entrega') or 'Retiro en el local').strip()[:80]
     direccion=str(data.get('direccion') or '').strip()[:180]
     observaciones=str(data.get('observaciones') or '').strip()[:300]
-    pago_tipo='total' if str(data.get('pago_tipo') or '').strip().lower() in {'total','contado'} else 'sena'
-    monto_pago=total if pago_tipo=='total' else sena
     safe_items=[]
     for it in items[:30]:
         try:
@@ -606,14 +640,14 @@ def api_libreria_pedido():
     if not safe_items or any(i['price']<=0 for i in safe_items):
         return jsonify(ok=False,error='Todos los productos deben tener precio confirmado'),400
     with get_db() as db:
-        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,pago_tipo,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena',pago_tipo))
+        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena'))
         db.commit()
-    title=('Pago total' if pago_tipo=='total' else 'Seña 50%')+' — Pedido '+pedido_id+' — Librería Ruiz · FIWIND'
+    title='Seña 50% — Pedido '+pedido_id+' — Librería Comercial Ruiz'
     try:
         pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
-            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':monto_pago}],
+            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':sena}],
             'external_reference':pedido_id,
-            'statement_descriptor':'LIBRERIA RUIZ FIWIND',
+            'statement_descriptor':'LIBRERIA RUIZ',
             'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
             'notification_url':'https://catalogo-app-zm3w.onrender.com/api/libreria/pago/webhook',
             'auto_return':'approved'
@@ -622,7 +656,7 @@ def api_libreria_pedido():
         if not link: raise RuntimeError('Mercado Pago no devolvió link')
         with get_db() as db:
             db.execute('UPDATE libreria_pedidos SET payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',('link_generado',pedido_id)); db.commit()
-        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,monto_pago=monto_pago,pago_tipo=pago_tipo,checkout_url=link,estado='pendiente_sena')
+        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,checkout_url=link,estado='pendiente_sena')
     except Exception:
         app.logger.exception('No se pudo crear la preferencia de Mercado Pago')
         return jsonify(ok=False,error='No se pudo generar el link de seña'),502
@@ -638,10 +672,8 @@ def api_libreria_pago_webhook():
         status=str(payment.get('status') or '')
         ref=str(payment.get('external_reference') or '').strip()
         if ref:
+            new_state='sena_confirmada' if status=='approved' else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena')
             with get_db() as db:
-                row=db.execute('SELECT pago_tipo FROM libreria_pedidos WHERE pedido_id=?',(ref,)).fetchone()
-                tipo=(row['pago_tipo'] if row else 'sena')
-                new_state=('pago_confirmado' if tipo=='total' else 'sena_confirmada') if status=='approved' else ('pago_rechazado' if tipo=='total' and status in {'rejected','cancelled'} else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena'))
                 db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
         return jsonify(ok=True)
     except Exception:
@@ -654,7 +686,7 @@ def api_libreria_pagos_aprobados():
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,pago_tipo,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado IN ('sena_confirmada','pago_confirmado') AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
+        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado='sena_confirmada' AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
     result=[]
     for row in rows:
         item=dict(row); item['items']=json.loads(item.get('items') or '[]'); result.append(item)
@@ -666,13 +698,13 @@ def api_libreria_pago_ack(pedido_id):
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado IN ('sena_confirmada','pago_confirmado')",(pedido_id,)); db.commit()
+        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado='sena_confirmada'",(pedido_id,)); db.commit()
     return jsonify(ok=True,pedido_id=pedido_id)
 
 @app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
 def api_libreria_pago_estado(pedido_id):
     with get_db() as db:
-        row=db.execute('SELECT pedido_id,total,sena,pago_tipo,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
+        row=db.execute('SELECT pedido_id,total,sena,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
     if not row: return jsonify(ok=False,error='Pedido no encontrado'),404
     return jsonify(ok=True,**dict(row))
 
