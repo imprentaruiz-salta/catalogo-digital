@@ -490,8 +490,8 @@ def index():
     cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
-    # Abigail and every auxiliary catalog remain stored for recovery, but are not public.
-    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries'}: return ('Catálogo no disponible', 404)
+    # Restored at the user's request; other auxiliary catalogs remain private.
+    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries', 'limpieza-abigail'}: return ('Catálogo no disponible', 404)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     if slug == 'pizzeria-demo':
