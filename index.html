@@ -344,14 +344,16 @@ body.has-abigail .abigail-widget>.abigail-launcher{position:relative;right:auto;
 body.has-abigail .abigail-contact-actions{display:none}
 @media(max-width:599px){body.has-abigail .abigail-widget{width:auto;height:auto;right:70px;bottom:58px}body.has-abigail .abigail-widget>.abigail-launcher{right:auto}}
 /* Asistente de Librería Ruiz: misma experiencia, identidad propia */
-body.has-ruiz .abigail-widget{right:18px;bottom:144px}
+body.has-ruiz .abigail-widget{right:18px;bottom:224px}
 /* WhatsApp de Librería Ruiz: visible, verde y separado de Telegram */
 body.has-ruiz .float-whatsapp{display:flex!important;right:12px;bottom:12px;width:58px;height:58px;z-index:390;background:#25D366;color:#fff}
 body.has-ruiz .float-whatsapp .wa-label,body.has-ruiz .float-whatsapp .wa-name-visible{display:none}
-/* Contacto Elizabeth: queda encima del WhatsApp principal */
+/* Contactos de Librería Ruiz: apilados encima del WhatsApp principal */
+body.has-ruiz .float-whatsapp-maria{display:flex!important;right:12px;bottom:152px;width:58px;height:58px;z-index:392;background:#128c7e;color:#fff;animation:none}
+body.has-ruiz .float-whatsapp-maria .wa-name-visible{display:block!important;position:absolute;right:66px;white-space:nowrap;background:#fff;color:#08766d;font-size:11px;font-weight:800;padding:6px 9px;border-radius:9px;box-shadow:0 2px 9px rgba(0,0,0,.16)}
 body.has-ruiz .float-whatsapp-elizabeth{display:flex!important;right:12px;bottom:82px;width:58px;height:58px;z-index:391;background:#075e54;color:#fff;animation:none}
 body.has-ruiz .float-whatsapp-elizabeth .wa-name-visible{display:block!important;position:absolute;right:66px;white-space:nowrap;background:#fff;color:#075e54;font-size:11px;font-weight:800;padding:6px 9px;border-radius:9px;box-shadow:0 2px 9px rgba(0,0,0,.16)}
-@media(max-width:599px){body.has-ruiz .float-whatsapp{right:9px;bottom:10px;width:52px;height:52px}body.has-ruiz .float-whatsapp svg{width:29px;height:29px}body.has-ruiz .float-whatsapp-elizabeth{right:9px;bottom:72px;width:52px;height:52px}body.has-ruiz .float-whatsapp-elizabeth svg{width:29px;height:29px}}
+@media(max-width:599px){body.has-ruiz .float-whatsapp{right:9px;bottom:10px;width:52px;height:52px}body.has-ruiz .float-whatsapp svg{width:29px;height:29px}body.has-ruiz .float-whatsapp-elizabeth{right:9px;bottom:72px;width:52px;height:52px}body.has-ruiz .float-whatsapp-elizabeth svg{width:29px;height:29px}body.has-ruiz .float-whatsapp-maria{right:9px;bottom:134px;width:52px;height:52px}body.has-ruiz .float-whatsapp-maria svg{width:29px;height:29px}body.has-ruiz .abigail-widget{bottom:206px}}
 body.has-ruiz .abigail-launcher{width:68px!important;height:68px!important;background:linear-gradient(145deg,#2563eb,#0ea5e9);box-shadow:0 8px 26px rgba(37,99,235,.35);border-radius:50%;align-items:center;justify-content:center;overflow:visible}
 body.has-ruiz .abigail-launcher:hover{transform:scale(1.07)}
 body.has-ruiz .ruiz-assistant-icon{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border:3px solid rgba(255,255,255,.9);border-radius:50%;background:#fff;font-size:32px;line-height:1}
@@ -497,6 +499,10 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 
 {% if catalogo.slug == 'libreria-ruiz' %}
+<a class="float-whatsapp float-whatsapp-maria" href="https://wa.me/5493874425245?text=Hola%20Mar%C3%ADa%20Fernanda%2C%20quiero%20consultar%20por%20un%20producto%20de%20Librer%C3%ADa%20Ruiz." target="_blank" rel="noopener" aria-label="Contactar a María Fernanda por WhatsApp" title="WhatsApp de María Fernanda">
+ <span class="wa-name-visible">María Fernanda</span>
+ <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.19-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>
+</a>
 <a class="float-whatsapp float-whatsapp-elizabeth" href="https://wa.me/5493874441110?text={{ 'Hola%20Elizabeth%2C%20quiero%20consultar%20por%20un%20producto%20de%20Librer%C3%ADa%20Ruiz.' }}" target="_blank" rel="noopener" aria-label="Contactar a Elizabeth por WhatsApp" title="WhatsApp de Elizabeth">
  <span class="wa-name-visible">Elizabeth</span>
  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>
