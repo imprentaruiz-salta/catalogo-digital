@@ -468,7 +468,8 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>15 productos</small></a>
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
  <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Ver resaltadores" title="Ver resaltadores" onclick="filtrarCategoriaMenu(event,'resaltadores')"><span class="ruiz-category-icon">🖍️</span><span>Resaltadores</span><small>8 colores</small></a>
- <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas adhesivas" title="Ver notas adhesivas" onclick="filtrarCategoriaMenu(event,'libreria')"><span class="sticky-notes-icon" aria-hidden="true"><i></i></span><span>Notas adhesivas</span><small>2 productos</small></a>
+ <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas EZCO" title="Ver notas EZCO" onclick="filtrarMarcaNotas(event,'EZCO')"><span class="ruiz-category-icon">🟨</span><span>Notas EZCO</span><small>1 producto</small></a>
+ <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas Katania" title="Ver notas Katania" onclick="filtrarMarcaNotas(event,'Katania')"><span class="ruiz-category-icon">🌈</span><span>Notas Katania</span><small>1 producto</small></a>
  {% for cat in cats %}{% if cat|lower == 'corrector en cinta' %}<a href="#sec-corrector-en-cinta" class="ruiz-category-menu" aria-label="Ver corrector en cinta" title="Ver corrector en cinta" onclick="filtrarCategoriaMenu(event,'corrector en cinta')"><img class="cat-thumb nav" src="/static/category_corrector_cinta.webp" alt="Corrector en cinta" loading="lazy" decoding="async"><span>Corrector en cinta</span><small>1 producto</small></a>{% endif %}{% endfor %}
  {% for cat in cats %}{% if cat|lower == 'cinta adhesiva' %}<a href="#sec-cinta-adhesiva" class="ruiz-category-menu" aria-label="Ver cinta adhesiva" title="Ver cinta adhesiva" onclick="filtrarCategoriaMenu(event,'cinta adhesiva')"><img class="cat-thumb nav" src="/static/uploads/593ac6006ebd4fe9a8863d491ec41ca5.webp" alt="Cinta adhesiva ancha" loading="lazy" decoding="async"><span>Cinta adhesiva</span><small>1 producto</small></a>{% endif %}{% endfor %}
  {% else %}
@@ -631,7 +632,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% for p in productos %}
  {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026'] %}
  {% set display_name = p.nombre|product_name %}
- <div class="product-card" data-code="{{ p.codigo }}" data-category="{{ p.categoria|lower }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
+ <div class="product-card" data-code="{{ p.codigo }}" data-category="{{ p.categoria|lower }}" data-brand="{{ p.marca|lower }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
@@ -1064,6 +1065,20 @@ function buscar(q) {
  });
  document.getElementById('noResults').style.display = (filtered && visible === 0) ? 'block' : 'none';
  actualizarEstadoBusqueda(visible,cards.length,filtered,level);
+}
+
+function filtrarMarcaNotas(ev,brand){
+ if(ev)ev.preventDefault();
+ trackCatalogEvent('category_view','','notas '+brand,{});
+ document.body.classList.remove('menu-only','product-selected');
+ document.querySelectorAll('.ruiz-category-menu').forEach(function(a){a.classList.toggle('active',a===ev.currentTarget)});
+ var cards=document.querySelectorAll('.product-card');
+ cards.forEach(function(card){var match=(card.dataset.category||'').toLowerCase()==='libreria'&&(card.dataset.brand||'').toLowerCase()===brand.toLowerCase();card.dataset.hidden=match?'false':'true'});
+ document.querySelectorAll('.cat-section').forEach(function(section){
+  var found=section.querySelector('.product-card[data-hidden="false"]');section.classList.toggle('search-hidden',!found);
+  section.querySelectorAll('.brand-block').forEach(function(block){var ok=block.querySelector('.product-card[data-hidden="false"]');block.classList.toggle('search-hidden',!ok);if(ok){block.classList.add('brand-open');var products=block.querySelector('.brand-products'),head=block.querySelector('.brand-header');if(products)products.classList.add('open');if(head)head.classList.add('open')}});
+ });
+ var target=document.getElementById('sec-libreria');if(target)setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'})},30);
 }
 
 function filtrarCategoriaMenu(ev,category){
