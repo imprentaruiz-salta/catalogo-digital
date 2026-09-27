@@ -384,6 +384,8 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <img class="cat-thumb {{ size }}" src="/static/category_papel_real.webp" alt="Papel higiénico" loading="lazy" decoding="async">
  {% elif n == 'rollo de cocina' or n == 'rollos de cocina' %}
  <img class="cat-thumb {{ size }}" src="/static/category_cocina_real.webp" alt="Rollo de cocina" loading="lazy" decoding="async">
+ {% elif n == 'cinta adhesiva' %}
+ <img class="cat-thumb {{ size }}" src="/static/uploads/593ac6006ebd4fe9a8863d491ec41ca5.webp" alt="Cinta adhesiva ancha" loading="lazy" decoding="async">
  {% elif n == 'jabones en pan' %}
  <img class="cat-thumb {{ size }}" src="/static/category_jabones_pan.webp" alt="Jabones en pan" loading="lazy" decoding="async">
  {% elif n == 'acondicionador' %}
@@ -466,7 +468,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Ver resaltadores" title="Ver resaltadores" onclick="filtrarCategoriaMenu(event,'resaltadores')"><span class="ruiz-category-icon">🖍️</span><span>Resaltadores</span><small>8 colores</small></a>
  <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas adhesivas" title="Ver notas adhesivas" onclick="filtrarCategoriaMenu(event,'libreria')"><span class="sticky-notes-icon" aria-hidden="true"><i></i></span><span>Notas adhesivas</span><small>2 productos</small></a>
  {% for cat in cats %}{% if cat|lower == 'accesorios' %}<a href="#sec-accesorios" class="ruiz-category-menu" aria-label="Ver accesorios" title="Ver accesorios" onclick="filtrarCategoriaMenu(event,'accesorios')"><span class="ruiz-category-icon">✂️</span><span>Accesorios</span><small>1 producto</small></a>{% endif %}{% endfor %}
- {% for cat in cats %}{% if cat|lower == 'cinta adhesiva' %}<a href="#sec-cinta-adhesiva" class="ruiz-category-menu" aria-label="Ver cinta adhesiva" title="Ver cinta adhesiva" onclick="filtrarCategoriaMenu(event,'cinta adhesiva')"><span class="ruiz-category-icon">📎</span><span>Cinta adhesiva</span><small>1 producto</small></a>{% endif %}{% endfor %}
+ {% for cat in cats %}{% if cat|lower == 'cinta adhesiva' %}<a href="#sec-cinta-adhesiva" class="ruiz-category-menu" aria-label="Ver cinta adhesiva" title="Ver cinta adhesiva" onclick="filtrarCategoriaMenu(event,'cinta adhesiva')"><img class="cat-thumb nav" src="/static/uploads/593ac6006ebd4fe9a8863d491ec41ca5.webp" alt="Cinta adhesiva ancha" loading="lazy" decoding="async"><span>Cinta adhesiva</span><small>1 producto</small></a>{% endif %}{% endfor %}
  {% else %}
  {% for cat in cats %}
  <a href="#sec-{{ loop.index }}" data-cat="{{ cat }}" aria-label="Abrir categoría {{ cat }}" title="Ver {{ cat }}" onclick="toggleCategory(event,'sec-{{ loop.index }}')">
