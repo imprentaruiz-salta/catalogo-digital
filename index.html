@@ -467,10 +467,10 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% if catalogo.slug == 'libreria-ruiz' %}
  <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>15 productos</small></a>
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
- <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores BIC" title="Resaltadores BIC" onclick="filtrarMarcaResaltadores(event,'BIC')"><span class="ruiz-category-icon">🖍️</span><span>BIC</span><small>3 colores</small></a>
- <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Intra" title="Resaltadores Intra" onclick="filtrarMarcaResaltadores(event,'INTRA')"><span class="ruiz-category-icon">🟨</span><span>Intra</span><small>2 colores</small></a>
- <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Filgo" title="Resaltadores Filgo" onclick="filtrarMarcaResaltadores(event,'FILGO')"><span class="ruiz-category-icon">🟠</span><span>Filgo</span><small>2 colores</small></a>
- <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Pelikan" title="Resaltadores Pelikan" onclick="filtrarMarcaResaltadores(event,'PELIKAN')"><span class="ruiz-category-icon">🟡</span><span>Pelikan</span><small>1 color</small></a>
+ <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores BIC" title="Resaltadores BIC" data-resaltador-brand="bic" onclick="filtrarMarcaResaltadores(event,'BIC')"><span class="ruiz-category-icon">🖍️</span><span>BIC</span><small>3 colores</small></a>
+ <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Intra" title="Resaltadores Intra" data-resaltador-brand="intra" onclick="filtrarMarcaResaltadores(event,'INTRA')"><span class="ruiz-category-icon">🟨</span><span>Intra</span><small>2 colores</small></a>
+ <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Filgo" title="Resaltadores Filgo" data-resaltador-brand="filgo" onclick="filtrarMarcaResaltadores(event,'FILGO')"><span class="ruiz-category-icon">🟠</span><span>Filgo</span><small>2 colores</small></a>
+ <a href="#sec-resaltadores" class="ruiz-category-menu" aria-label="Resaltadores Pelikan" title="Resaltadores Pelikan" data-resaltador-brand="pelikan" onclick="filtrarMarcaResaltadores(event,'PELIKAN')"><span class="ruiz-category-icon">🟡</span><span>Pelikan</span><small>1 color</small></a>
  <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas EZCO" title="Ver notas EZCO" onclick="filtrarMarcaNotas(event,'EZCO')"><span class="ruiz-category-icon">🟨</span><span>Notas EZCO</span><small>1 producto</small></a>
  <a href="#sec-libreria" class="ruiz-category-menu" aria-label="Ver notas Katania" title="Ver notas Katania" onclick="filtrarMarcaNotas(event,'Katania')"><span class="ruiz-category-icon">🌈</span><span>Notas Katania</span><small>1 producto</small></a>
  {% for cat in cats %}{% if cat|lower == 'corrector en cinta' %}<a href="#sec-corrector-en-cinta" class="ruiz-category-menu" aria-label="Ver corrector en cinta" title="Ver corrector en cinta" onclick="filtrarCategoriaMenu(event,'corrector en cinta')"><img class="cat-thumb nav" src="/static/category_corrector_cinta.webp" alt="Corrector en cinta" loading="lazy" decoding="async"><span>Corrector en cinta</span><small>1 producto</small></a>{% endif %}{% endfor %}
@@ -1097,6 +1097,12 @@ function filtrarMarcaResaltadores(ev,brand){
  });
  var target=document.getElementById('sec-resaltadores');if(target)setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'})},30);
 }
+
+window.addEventListener('DOMContentLoaded',function(){
+ var marca=new URLSearchParams(window.location.search).get('resaltador');if(!marca)return;
+ var boton=document.querySelector('.ruiz-category-menu[data-resaltador-brand="'+marca.toLowerCase()+'"]');
+ if(boton)filtrarMarcaResaltadores({preventDefault:function(){},currentTarget:boton},marca);
+});
 
 function filtrarCategoriaMenu(ev,category){
  if(ev)ev.preventDefault();
