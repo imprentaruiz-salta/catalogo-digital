@@ -602,7 +602,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
  {% for cat, marcas in cats.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores','libreria','accesorios','cinta adhesiva','corrector en cinta'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores','libreria','cinta adhesiva','corrector en cinta'] %}
  {% set total = namespace(n=0) %}
  {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026'] %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
  <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' else ('sec-resaltadores' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'resaltadores' else ('sec-libreria' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' else ('sec-corrector-en-cinta' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'corrector en cinta' else ('sec-accesorios' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'accesorios' else ('sec-cinta-adhesiva' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'cinta adhesiva' else 'sec-' ~ loop.index))))) }}">
