@@ -605,13 +605,23 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% for cat, marcas in cats.items() %}
  {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores','libreria','reglas','papel','cinta adhesiva','corrector en cinta'] %}
  {% set total = namespace(n=0) %}
- {% for m, prods in marcas.items() %}{% for pp in prods %}{% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026'] %}{% set total.n = total.n + 1 %}{% endif %}{% endfor %}{% endfor %}
+ {% set total_marcas = namespace(n=0) %}
+ {% for m, prods in marcas.items() %}
+  {% set marca_visible = namespace(si=false) %}
+  {% for pp in prods %}
+   {% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026'] %}
+    {% set total.n = total.n + 1 %}
+    {% set marca_visible.si = true %}
+   {% endif %}
+  {% endfor %}
+  {% if marca_visible.si %}{% set total_marcas.n = total_marcas.n + 1 %}{% endif %}
+ {% endfor %}
  <section class="cat-section{% if catalogo.slug == 'vivero-los-colibries' and loop.first %} category-open{% endif %}" id="{{ 'sec-biromes' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' else ('sec-resaltadores' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'resaltadores' else ('sec-libreria' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' else ('sec-corrector-en-cinta' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'corrector en cinta' else ('sec-accesorios' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'accesorios' else ('sec-cinta-adhesiva' if catalogo.slug == 'libreria-ruiz' and cat|lower == 'cinta adhesiva' else 'sec-' ~ loop.index))))) }}">
  <div class="cat-header">
  {% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' %}<span class="sticky-notes-icon header" aria-hidden="true"><i></i></span>{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'papel' %}<span class="ruiz-category-icon" aria-hidden="true">📄</span>{% else %}{{ cat_visual(cat, 'header') }}{% endif %}
  <div>
  <h2>{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' %}Notas adhesivas{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'corrector en cinta' %}Corrector en cinta{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}</h2>
- <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'papel' %}1 marca{% else %}{{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}{% endif %}</div>
+ <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ total_marcas.n }} marca{{ 's' if total_marcas.n != 1 else '' }}</div>
  </div>
  </div>
 
