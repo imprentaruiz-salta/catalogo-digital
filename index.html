@@ -615,12 +615,12 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  {% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' %}<span class="sticky-notes-icon header" aria-hidden="true"><i></i></span>{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'papel' %}<span class="ruiz-category-icon" aria-hidden="true">📄</span>{% else %}{{ cat_visual(cat, 'header') }}{% endif %}
  <div>
  <h2>{% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}Birome{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'libreria' %}Notas adhesivas{% elif catalogo.slug == 'libreria-ruiz' and cat|lower == 'corrector en cinta' %}Corrector en cinta{% elif cat|lower in ['papel higienico','papel higiénico','papel higienicos','papel higiénicos'] %}Papel higiénicos{% elif cat|lower in ['rollo de cocina','rollos de cocina'] %}Rollo de cocina{% elif cat|lower == 'jabones en pan' %}Jabones en pan{% elif cat|lower == 'lapices' %}Lápices{% elif cat|lower == 'libreria' %}Librería{% else %}{{ cat|title }}{% endif %}</h2>
- <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}</div>
+ <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'papel' %}1 marca{% else %}{{ marcas|length }} marca{{ 's' if marcas|length != 1 else '' }}{% endif %}</div>
  </div>
  </div>
 
  {% for marca, productos in marcas.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra','filgo','ezco','katania','pelikan','auca','maped'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet'] %}
  <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
