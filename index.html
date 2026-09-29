@@ -129,10 +129,10 @@ body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-foot{padding:5px 8px;
 body.vivero-accordion .suggestion-fab{position:relative;left:auto;bottom:auto;display:block;width:fit-content;max-width:calc(100% - 28px);margin:10px auto 0;background:linear-gradient(135deg,#a96e42,#c48658);box-shadow:0 6px 20px rgba(169,110,66,.32)}
 body.vivero-accordion header{background:linear-gradient(135deg,#2f6f55,#79b99b)}
 body.vivero-accordion .hero{background:linear-gradient(135deg,#edf7ed,#e3efe0)}
-body.vivero-accordion .cat-nav{overflow:visible;white-space:normal}
+body.vivero-accordion .cat-nav{overflow-x:auto;overflow-y:hidden;white-space:nowrap;scroll-snap-type:x mandatory}
 body.vivero-accordion .logo-area>img{border-radius:50%!important;border:2px solid #f4d35e}
-body.vivero-accordion .cat-nav .category-track{display:flex!important;flex-wrap:wrap!important;width:100%!important;justify-content:center;gap:6px}
-body.vivero-accordion .cat-nav a{min-width:88px}
+body.vivero-accordion .cat-nav .category-track{display:flex!important;flex-wrap:nowrap!important;width:max-content!important;justify-content:flex-start;gap:6px}
+body.vivero-accordion .cat-nav a{flex:0 0 calc((100vw - 28px)/3);width:calc((100vw - 28px)/3);min-width:0;max-width:none;white-space:normal;scroll-snap-align:start}@media(min-width:600px){body.vivero-accordion .cat-nav a{flex-basis:calc((100vw - 34px)/4);width:calc((100vw - 34px)/4)}}@media(min-width:1000px){body.vivero-accordion .cat-nav a{flex-basis:calc((100vw - 46px)/6);width:calc((100vw - 46px)/6)}}@media(min-width:1400px){body.vivero-accordion .cat-nav a{flex-basis:calc((100vw - 58px)/8);width:calc((100vw - 58px)/8)}}
 body.vivero-accordion .quick-categories{display:none!important}
 body.vivero-accordion .showcase-wrap{display:none!important}
 body.vivero-accordion .cat-section{display:none}
@@ -464,7 +464,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
- <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:stretch!important;width:100%!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
+ <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
  {% if catalogo.slug == 'libreria-ruiz' %}
  <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>17 productos</small></a>
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
@@ -1566,6 +1566,42 @@ if(window.MutationObserver){
  var languageObserver=new MutationObserver(function(){if(currentLanguage==='en')applyLanguage();});
  languageObserver.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['aria-label','alt','title','placeholder']});
 }
+/* Vivero: autoavance por páginas, sin clonar categorías; pausa al interactuar. */
+(function(){
+  var nav=document.getElementById('catNav');
+  if(!nav||!document.body.classList.contains('vivero-accordion'))return;
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var track=nav.querySelector('.category-track');
+  var items=track?Array.prototype.slice.call(track.children).filter(function(el){return el.tagName==='A';}):[];
+  if(items.length<2)return;
+  var page=0,direction=1,userPaused=false,hoverPaused=false,timer=null;
+  function pageSize(){if(window.innerWidth<600)return 3;if(window.innerWidth<1000)return 4;if(window.innerWidth<1400)return 6;return 8;}
+  function schedule(){clearTimeout(timer);if(userPaused||hoverPaused)return;timer=setTimeout(advance,5200);}
+  function alignPage(p){
+    var index=Math.min(p*pageSize(),items.length-1),item=items[index];
+    var pad=parseFloat(getComputedStyle(nav).paddingLeft)||0;
+    var target=nav.scrollLeft+item.getBoundingClientRect().left-nav.getBoundingClientRect().left-pad;
+    var max=Math.max(0,nav.scrollWidth-nav.clientWidth);
+    nav.scrollTo({left:Math.min(max,Math.max(0,target)),behavior:'smooth'});
+  }
+  function advance(){
+    var maxPage=Math.ceil(items.length/pageSize())-1;
+    if(maxPage<1)return;
+    var next=page+direction;
+    if(next>maxPage){direction=-1;next=maxPage-1;}
+    else if(next<0){direction=1;next=1;}
+    page=next;alignPage(page);schedule();
+  }
+  function pauseForUser(){userPaused=true;clearTimeout(timer);}
+  nav.addEventListener('pointerenter',function(){hoverPaused=true;clearTimeout(timer);});
+  nav.addEventListener('pointerleave',function(){hoverPaused=false;schedule();});
+  nav.addEventListener('pointerdown',pauseForUser,{passive:true});
+  nav.addEventListener('touchstart',pauseForUser,{passive:true});
+  nav.addEventListener('wheel',pauseForUser,{passive:true});
+  nav.addEventListener('focusin',pauseForUser);
+  window.addEventListener('resize',function(){page=0;direction=1;nav.scrollTo({left:0,behavior:'auto'});schedule();});
+  schedule();
+})();
 </script>
 </body>
 </html>
