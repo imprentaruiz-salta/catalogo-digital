@@ -173,9 +173,10 @@ def init_db():
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
         db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
-        try: db.execute("ALTER TABLE libreria_pedidos ADD COLUMN avisado_whatsapp INTEGER DEFAULT 0")
-        except sqlite3.OperationalError: pass
+        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', pago_tipo TEXT NOT NULL DEFAULT 'sena', monto_pago REAL NOT NULL DEFAULT 0, creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
+        for col,definition in [('avisado_whatsapp','INTEGER DEFAULT 0'),('pago_tipo',"TEXT DEFAULT 'sena'"),('monto_pago','REAL DEFAULT 0')]:
+            try: db.execute(f"ALTER TABLE libreria_pedidos ADD COLUMN {col} {definition}")
+            except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
         # Anonymous catalog analytics: page views and product interactions.
         for col,definition in [('producto_codigo',"TEXT DEFAULT ''"),('producto_nombre',"TEXT DEFAULT ''"),('meta',"TEXT DEFAULT ''")]:
@@ -611,41 +612,117 @@ def _mp_json_request(url, method='GET', payload=None):
     with urllib.request.urlopen(req,timeout=18) as response:
         return json.loads(response.read().decode('utf-8'))
 
+def _libreria_validar_items(items):
+    """Return canonical catalog items, total, and any price/stock conflicts."""
+    if not isinstance(items,list) or not items:
+        return [],0,[{'code':'','name':'Pedido','qty':0,'stock':0,'price':0,'reason':'empty'}]
+    if len(items)>30:
+        return [],0,[{'code':'','name':'Pedido','qty':0,'stock':0,'price':0,'reason':'too_many_items'}]
+    requested={}
+    conflicts=[]
+    for raw in items:
+        if not isinstance(raw,dict):
+            conflicts.append({'code':'','name':'Producto','qty':0,'stock':0,'price':0,'reason':'invalid_item'})
+            continue
+        code=str(raw.get('code') or '').strip()[:50]
+        try: qty=int(raw.get('qty') or 0)
+        except (TypeError,ValueError): qty=0
+        if not code or qty<1 or qty>999:
+            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'invalid_qty'})
+            continue
+        client_price=None
+        if 'price' in raw:
+            try: client_price=round(float(raw.get('price') or 0),2)
+            except (TypeError,ValueError):
+                conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'invalid_price'})
+                continue
+        entry=requested.setdefault(code,{'qty':0,'client_price':client_price})
+        if entry['client_price'] is None and client_price is not None:
+            entry['client_price']=client_price
+        elif client_price is not None and entry['client_price']!=client_price:
+            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'inconsistent_price'})
+        entry['qty']+=qty
+        if entry['qty']>999:
+            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':entry['qty'],'stock':0,'price':0,'reason':'invalid_qty'})
+    canonical=[]
+    total=0.0
+    with get_db() as db:
+        for code,entry in requested.items():
+            qty=entry['qty']
+            row=db.execute('SELECT codigo,nombre,precio,stock_actual FROM productos WHERE codigo=? AND catalogo_slug=? AND activo=1',(code,'libreria-ruiz')).fetchone()
+            if not row:
+                conflicts.append({'code':code,'name':'Producto no disponible','qty':qty,'stock':0,'price':0,'reason':'not_available'})
+                continue
+            try: price=max(0,round(float(row['precio'] or 0),2))
+            except (TypeError,ValueError): price=0
+            try: stock=max(0,int(row['stock_actual'] or 0))
+            except (TypeError,ValueError): stock=0
+            name=str(row['nombre'] or 'Producto')[:160]
+            canonical.append({'code':code,'name':name,'qty':qty,'price':price,'stock':stock})
+            if price<=0:
+                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'price_unconfirmed'})
+            if stock<=0:
+                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'stock_unconfirmed'})
+            elif qty>stock:
+                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'stock_exceeded'})
+            client_price=entry['client_price']
+            if client_price is not None and client_price!=price:
+                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'old_price':client_price,'reason':'price_changed'})
+            total+=price*qty
+    return canonical,round(total,2),conflicts
+
+def _libreria_conflict_message(conflicts):
+    reasons={str(item.get('reason') or '') for item in conflicts}
+    if 'price_changed' in reasons:
+        return 'Cambió un precio del catálogo. Revisá el precio actualizado y volvé a intentar.'
+    if 'stock_exceeded' in reasons:
+        return 'El stock cambió o la cantidad supera lo disponible. Revisá el máximo indicado y volvé a intentar.'
+    if 'stock_unconfirmed' in reasons:
+        return 'Hay un producto sin disponibilidad confirmada. Consultá por WhatsApp antes de continuar.'
+    if 'not_available' in reasons:
+        return 'Uno de los productos ya no está disponible en el catálogo. Revisá el pedido.'
+    return 'No se pudo validar el pedido. Revisá los productos y las cantidades.'
+
+@app.route('/api/libreria/validar-pedido',methods=['POST'])
+def api_libreria_validar_pedido():
+    data=request.get_json(silent=True) or {}
+    canonical,total,conflicts=_libreria_validar_items(data.get('items'))
+    if conflicts:
+        return jsonify(ok=False,error=_libreria_conflict_message(conflicts),items=canonical,total=total,conflicts=conflicts),409
+    if total<=0:
+        return jsonify(ok=False,error='El pedido debe tener precios confirmados',items=canonical,total=total),400
+    return jsonify(ok=True,items=canonical,total=total)
+
 @app.route('/api/libreria/pedido',methods=['POST'])
 def api_libreria_pedido():
     if not MP_ACCESS_TOKEN:
         return jsonify(ok=False,error='Mercado Pago todavía no está configurado'),503
     data=request.get_json(silent=True) or {}
-    try:
-        total=round(float(data.get('total') or 0),2)
-        sena=round(total*0.50,2)
-    except (TypeError,ValueError):
-        return jsonify(ok=False,error='Total inválido'),400
-    items=data.get('items') or []
-    if total<=0 or not items:
+    canonical,total,conflicts=_libreria_validar_items(data.get('items'))
+    if conflicts:
+        return jsonify(ok=False,error=_libreria_conflict_message(conflicts),items=canonical,total=total,conflicts=conflicts),409
+    if total<=0 or not canonical:
         return jsonify(ok=False,error='El pedido debe tener precios confirmados'),400
-    pedido_id=str(data.get('pedido_id') or _libreria_order_id())[:50]
     nombre=str(data.get('nombre') or '').strip()[:120]
     celular=str(data.get('celular') or '').strip()[:60]
+    if not nombre or not celular:
+        return jsonify(ok=False,error='Completá nombre y celular para continuar'),400
     entrega=str(data.get('entrega') or 'Retiro en el local').strip()[:80]
     direccion=str(data.get('direccion') or '').strip()[:180]
     observaciones=str(data.get('observaciones') or '').strip()[:300]
-    safe_items=[]
-    for it in items[:30]:
-        try:
-            qty=max(1,int(it.get('qty') or 1)); price=round(float(it.get('price') or 0),2)
-        except (TypeError,ValueError):
-            continue
-        safe_items.append({'code':str(it.get('code') or '')[:50],'name':str(it.get('name') or 'Producto')[:160],'qty':qty,'price':price})
-    if not safe_items or any(i['price']<=0 for i in safe_items):
-        return jsonify(ok=False,error='Todos los productos deben tener precio confirmado'),400
+    pago_tipo='total' if str(data.get('pago_tipo') or '').strip().lower()=='total' else 'sena'
+    sena=round(total*0.50,2)
+    monto_pago=total if pago_tipo=='total' else sena
+    estado_inicial='pendiente_pago' if pago_tipo=='total' else 'pendiente_sena'
+    pedido_id=str(data.get('pedido_id') or _libreria_order_id())[:50]
     with get_db() as db:
-        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(safe_items,ensure_ascii=False),total,sena,'pendiente_sena'))
+        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,pago_tipo,monto_pago,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(canonical,ensure_ascii=False),total,sena,estado_inicial,pago_tipo,monto_pago))
         db.commit()
-    title='Seña 50% — Pedido '+pedido_id+' — Librería Comercial Ruiz'
+    label='Pago total' if pago_tipo=='total' else 'Seña 50%'
+    title=label+' — Pedido '+pedido_id+' — Librería Ruiz'
     try:
         pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
-            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':sena}],
+            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':monto_pago}],
             'external_reference':pedido_id,
             'statement_descriptor':'LIBRERIA RUIZ',
             'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
@@ -656,10 +733,10 @@ def api_libreria_pedido():
         if not link: raise RuntimeError('Mercado Pago no devolvió link')
         with get_db() as db:
             db.execute('UPDATE libreria_pedidos SET payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',('link_generado',pedido_id)); db.commit()
-        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,checkout_url=link,estado='pendiente_sena')
+        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,monto_pago=monto_pago,pago_tipo=pago_tipo,checkout_url=link,estado=estado_inicial)
     except Exception:
         app.logger.exception('No se pudo crear la preferencia de Mercado Pago')
-        return jsonify(ok=False,error='No se pudo generar el link de seña'),502
+        return jsonify(ok=False,error='No se pudo generar el link de pago'),502
 
 @app.route('/api/libreria/pago/webhook',methods=['GET','POST'])
 def api_libreria_pago_webhook():
@@ -672,9 +749,14 @@ def api_libreria_pago_webhook():
         status=str(payment.get('status') or '')
         ref=str(payment.get('external_reference') or '').strip()
         if ref:
-            new_state='sena_confirmada' if status=='approved' else ('sena_rechazada' if status in {'rejected','cancelled'} else 'pendiente_sena')
             with get_db() as db:
-                db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
+                row=db.execute('SELECT pago_tipo FROM libreria_pedidos WHERE pedido_id=?',(ref,)).fetchone()
+                if row:
+                    pago_tipo=str(row['pago_tipo'] or 'sena')
+                    if status=='approved': new_state='pago_confirmado' if pago_tipo=='total' else 'sena_confirmada'
+                    elif status in {'rejected','cancelled'}: new_state='pago_rechazado' if pago_tipo=='total' else 'sena_rechazada'
+                    else: new_state='pendiente_pago' if pago_tipo=='total' else 'pendiente_sena'
+                    db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
         return jsonify(ok=True)
     except Exception:
         app.logger.exception('Webhook de Mercado Pago no procesado')
@@ -686,7 +768,7 @@ def api_libreria_pagos_aprobados():
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado='sena_confirmada' AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
+        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,pago_tipo,monto_pago,estado,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado IN ('sena_confirmada','pago_confirmado') AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
     result=[]
     for row in rows:
         item=dict(row); item['items']=json.loads(item.get('items') or '[]'); result.append(item)
@@ -698,13 +780,13 @@ def api_libreria_pago_ack(pedido_id):
     if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
         return jsonify(ok=False,error='No autorizado'),403
     with get_db() as db:
-        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado='sena_confirmada'",(pedido_id,)); db.commit()
+        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado IN ('sena_confirmada','pago_confirmado')",(pedido_id,)); db.commit()
     return jsonify(ok=True,pedido_id=pedido_id)
 
 @app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
 def api_libreria_pago_estado(pedido_id):
     with get_db() as db:
-        row=db.execute('SELECT pedido_id,total,sena,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
+        row=db.execute('SELECT pedido_id,total,sena,pago_tipo,monto_pago,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
     if not row: return jsonify(ok=False,error='Pedido no encontrado'),404
     return jsonify(ok=True,**dict(row))
 
@@ -1195,4 +1277,3 @@ def admin_foto_rapida(pid):
 restore_from_cloud()
 init_db()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
-
