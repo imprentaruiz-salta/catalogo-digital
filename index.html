@@ -126,7 +126,7 @@ body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-fab{background:linear
 body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-panel{height:min(335px,calc(100vh - 210px))}
 body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-foot{padding:5px 8px;font-size:9px;line-height:1.15}
 @media(max-width:599px){body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-panel{height:min(320px,56vh)}}
-body.vivero-accordion .suggestion-fab{background:linear-gradient(135deg,#a96e42,#c48658);box-shadow:0 6px 20px rgba(169,110,66,.32)}
+body.vivero-accordion .suggestion-fab{position:relative;left:auto;bottom:auto;display:block;width:fit-content;max-width:calc(100% - 28px);margin:10px auto 0;background:linear-gradient(135deg,#a96e42,#c48658);box-shadow:0 6px 20px rgba(169,110,66,.32)}
 body.vivero-accordion header{background:linear-gradient(135deg,#2f6f55,#79b99b)}
 body.vivero-accordion .hero{background:linear-gradient(135deg,#edf7ed,#e3efe0)}
 body.vivero-accordion .cat-nav{overflow:visible;white-space:normal}
@@ -464,7 +464,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
- <div class="category-track" style="display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;">
+ <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:stretch!important;width:100%!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
  {% if catalogo.slug == 'libreria-ruiz' %}
  <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>17 productos</small></a>
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
@@ -1235,6 +1235,7 @@ function toggleBrand(btn) {
  var SPEED=document.body.classList.contains('catalog-libreria-ruiz')?7:22; // Librería: movimiento muy lento para leer sin apuro
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
+  if(rail.id==='catNav' && document.body.classList.contains('vivero-accordion')) return;
   var track=rail.querySelector('.category-track');
   if(!track || !track.children.length) return;
   var originals=Array.prototype.slice.call(track.children);
