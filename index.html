@@ -978,7 +978,7 @@ function sendTelegram() {
  var msg='🧾 PEDIDO '+makeOrderId()+' — {{ catalogo.nombre }}\\n👤 Cliente: '+nombre+'\\n📱 WhatsApp: '+telefono+'\\n📦 Entrega: '+entrega+'\\n';
  if(direccion)msg+='📍 Dirección: '+direccion+'\\n'; msg+='────────────\\n';
  keys.forEach(function(k){var it=cart[k];msg+='• '+it.name+' ['+k+'] x'+it.qty+' = '+CART_CURRENCY_PREFIX+formatNum(it.price*it.qty)+'\\n'}); if(observaciones)msg+='📝 Observación: '+observaciones+'\\n';
- msg+='────────────\\n💰 TOTAL: $'+formatNum(total)+'\\n✅ Estado: pedido recibido, confirmar disponibilidad y total'; if(payMethod)msg+='\\n💳 Pago: '+payMethod;
+ msg+='────────────\\n💰 TOTAL: '+CART_CURRENCY_PREFIX+formatNum(total)+'\\n✅ Estado: pedido recibido, confirmar disponibilidad y total'; if(payMethod)msg+='\\n💳 Pago: '+payMethod;
  var btn = document.querySelector('.wpp-btn[onclick="sendTelegram()"]');
  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando pedido…';}
  fetch('/api/pedido-telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:msg})})
