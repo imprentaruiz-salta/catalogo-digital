@@ -377,6 +377,25 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 .magic-flyer{position:fixed;z-index:10000;pointer-events:none;font-size:30px;line-height:1;filter:drop-shadow(2px 3px 2px rgba(15,23,42,.2));transition:transform .72s cubic-bezier(.2,.85,.3,1),opacity .72s ease;will-change:transform,opacity}
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 </style>
+<style id="vivero-cover-styles">
+body.vivero-accordion .vivero-hero-cover{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(320px,33vw,430px);margin:14px auto 12px;width:calc(100% - 24px);max-width:1320px;overflow:hidden;border-radius:24px;background:#2f6f55;box-shadow:0 14px 34px rgba(31,70,47,.16)}
+body.vivero-accordion .vivero-cover-photo{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 53%}
+body.vivero-accordion .vivero-hero-cover:after{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgba(17,47,31,.88) 0%,rgba(17,47,31,.72) 34%,rgba(17,47,31,.20) 72%,rgba(17,47,31,.05) 100%)}
+body.vivero-accordion .vivero-cover-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;max-width:700px;padding:38px 5.5%;color:#fff}
+body.vivero-accordion .vivero-cover-kicker{font-size:13px;font-weight:800;letter-spacing:.04em;color:#e7f2e8}
+body.vivero-accordion .vivero-cover-content h2{margin:10px 0 8px;font-size:clamp(36px,4.3vw,56px);line-height:1.02;font-weight:900;letter-spacing:-.03em;color:#fff}
+body.vivero-accordion .vivero-cover-content p{margin:0;font-size:clamp(16px,1.8vw,20px);line-height:1.4;color:#f7fbf4}
+body.vivero-accordion .vivero-cover-note{margin-top:8px;font-size:13px;font-weight:700;color:#f6e8d6}
+body.vivero-accordion .vivero-cover-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+body.vivero-accordion .vivero-cover-button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 22px;border-radius:999px;text-decoration:none!important;font-size:14px;font-weight:900;transition:transform .18s ease,box-shadow .18s ease}
+body.vivero-accordion .vivero-cover-button:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.18)}
+body.vivero-accordion .vivero-cover-button.primary{background:#f5f2e4;color:#28543d;border:1px solid rgba(255,255,255,.65)}
+body.vivero-accordion .vivero-cover-button.secondary{background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.9)}
+body.vivero-accordion .vivero-cover-button:focus-visible{outline:3px solid #e4b17b;outline-offset:3px}
+body.vivero-accordion .vivero-cover-locations{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:calc(100% - 24px);max-width:1320px;margin:0 auto 12px}
+body.vivero-accordion .vivero-cover-locations>div{flex:1 1 320px;padding:10px 14px;border:1px solid #dceadd;border-radius:14px;background:#fff;color:#294338;font-size:12px;line-height:1.45;box-shadow:0 3px 10px rgba(34,75,51,.05)}
+@media(max-width:640px){body.vivero-accordion .vivero-hero-cover{min-height:390px;margin:10px auto 9px;width:calc(100% - 20px);border-radius:20px}body.vivero-accordion .vivero-cover-photo{object-position:86% center}body.vivero-accordion .vivero-hero-cover:after{background:linear-gradient(0deg,rgba(17,47,31,.94) 0%,rgba(17,47,31,.70) 44%,rgba(17,47,31,.14) 100%)}body.vivero-accordion .vivero-cover-content{align-self:stretch;justify-content:flex-end;max-width:none;padding:22px 20px 23px}body.vivero-accordion .vivero-cover-kicker{font-size:11px}body.vivero-accordion .vivero-cover-content h2{margin:8px 0 7px;font-size:clamp(32px,8.5vw,40px)}body.vivero-accordion .vivero-cover-content p{font-size:15px}body.vivero-accordion .vivero-cover-note{font-size:12px}body.vivero-accordion .vivero-cover-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px;margin-top:16px}body.vivero-accordion .vivero-cover-button{min-height:46px;padding:10px 12px;font-size:13px}body.vivero-accordion .vivero-cover-locations{flex-direction:column;gap:7px;width:calc(100% - 20px);margin-bottom:10px}body.vivero-accordion .vivero-cover-locations>div{flex-basis:auto;padding:9px 11px;font-size:11px}}
+</style>
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
@@ -462,6 +481,27 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {% endif %}
 </header>
 
+{% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
+{% if catalogo.slug == 'vivero-los-colibries' %}
+<section class="vivero-hero-cover" aria-label="Portada de Vivero Los Colibríes">
+ <img class="vivero-cover-photo" src="/static/vivero_portada_hero_20260929.webp?v=20260929" alt="Plantas y macetas de Vivero Los Colibríes" fetchpriority="high" decoding="async">
+ <div class="vivero-cover-content">
+  <span class="vivero-cover-kicker">🌿 Vivero Los Colibríes</span>
+  <h2>Dale vida a tu espacio</h2>
+  <p>Plantas, árboles, macetas y tierra</p>
+  <span class="vivero-cover-note">Consultá precio y disponibilidad</span>
+  <div class="vivero-cover-actions">
+   <a class="vivero-cover-button primary" href="#catNav">🌱 Ver plantas</a>
+   <a class="vivero-cover-button secondary" href="https://wa.me/{{ whatsapp_contacto }}?text={{ 'Hola, quiero consultar por plantas y disponibilidad. Local: Ruta Nacional 68 km 154, El Carril, Salta. Punto de entrega: Azahares 55, Barrio Tres Cerritos, Salta.'|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="Consultar por WhatsApp">💬 Consultar</a>
+  </div>
+ </div>
+</section>
+<div class="vivero-cover-locations" aria-label="Ubicaciones del vivero">
+ <div>📍 <strong>Local:</strong> Ruta Nacional 68 km 154, El Carril, Salta</div>
+ <div>🚚 <strong>Punto de entrega:</strong> Azahares 55, Barrio Tres Cerritos, Salta</div>
+</div>
+{% endif %}
+
 <!-- NAV CATEGORÍAS -->
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
@@ -484,7 +524,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  </div>
 </nav>
 {% if catalogo.slug == 'libreria-ruiz' %}<div class="ruiz-selection-bar" id="ruizSelectionBar"><button type="button" onclick="volverAlMenu()" aria-label="Cerrar producto y volver al menú" title="Cerrar producto y volver al menú">×</button></div>{% endif %}
-{% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
+
 {% if catalogo.slug != 'vivero-los-colibries' %}
 <div class="quick-action-row" aria-label="Acciones rápidas">
  <button class="quick-action quick-action-cart" onclick="toggleCart()">🛒 <span id="quickCartText">Mi pedido</span></button>
@@ -559,6 +599,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 {%- endmacro %}
 
  <!-- HERO -->
+ {% if catalogo.slug != 'vivero-los-colibries' %}
  <div class="hero">
  {% set banner_url = '/static/banner_limpieza_abigail_20260927.jpg' if catalogo.slug == 'limpieza-abigail' else ((catalogo.banner or '/static/banner_libreria_ruiz.jpg') if catalogo.slug == 'libreria-ruiz' else catalogo.banner) %}
  {% set effective_banner_url = banner_url or ('/static/banner_vivero_los_colibries.png' if catalogo.slug == 'vivero-los-colibries' else '') %}{% if effective_banner_url %}<div class="hero-banner"><img src="{{ effective_banner_url }}" alt="Imagen de {{ catalogo.nombre }}" loading="eager" decoding="async"></div>{% endif %}
@@ -569,6 +610,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
  <div class="hero-steps" aria-label="Pasos para consultar"><span class="hero-step">👀 Mirá</span><span class="hero-step">☝️ Elegí</span><span class="hero-step">📩 Consultá</span></div>
  </div>
  </div>
+ {% endif %}
 
  {% if catalogo.slug == 'libreria-ruiz' %}<div class="info-strip ruiz-hours-strip" aria-label="Pedidos, retiro y horario"><strong>💬 Hacé tu pedido por WhatsApp y retiralo en Chacabuco 470, Salta</strong><span>🕒 Atención: lunes a viernes, 19:00–22:30 · sábados y domingos, 10:00–22:30</span></div>{% endif %}
 {% if catalogo.slug == 'libreria-ruiz' %}<div class="info-strip purchase-info-strip" aria-label="Información del catálogo"><strong>📚 Elegí una categoría o mirá todos los productos</strong>Elegí una categoría para encontrar biromes, resaltadores, notas adhesivas, reglas, papel, corrector en cinta y cinta adhesiva.</div><div class="ruiz-buy-steps" aria-label="Pasos para comprar"><span><b>1</b> Categoría</span><i>→</i><span><b>2</b> Producto</span><i>→</i><span><b>3</b> Tocá +</span></div>{% else %}<div class="info-strip purchase-info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>{% endif %}
