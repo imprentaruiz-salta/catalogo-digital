@@ -5,103 +5,97 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#edf4eb">
-  <title>Prueba del recomendador · Vivero Los Colibríes</title>
+  <title>Encontrá tu planta ideal · Vivero Los Colibríes</title>
   <style>
     :root{--green:#2f6f55;--green2:#79b99b;--ink:#294338;--muted:#687a70;--cream:#f6f5e9;--line:#dceadd;--terra:#b97850;--white:#fff;--shadow:0 14px 36px rgba(38,75,54,.10)}
     *{box-sizing:border-box}
     body{margin:0;background:#f5f8f2;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-    .top{background:linear-gradient(135deg,#2f6f55,#79b99b);padding:16px 18px;color:white}
-    .brand{max-width:760px;margin:auto;display:flex;align-items:center;gap:12px}
-    .brand img{width:54px;height:54px;object-fit:contain;border-radius:50%;background:#fff;padding:4px}
-    .brand strong{display:block;font-size:17px;line-height:1.1}.brand small{opacity:.88;font-size:12px}
-    .wrap{width:min(100% - 24px,700px);margin:20px auto 36px}
-    .demo-tag{display:inline-flex;align-items:center;gap:7px;background:#fff4e7;border:1px solid #efd6bf;color:#77533a;border-radius:999px;padding:7px 12px;font-weight:800;font-size:11px;letter-spacing:.02em}
-    h1{font-size:clamp(28px,7vw,38px);line-height:1.08;margin:14px 0 8px;color:#28543d;letter-spacing:-.025em}
-    .intro{margin:0 0 19px;color:var(--muted);font-size:14px;line-height:1.5}
+    .top{background:linear-gradient(135deg,#2f6f55,#79b99b);padding:14px 18px;color:white}
+    .brand{max-width:780px;margin:auto;display:flex;align-items:center;gap:12px}
+    .brand img{width:52px;height:52px;object-fit:contain;border-radius:50%;background:#fff;padding:4px}
+    .brand strong{display:block;font-size:17px;line-height:1.1}.brand small{opacity:.9;font-size:12px}
+    .wrap{width:min(100% - 24px,760px);margin:22px auto 36px}
+    h1{font-size:clamp(28px,7vw,38px);line-height:1.08;margin:6px 0 8px;color:#28543d;letter-spacing:-.025em}
+    .intro{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
     .progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 14px}
     .progress span{border:1px solid var(--line);border-radius:12px;background:#fff;color:#728178;text-align:center;padding:9px 5px;font-size:11px;font-weight:800}
-    .progress span.active{background:#e6f2e7;border-color:#92c5a2;color:#2f6f55}
+    .progress span.active{background:#e6f2e7;border-color:#92c5a2;color:#2f6f55}.progress span.done{background:#edf4eb;border-color:#b8d9c1;color:#2f6f55}
     .panel{background:var(--white);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
     .step-count{color:var(--terra);font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
     h2{font-size:22px;line-height:1.2;margin:7px 0 15px;color:var(--ink)}
-    .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    .choice{appearance:none;border:1px solid var(--line);border-radius:16px;background:#fbfcf8;color:var(--ink);padding:14px 10px;min-height:102px;text-align:center;font:inherit;cursor:pointer;transition:.18s ease}
-    .choice .emoji{display:block;font-size:27px;margin-bottom:8px}.choice strong{display:block;font-size:13px;line-height:1.2}.choice small{display:block;margin-top:5px;color:var(--muted);font-size:10px;line-height:1.25}
+    .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
+    .choice{appearance:none;border:1px solid var(--line);border-radius:16px;background:#fbfcf8;color:var(--ink);padding:13px 10px;min-height:94px;text-align:center;font:inherit;cursor:pointer;transition:.18s ease}
+    .choice .emoji{display:block;font-size:25px;margin-bottom:7px}.choice strong{display:block;font-size:13px;line-height:1.2}.choice small{display:block;margin-top:5px;color:var(--muted);font-size:10px;line-height:1.3}
     .choice:hover{border-color:#79b99b;transform:translateY(-2px)}.choice[aria-pressed="true"]{border:2px solid var(--green);background:#eef7ee;box-shadow:0 5px 15px rgba(47,111,85,.11)}
-    .actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+    .actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
     .btn{appearance:none;border:0;border-radius:999px;min-height:46px;padding:11px 18px;font:inherit;font-size:14px;font-weight:850;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
     .btn.primary{background:var(--green);color:white}.btn.primary:disabled{opacity:.4;cursor:not-allowed}.btn.secondary{background:#edf4eb;color:var(--green)}
     .helper{margin:13px 0 0;color:var(--muted);font-size:11px;line-height:1.45}
-    .results{display:grid;gap:12px}
-    .result{display:grid;grid-template-columns:86px 1fr;gap:13px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:10px;background:#fff}
-    .result img{width:86px;height:86px;object-fit:cover;border-radius:12px;background:#edf4eb}
-    .result h3{font-size:16px;margin:0 0 5px;color:#28543d}.result p{font-size:12px;line-height:1.4;color:var(--muted);margin:0 0 9px}
-    .result .btn{min-height:37px;padding:8px 13px;font-size:12px;background:#edf4eb;color:var(--green)}
+    .results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .result{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(38,75,54,.05)}
+    .result img{display:block;width:100%;height:142px;object-fit:cover;background:#edf4eb}
+    .result-body{padding:12px}.result h3{font-size:16px;margin:0 0 6px;color:#28543d}.result p{font-size:12px;line-height:1.4;color:var(--muted);margin:0 0 10px}.result .btn{min-height:38px;padding:8px 13px;font-size:12px;background:#edf4eb;color:var(--green)}
+    .tag{display:inline-block;margin-bottom:7px;padding:4px 8px;border-radius:999px;background:#eef7ee;color:#2f6f55;font-size:10px;font-weight:800}
     .no-result{padding:18px;border-radius:15px;background:#fff8ef;border:1px solid #f0ddc5;color:#634d3a;font-size:14px;line-height:1.5}
-    .footer{display:flex;justify-content:center;margin-top:16px}.footer a{color:var(--green);font-size:13px;font-weight:800;text-decoration:none}
-    @media(max-width:430px){.wrap{width:calc(100% - 18px);margin-top:14px}.panel{padding:16px;border-radius:18px}.choice{min-height:92px;padding:11px 6px}.choice .emoji{font-size:24px}.choice strong{font-size:12px}.result{grid-template-columns:72px 1fr;gap:10px;padding:9px}.result img{width:72px;height:72px}.progress span{font-size:10px;padding:8px 3px}}
+    .footer{display:flex;justify-content:center;margin-top:17px}.footer a{color:var(--green);font-size:13px;font-weight:800;text-decoration:none}
+    @media(max-width:520px){.wrap{width:calc(100% - 18px);margin-top:16px}.panel{padding:16px;border-radius:18px}.choice{min-height:88px;padding:11px 6px}.choice strong{font-size:12px}.progress span{font-size:10px;padding:8px 3px}.results{grid-template-columns:1fr}.result{display:grid;grid-template-columns:92px 1fr;align-items:center}.result img{width:92px;height:100%;min-height:124px}.result-body{padding:10px}.result h3{font-size:15px}.actions .btn{flex:1 1 145px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <img src="/static/logo_vivero_los_colibries_transparente.png" alt="">
-      <div><strong>Vivero Los Colibríes</strong><small>Catálogo de plantas</small></div>
-    </div>
-  </header>
+  <header class="top"><div class="brand"><img src="/static/logo_vivero_los_colibries_transparente.png" alt=""><div><strong>Vivero Los Colibríes</strong><small>Asesoramiento para elegir tus plantas</small></div></div></header>
   <main class="wrap">
-    <span class="demo-tag">🧪 VISTA DE PRUEBA · NO PUBLICADA EN EL CATÁLOGO</span>
     <h1>Encontrá tu planta ideal</h1>
-    <p class="intro">Respondé tres preguntas y mirá opciones del catálogo para consultar. Es una orientación inicial basada en los cuidados que ya figuran en las fichas.</p>
+    <p class="intro">Contanos cómo es tu espacio y te mostramos opciones del catálogo para consultar. Si no estás seguro, elegí esa opción y seguimos igual.</p>
     <div class="progress" id="progress" aria-label="Progreso"></div>
     <section class="panel" id="panel" aria-live="polite"></section>
-    <div class="footer"><a href="https://catalogo-app-zm3w.onrender.com/c/vivero-los-colibries">← Volver al catálogo actual</a></div>
+    <div class="footer"><a href="https://catalogo-app-zm3w.onrender.com/c/vivero-los-colibries">← Volver al catálogo</a></div>
   </main>
 <script>
 (function(){
-  var step=0, answers={place:null,light:null,preference:null};
+  var step=0,answers={place:null,light:null,preference:null};
   var stages=[
-    {key:'place',count:'Paso 1 de 3',question:'¿Dónde la vas a poner?',choices:[['interior','🏠','Interior','Dentro de casa'],['patio','🪴','Patio','Macetas o espacio chico'],['jardin','🌳','Jardín','Tierra o espacio amplio']]},
-    {key:'light',count:'Paso 2 de 3',question:'¿Cuánta luz recibe?',choices:[['sol','☀️','Sol','Sol directo varias horas'],['semi','🌤️','Semisombra','Luz parcial o filtrada'],['sombra','🌥️','Sombra','Poca luz directa']]},
-    {key:'preference',count:'Paso 3 de 3',question:'¿Qué te gustaría priorizar?',choices:[['poco','💧','Poco riego','Riego bajo o moderado'],['flores','🌼','Flores','Color y floración'],['frutos','🍎','Frutos','Consultar variedades']]}
+    {key:'place',question:'¿Dónde la vas a poner?',choices:[['interior','🏠','Interior','Dentro de casa'],['patio','🪴','Patio','Macetas o espacio chico'],['jardin','🌳','Jardín','Tierra o espacio amplio'],['unsure','🤔','No estoy seguro','Te orientamos igual']]},
+    {key:'light',question:'¿Cuánta luz recibe?',choices:[['sol','☀️','Sol','Sol directo varias horas'],['semi','🌤️','Semisombra','Luz parcial o filtrada'],['sombra','🌥️','Sombra','Poca luz directa'],['unsure','🤔','No estoy seguro','Seguimos con las opciones']]},
+    {key:'preference',question:'¿Qué te gustaría priorizar?',choices:[['poco','💧','Poco riego','Riego bajo o moderado'],['flores','🌼','Flores','Color y floración'],['frutos','🍎','Frutos','Consultar variedades'],['any','🌿','Me da igual','Quiero ver opciones']]}
   ];
   var plants=[
-    {name:'Ajenjo',code:'AROM-AJENJO-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol'],water:'low',flowers:true,fruit:false,detail:'Sol pleno · Riego bajo a moderado · Tamaño aprox. 60 a 120 cm.'},
-    {name:'Orégano',code:'AROM-OREGANO-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o semisombra luminosa · Riego moderado · Tamaño aprox. 20 a 50 cm.'},
-    {name:'Ruda Hembra',code:'AROM-RUDA-HEMBRA-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol pleno o semisombra luminosa · Riego moderado · Tamaño aprox. 50 a 100 cm.'},
-    {name:'Ruda Macho',code:'AROM-RUDA-MACHO-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol pleno o semisombra luminosa · Riego moderado.'},
-    {name:'Salvia',code:'AROM-SALVIA-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol pleno o semisombra luminosa · Riego moderado · Tamaño aprox. 30 a 80 cm.'},
-    {name:'Gramínea · Stipa',code:'HERB-GRAMINEA-STIPA-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo una vez establecida · Tamaño aprox. 40 a 90 cm.'},
-    {name:'Hemerocallis amarillo',code:'HERB-HEMEROCALLIS-AMARILLO-001',image:'/static/vivero_herbaceas.png',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o media sombra · Riego moderado · Flores amarillas.'},
-    {name:'Molle',code:'ARB-MOLLE-001',image:'/static/vivero_arboles.png',places:['jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo a moderado una vez establecido · Árbol para jardín amplio.'}
+    {name:'Ajenjo',code:'AROM-AJENJO-001',category:'Aromáticas',image:'/static/uploads/5a0869cbf422403a89964e716b358e80.webp',places:['patio','jardin'],lights:['sol'],water:'low',flowers:true,fruit:false,detail:'Sol pleno · Riego bajo a moderado · Tamaño aprox. 60 a 120 cm.'},
+    {name:'Orégano',code:'AROM-OREGANO-001',category:'Aromáticas',image:'/static/uploads/71b808bc771b448ea609509af42c9c90.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o semisombra luminosa · Riego moderado · Tamaño aprox. 20 a 50 cm.'},
+    {name:'Ruda Hembra',code:'AROM-RUDA-HEMBRA-001',category:'Aromáticas',image:'/static/uploads/a9e51dc931d04967bbb5693b98e4d8c2.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol pleno o semisombra luminosa · Riego moderado · Tamaño aprox. 50 a 100 cm.'},
+    {name:'Salvia',code:'AROM-SALVIA-001',category:'Aromáticas',image:'/static/uploads/4a0bdf7030654f5caa12190dc3902a43.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol pleno o semisombra luminosa · Riego moderado · Tamaño aprox. 30 a 80 cm.'},
+    {name:'Gramínea · Stipa',code:'HERB-GRAMINEA-STIPA-001',category:'Herbáceas',image:'/static/uploads/a03db052115442828393f243990216fa.webp',places:['patio','jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo una vez establecida · Tamaño aprox. 40 a 90 cm.'},
+    {name:'Hemerocallis amarillo',code:'HERB-HEMEROCALLIS-AMARILLO-001',category:'Herbáceas',image:'/static/uploads/52d40240ce844257837a62bf2571ae1a.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o media sombra · Riego moderado · Flores amarillas.'},
+    {name:'Iris',code:'HERB-IRIS-001',category:'Herbáceas',image:'/static/uploads/fe4aa903eab94adea50dd7641af43fc9.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o semisombra luminosa · Riego moderado · Floración vistosa.'},
+    {name:'Molle',code:'ARB-MOLLE-001',category:'Árboles',image:'/static/uploads/438c9560f0e343a495dc0176f4bafd68.webp',places:['jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo a moderado una vez establecido · Árbol para jardín amplio.'}
   ];
   var panel=document.getElementById('panel'),progress=document.getElementById('progress');
-  function waLink(name){var msg='Hola, quiero consultar por '+name+' del catálogo de Vivero Los Colibríes. ¿Me indican precio y disponibilidad?';return 'https://wa.me/5493874425245?text='+encodeURIComponent(msg)}
+  function waLink(name){var msg='Hola, quiero consultar por '+name+' del catálogo de Vivero Los Colibríes. ¿Me indican precio y disponibilidad? Local: Ruta Nacional 68 km 154, El Carril, Salta. Punto de entrega: Azahares 55, Barrio Tres Cerritos, Salta.';return 'https://wa.me/5493874425245?text='+encodeURIComponent(msg)}
   function render(){
-    progress.innerHTML=stages.map(function(s,i){return '<span class="'+(i===step?'active':'')+'">'+(i+1)+'. '+['Espacio','Luz','Preferencia'][i]+'</span>'}).join('');
+    progress.innerHTML=stages.map(function(s,i){return '<span class="'+(i===step?'active':(i<step?'done':''))+'">'+(i+1)+'. '+['Espacio','Luz','Preferencia'][i]+'</span>'}).join('');
     if(step<3){
       var s=stages[step];
-      panel.innerHTML='<div class="step-count">'+s.count+'</div><h2>'+s.question+'</h2><div class="choices">'+s.choices.map(function(c){return '<button type="button" class="choice" aria-pressed="'+(answers[s.key]===c[0]?'true':'false')+'" data-value="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small></button>'}).join('')+'</div><div class="actions">'+(step>0?'<button class="btn secondary" id="back">← Atrás</button>':'<span></span>')+'<button class="btn primary" id="next" '+(answers[s.key]?'':'disabled')+'>Continuar →</button></div><p class="helper">No se muestran precios fijos: cada opción se consulta con el vivero.</p>';
+      panel.innerHTML='<div class="step-count">Paso '+(step+1)+' de 3</div><h2>'+s.question+'</h2><div class="choices">'+s.choices.map(function(c){return '<button type="button" class="choice" aria-pressed="'+(answers[s.key]===c[0]?'true':'false')+'" data-value="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small></button>'}).join('')+'</div><div class="actions">'+(step>0?'<button class="btn secondary" id="back">← Atrás</button>':'<span></span>')+'<button class="btn primary" id="next" '+(answers[s.key]?'':'disabled')+'>Continuar →</button></div><p class="helper">El precio y la disponibilidad se confirman al consultar.</p>';
       panel.querySelectorAll('.choice').forEach(function(b){b.onclick=function(){answers[s.key]=b.dataset.value;render()}});
       var next=panel.querySelector('#next');if(next)next.onclick=function(){if(answers[s.key]){step++;render()}};
       var back=panel.querySelector('#back');if(back)back.onclick=function(){step--;render()};
       return;
     }
     var matches=plants.filter(function(p){
-      return p.places.indexOf(answers.place)>=0 && p.lights.indexOf(answers.light)>=0 &&
-        (answers.preference==='poco'?p.water==='low':answers.preference==='flores'?p.flowers:answers.preference==='frutos'?p.fruit:false);
+      var placeOk=answers.place==='unsure'||p.places.indexOf(answers.place)>=0;
+      var lightOk=answers.light==='unsure'||p.lights.indexOf(answers.light)>=0;
+      var preferenceOk=answers.preference==='any'||(answers.preference==='poco'?p.water==='low':answers.preference==='flores'?p.flowers:false);
+      return placeOk&&lightOk&&preferenceOk;
     });
-    var title='Opciones para tu espacio';
-    var note='Orientación inicial según las fichas del catálogo. Precio y disponibilidad se confirman al consultar.';
-    if(answers.preference==='frutos' && answers.place!=='interior' && answers.light!=='sombra'){
-      matches=[{name:'Frutales',code:'FRUT-001',image:'/static/vivero_frutales.png',detail:'Variedad, luz y riego a confirmar con el vivero.'}];
+    var note='Opciones orientativas según las fichas del catálogo. Precio y disponibilidad se confirman al consultar.';
+    if(answers.preference==='frutos'&&answers.place!=='interior'&&answers.light!=='sombra'){
+      matches=[{name:'Frutales',code:'FRUT-001',category:'Frutales',image:'/static/vivero_frutales.png',detail:'Variedades, espacio y cuidados a confirmar con el vivero.'}];
       note='En el catálogo figura la categoría Frutales; la variedad y los cuidados se confirman por consulta.';
     }
-    var cards=matches.slice(0,4).map(function(p){return '<article class="result"><img src="'+p.image+'" alt="Ilustración de categoría para '+p.name+'" loading="lazy"><div><h3>'+p.name+'</h3><p>'+p.detail+'</p><a class="btn" href="'+waLink(p.name)+'" target="_blank" rel="noopener">Consultar</a></div></article>'}).join('');
-    var empty=matches.length?'':'<div class="no-result">No encontramos una coincidencia con cuidados confirmados para esta combinación. Escribinos y te orientamos con las opciones del vivero.</div>';
-    panel.innerHTML='<div class="step-count">Resultado de prueba</div><h2>'+title+'</h2><p class="helper" style="margin:0 0 14px">'+note+'</p><div class="results">'+cards+empty+'</div><div class="actions"><button class="btn secondary" id="edit">← Cambiar respuestas</button><a class="btn primary" href="'+waLink('plantas para mi espacio')+'" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>';
-    panel.querySelector('#edit').onclick=function(){step=2;render()};
+    var cards=matches.map(function(p){return '<article class="result"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy" onerror="this.onerror=null;this.src=\'/static/vivero_herbaceas.png\'"><div class="result-body"><span class="tag">'+p.category+'</span><h3>'+p.name+'</h3><p>'+p.detail+'</p><a class="btn" href="'+waLink(p.name)+'" target="_blank" rel="noopener">Consultar</a></div></article>'}).join('');
+    var empty=matches.length?'':'<div class="no-result">No encontramos una coincidencia con cuidados confirmados para esta combinación. Consultanos y te orientamos según tu espacio.</div>';
+    panel.innerHTML='<div class="step-count">Resultado</div><h2>Opciones para tu espacio</h2><p class="helper" style="margin:0 0 14px">'+note+'</p><div class="results">'+cards+empty+'</div><div class="actions"><button class="btn secondary" id="edit">← Cambiar respuestas</button><a class="btn primary" href="'+waLink('plantas para mi espacio')+'" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>';
+    panel.querySelector('#edit').onclick=function(){step=0;render()};
   }
   render();
 })();
