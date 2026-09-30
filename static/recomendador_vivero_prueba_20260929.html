@@ -17,9 +17,15 @@
     .wrap{width:min(100% - 24px,760px);margin:22px auto 36px}
     h1{font-size:clamp(28px,7vw,38px);line-height:1.08;margin:6px 0 8px;color:#28543d;letter-spacing:-.025em}
     .intro{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
-    .progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 14px}
-    .progress span{border:1px solid var(--line);border-radius:12px;background:#fff;color:#728178;text-align:center;padding:9px 5px;font-size:11px;font-weight:800}
-    .progress span.active{background:#e6f2e7;border-color:#92c5a2;color:#2f6f55}.progress span.done{background:#edf4eb;border-color:#b8d9c1;color:#2f6f55}
+    .progress{display:flex;align-items:flex-start;gap:0;margin:0 0 16px}
+    .progress span{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:#728178;padding:0 3px}
+    .progress span:not(:last-child)::after{content:"";position:absolute;z-index:0;height:2px;top:17px;left:calc(50% + 19px);right:calc(-50% + 19px);background:var(--line)}
+    .step-icon{position:relative;z-index:1;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:#fff;font-style:normal;font-size:17px}
+    .step-label{font-size:11px;font-weight:800;line-height:1.2}
+    .progress span.active .step-icon{background:#e6f2e7;border:2px solid #79b99b;box-shadow:0 0 0 4px #e6f2e7}
+    .progress span.done .step-icon{background:#edf4eb;border-color:#b8d9c1}
+    .progress span.done:not(:last-child)::after{background:#92c5a2}
+    .progress span.active .step-label,.progress span.done .step-label{color:#2f6f55}
     .panel{background:var(--white);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
     .step-count{color:var(--terra);font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
     h2{font-size:22px;line-height:1.2;margin:7px 0 15px;color:var(--ink)}
@@ -31,6 +37,8 @@
     .btn{appearance:none;border:0;border-radius:999px;min-height:46px;padding:11px 18px;font:inherit;font-size:14px;font-weight:850;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
     .btn.primary{background:var(--green);color:white}.btn.primary:disabled{opacity:.4;cursor:not-allowed}.btn.secondary{background:#edf4eb;color:var(--green)}
     .helper{margin:13px 0 0;color:var(--muted);font-size:11px;line-height:1.45}
+    .answer-summary{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 13px}
+    .answer-summary span{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:999px;background:#eef4e9;color:#365d49;font-size:11px;font-weight:800}
     .results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .result{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(38,75,54,.05)}
     .result img{display:block;width:100%;height:142px;object-fit:cover;background:#edf4eb}
@@ -38,7 +46,7 @@
     .tag{display:inline-block;margin-bottom:7px;padding:4px 8px;border-radius:999px;background:#eef7ee;color:#2f6f55;font-size:10px;font-weight:800}
     .no-result{padding:18px;border-radius:15px;background:#fff8ef;border:1px solid #f0ddc5;color:#634d3a;font-size:14px;line-height:1.5}
     .footer{display:flex;justify-content:center;margin-top:17px}.footer a{color:var(--green);font-size:13px;font-weight:800;text-decoration:none}
-    @media(max-width:520px){.wrap{width:calc(100% - 18px);margin-top:16px}.panel{padding:16px;border-radius:18px}.choice{min-height:88px;padding:11px 6px}.choice strong{font-size:12px}.progress span{font-size:10px;padding:8px 3px}.results{grid-template-columns:1fr}.result{display:grid;grid-template-columns:92px 1fr;align-items:center}.result img{width:92px;height:100%;min-height:124px}.result-body{padding:10px}.result h3{font-size:15px}.actions .btn{flex:1 1 145px}}
+    @media(max-width:520px){.wrap{width:calc(100% - 18px);margin-top:16px}.panel{padding:16px;border-radius:18px}.choice{min-height:88px;padding:11px 6px}.choice strong{font-size:12px}.step-label{font-size:10px}.step-icon{width:34px;height:34px}.results{grid-template-columns:1fr}.result{display:grid;grid-template-columns:92px 1fr;align-items:center}.result img{width:92px;height:100%;min-height:124px}.result-body{padding:10px}.result h3{font-size:15px}.actions .btn{flex:1 1 145px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
@@ -72,7 +80,7 @@
   var panel=document.getElementById('panel'),progress=document.getElementById('progress');
   function waLink(name){var msg='Hola, quiero consultar por '+name+' del catálogo de Vivero Los Colibríes. ¿Me indican precio y disponibilidad? Local: Ruta Nacional 68 km 154, El Carril, Salta. Punto de entrega: Azahares 55, Barrio Tres Cerritos, Salta.';return 'https://wa.me/5493874425245?text='+encodeURIComponent(msg)}
   function render(){
-    progress.innerHTML=stages.map(function(s,i){return '<span class="'+(i===step?'active':(i<step?'done':''))+'">'+(i+1)+'. '+['Espacio','Luz','Preferencia'][i]+'</span>'}).join('');
+    progress.innerHTML=stages.map(function(s,i){var state=i===step?'active':(i<step?'done':'');return '<span class="'+state+'"><i class="step-icon" aria-hidden="true">'+['🌱','🍃','🌼'][i]+'</i><b class="step-label">'+['Espacio','Luz','Preferencia'][i]+'</b></span>'}).join('');
     if(step<3){
       var s=stages[step];
       panel.innerHTML='<div class="step-count">Paso '+(step+1)+' de 3</div><h2>'+s.question+'</h2><div class="choices">'+s.choices.map(function(c){return '<button type="button" class="choice" aria-pressed="'+(answers[s.key]===c[0]?'true':'false')+'" data-value="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small></button>'}).join('')+'</div><div class="actions">'+(step>0?'<button class="btn secondary" id="back">← Atrás</button>':'<span></span>')+'<button class="btn primary" id="next" '+(answers[s.key]?'':'disabled')+'>Continuar →</button></div><p class="helper">El precio y la disponibilidad se confirman al consultar.</p>';
@@ -88,13 +96,18 @@
       return placeOk&&lightOk&&preferenceOk;
     });
     var note='Opciones orientativas según las fichas del catálogo. Precio y disponibilidad se confirman al consultar.';
+    function labelFor(stageIndex,value){var choices=stages[stageIndex].choices;for(var j=0;j<choices.length;j++){if(choices[j][0]===value)return choices[j][2]}return ''}
+    var placeIcon=answers.place==='interior'?'🏠':answers.place==='patio'?'🪴':answers.place==='jardin'?'🌳':'🤔';
+    var lightIcon=answers.light==='sol'?'☀️':answers.light==='semi'?'🌤️':answers.light==='sombra'?'🌥️':'🤔';
+    var preferenceIcon=answers.preference==='poco'?'💧':answers.preference==='flores'?'🌼':answers.preference==='frutos'?'🍎':answers.preference==='any'?'🌿':'🤔';
+    var summaryHtml='<div class="answer-summary" aria-label="Tus respuestas"><span>'+placeIcon+' '+labelFor(0,answers.place)+'</span><span>'+lightIcon+' '+labelFor(1,answers.light)+'</span><span>'+preferenceIcon+' '+labelFor(2,answers.preference)+'</span></div>';
     if(answers.preference==='frutos'&&answers.place!=='interior'&&answers.light!=='sombra'){
       matches=[{name:'Frutales',code:'FRUT-001',category:'Frutales',image:'/static/vivero_frutales.png',detail:'Variedades, espacio y cuidados a confirmar con el vivero.'}];
       note='En el catálogo figura la categoría Frutales; la variedad y los cuidados se confirman por consulta.';
     }
     var cards=matches.map(function(p){return '<article class="result"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy" onerror="this.onerror=null;this.src=\'/static/vivero_herbaceas.png\'"><div class="result-body"><span class="tag">'+p.category+'</span><h3>'+p.name+'</h3><p>'+p.detail+'</p><a class="btn" href="'+waLink(p.name)+'" target="_blank" rel="noopener">Consultar</a></div></article>'}).join('');
     var empty=matches.length?'':'<div class="no-result">No encontramos una coincidencia con cuidados confirmados para esta combinación. Consultanos y te orientamos según tu espacio.</div>';
-    panel.innerHTML='<div class="step-count">Resultado</div><h2>Opciones para tu espacio</h2><p class="helper" style="margin:0 0 14px">'+note+'</p><div class="results">'+cards+empty+'</div><div class="actions"><button class="btn secondary" id="edit">← Cambiar respuestas</button><a class="btn primary" href="'+waLink('plantas para mi espacio')+'" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>';
+    panel.innerHTML='<div class="step-count">Resultado</div><h2>Opciones para tu espacio</h2>'+summaryHtml+'<p class="helper" style="margin:0 0 14px">'+note+'</p><div class="results">'+cards+empty+'</div><div class="actions"><button class="btn secondary" id="edit">← Cambiar respuestas</button><a class="btn primary" href="'+waLink('plantas para mi espacio')+'" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>';
     panel.querySelector('#edit').onclick=function(){step=0;render()};
   }
   render();
