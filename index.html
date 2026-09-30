@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">
 <link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
-{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ((catalogo.banner or '/static/banner_libreria_ruiz.jpg') if catalogo.slug == 'libreria-ruiz' else ('/static/banner_vivero_los_colibries.png' if catalogo.slug == 'vivero-los-colibries' else catalogo.banner)) %}
+{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ((catalogo.banner or '/static/banner_libreria_ruiz.jpg') if catalogo.slug == 'libreria-ruiz' else ('/static/vivero_share_preview_20260929.jpg' if catalogo.slug == 'vivero-los-colibries' else catalogo.banner)) %}
 {% set share_image_url = (share_image if share_image.startswith('http') else request.url_root.rstrip('/') ~ share_image) if share_image else '' %}
 {% set share_description = 'Catálogo online de Librería Ruiz — útiles escolares, librería y oficina. Mirá los productos y hacé tu pedido.' if catalogo.slug == 'libreria-ruiz' else (catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.') %}
 <meta name="description" content="{{ share_description }}">
@@ -21,8 +21,8 @@
 {% if share_image %}<meta property="og:image" content="{{ share_image_url }}">
 <meta property="og:image:secure_url" content="{{ share_image_url }}">
 <meta property="og:image:type" content="{{ 'image/jpeg' if share_image_url.lower().endswith('.jpg') or share_image_url.lower().endswith('.jpeg') else 'image/png' }}">
-<meta property="og:image:width" content="1024">
-{% if catalogo.slug == 'libreria-ruiz' %}<meta property="og:image:height" content="341">{% else %}<meta property="og:image:height" content="455">{% endif %}
+<meta property="og:image:width" content="{% if catalogo.slug == 'vivero-los-colibries' %}1200{% else %}1024{% endif %}">
+{% if catalogo.slug == 'libreria-ruiz' %}<meta property="og:image:height" content="341">{% elif catalogo.slug == 'vivero-los-colibries' %}<meta property="og:image:height" content="630">{% else %}<meta property="og:image:height" content="455">{% endif %}
 <meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
 <meta property="og:site_name" content="{{ catalogo.nombre }}">
 <meta property="og:locale" content="es_AR">
