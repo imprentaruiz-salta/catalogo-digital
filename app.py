@@ -127,7 +127,7 @@ MAX_IMAGE_SIDE=1600
 MAX_IMAGE_BYTES=12*1024*1024
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={
- "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","escritura":"🖊️","papeleria":"📄","papel":"📄","oficina":"🗂️","escolar":"🎒","carpetas":"📁","adhesivos":"🧴","resaltadores":"🖍️","marcadores":"🖊️","colores":"🌈","arte":"🎨","dibujo":"🎨","organizadores":"🗃️","mochilas":"🎒","accesorios":"✂️","cinta adhesiva":"📎","corrector en cinta":"✏️","regla":"📏","reglas":"📏","calculadoras":"🧮","sellos":"🔖","anillados":"📚","plantines":"🌱","arboles":"🌳","herbaceas":"🌿","frutales":"🍎","macetas":"🪴","tierra":"🟫","arreglos florales":"💐","plantines de pasto":"🌱","aromaticas":"🌿","plantines de cesped":"🌱","yuyos":"🌿"}
+ "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","escritura":"🖊️","papeleria":"📄","papel":"📄","oficina":"🗂️","escolar":"🎒","carpetas":"📁","adhesivos":"🧴","resaltadores":"🖍️","marcadores":"🖊️","colores":"🌈","arte":"🎨","dibujo":"🎨","organizadores":"🗃️","mochilas":"🎒","accesorios":"✂️","cinta adhesiva":"📎","corrector en cinta":"✏️","regla":"📏","reglas":"📏","calculadoras":"🧮","sellos":"🔖","anillados":"📚","plantines":"🌱","arboles":"🌳","herbaceas":"🌿","frutales":"🍎","macetas":"🪴","tierra":"🟫","arreglos florales":"💐","plantines de pasto":"🌱","aromaticas":"🌿","plantines de cesped":"🌱","yuyos":"🌿","yuyos y hierbas":"🌿","otros productos":"🧺","hojas":"🍃","flores":"🌼","semillas":"🌰","raices":"🌱","cortezas":"🪵","ramas":"🌿","infusiones":"🍵"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
 def product_name(name):
@@ -492,9 +492,20 @@ def index():
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
     # Restored at the user's request; other auxiliary catalogs remain private.
-    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries', 'limpieza-abigail'}: return ('Catálogo no disponible', 404)
+    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries', 'limpieza-abigail', 'infusiones'}: return ('Catálogo no disponible', 404)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
+    if slug == 'infusiones':
+        with get_db() as db:
+            productos=[dict(r) for r in db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()]
+        for producto in productos:
+            producto['presentacion']='500 g' if '500g' in _norm(producto.get('nombre','')).replace(' ','') else '100 g'
+        prioridades=['Flores','Hojas','Semillas','Raíces','Cortezas','Ramas','Yuyos y hierbas','Otros productos']
+        categorias={}
+        for producto in productos:
+            categorias.setdefault(producto['categoria'],[]).append(producto)
+        categorias=dict(sorted(categorias.items(),key=lambda par:(prioridades.index(par[0]) if par[0] in prioridades else len(prioridades),par[0].lower())))
+        return render_template('infusiones.html',categorias=categorias,productos=productos,catalogo=cfg)
     if slug == 'pizzeria-demo':
         grouped=get_catalogo(slug)
         pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
@@ -1045,6 +1056,40 @@ def admin_index():
         productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute('SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre').fetchall()
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
     return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias])
+@app.route('/admin/cargar-infusiones',methods=['GET','POST'])
+@login_required
+def admin_cargar_infusiones():
+    """Add the user-approved Infusiones product list without replacing other catalogs."""
+    seed_path=os.path.join(BASE_DIR,'infusiones_seed.json')
+    if not os.path.isfile(seed_path): return jsonify(ok=False,error='No está el archivo de productos Infusiones'),500
+    try:
+        with open(seed_path,encoding='utf-8') as fh: items=json.load(fh)
+    except Exception:
+        return jsonify(ok=False,error='No se pudo leer el listado Infusiones'),500
+    if not isinstance(items,list) or len(items)!=251: return jsonify(ok=False,error='El listado debe contener los 251 productos'),400
+    required_assets={item.get('image_asset') for item in items}
+    if any(not asset or not os.path.isfile(os.path.join(BASE_DIR,asset)) for asset in required_assets):
+        return jsonify(ok=False,error='Falta una imagen ilustrativa de categoría'),500
+    backup_db('antes-carga-infusiones')
+    os.makedirs(UPLOAD_FOLDER,exist_ok=True)
+    for item in items:
+        source=os.path.join(BASE_DIR,item['image_asset'])
+        target=os.path.join(UPLOAD_FOLDER,os.path.basename(item['foto']))
+        if not os.path.isfile(target): shutil.copy2(source,target)
+    slug='infusiones'
+    with get_db() as db:
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner,activo) VALUES(?,?,?,?,?,?,?,1)",(slug,'Infusiones','Hierbas y productos para infusión · Bragado, Buenos Aires','','5493872101274','',''))
+        db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,whatsapp=?,telegram='',activo=1 WHERE slug=?",('Infusiones','Hierbas y productos para infusión · Bragado, Buenos Aires','5493872101274',slug))
+        for item in items:
+            db.execute("INSERT OR IGNORE INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(item['codigo'],item['nombre'],item['descripcion'],item['precio'],item['categoria'],'Infusiones',item['foto'],1,0,slug,0,0,0,'','Estándar'))
+        db.commit()
+        total=db.execute('SELECT COUNT(*) FROM productos WHERE catalogo_slug=? AND activo=1',(slug,)).fetchone()[0]
+        priced=db.execute('SELECT COUNT(*) FROM productos WHERE catalogo_slug=? AND activo=1 AND precio>0',(slug,)).fetchone()[0]
+    cloud_sync()
+    log_change('carga-infusiones',slug,f'{total} productos; {priced} con precio y {total-priced} a consultar')
+    session['catalogo_slug']=slug
+    return jsonify(ok=True,catalogo=slug,productos=total,con_precio=priced,a_consultar=total-priced)
+
 @app.route('/admin/catalogo/seleccionar',methods=['POST'])
 @login_required
 def seleccionar_catalogo():
