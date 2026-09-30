@@ -392,14 +392,10 @@ body.vivero-accordion .vivero-cover-button:hover{transform:translateY(-2px);box-
 body.vivero-accordion .vivero-cover-button.primary{background:#f5f2e4;color:#28543d;border:1px solid rgba(255,255,255,.65)}
 body.vivero-accordion .vivero-cover-button.secondary{background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.9)}
 body.vivero-accordion .vivero-cover-button:focus-visible{outline:3px solid #e4b17b;outline-offset:3px}
-body.vivero-accordion .vivero-cover-locations{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:calc(100% - 24px);max-width:1320px;margin:0 auto 12px}
+body.vivero-accordion .vivero-cover-locations{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:calc(100% - 24px);max-width:1320px;box-sizing:border-box;padding-right:180px;margin:0 auto 12px}
 body.vivero-accordion .vivero-cover-locations>div{flex:1 1 320px;padding:10px 14px;border:1px solid #dceadd;border-radius:14px;background:#fff;color:#294338;font-size:12px;line-height:1.45;box-shadow:0 3px 10px rgba(34,75,51,.05)}
-@media(max-width:640px){body.vivero-accordion .vivero-hero-cover{min-height:390px;margin:10px auto 9px;width:calc(100% - 20px);border-radius:20px}body.vivero-accordion .vivero-cover-photo{object-position:86% center}body.vivero-accordion .vivero-hero-cover:after{background:linear-gradient(0deg,rgba(17,47,31,.94) 0%,rgba(17,47,31,.70) 44%,rgba(17,47,31,.14) 100%)}body.vivero-accordion .vivero-cover-content{align-self:stretch;justify-content:flex-end;max-width:none;padding:22px 20px 23px}body.vivero-accordion .vivero-cover-kicker{font-size:11px}body.vivero-accordion .vivero-cover-content h2{margin:8px 0 7px;font-size:clamp(32px,8.5vw,40px)}body.vivero-accordion .vivero-cover-content p{font-size:15px}body.vivero-accordion .vivero-cover-note{font-size:12px}body.vivero-accordion .vivero-cover-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px;margin-top:16px}body.vivero-accordion .vivero-cover-button{min-height:46px;padding:10px 12px;font-size:13px}body.vivero-accordion .vivero-cover-locations{flex-direction:column;gap:7px;width:calc(100% - 20px);margin-bottom:10px}body.vivero-accordion .vivero-cover-locations>div{flex-basis:auto;padding:9px 11px;font-size:11px}}
+@media(max-width:640px){body.vivero-accordion .vivero-hero-cover{min-height:390px;margin:10px auto 9px;width:calc(100% - 20px);border-radius:20px}body.vivero-accordion .vivero-cover-photo{object-position:86% center}body.vivero-accordion .vivero-hero-cover:after{background:linear-gradient(0deg,rgba(17,47,31,.94) 0%,rgba(17,47,31,.70) 44%,rgba(17,47,31,.14) 100%)}body.vivero-accordion .vivero-cover-content{align-self:stretch;justify-content:flex-end;max-width:none;padding:22px 20px 23px}body.vivero-accordion .vivero-cover-kicker{font-size:11px}body.vivero-accordion .vivero-cover-content h2{margin:8px 0 7px;font-size:clamp(32px,8.5vw,40px)}body.vivero-accordion .vivero-cover-content p{font-size:15px}body.vivero-accordion .vivero-cover-note{font-size:12px}body.vivero-accordion .vivero-cover-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px;margin-top:16px}body.vivero-accordion .vivero-cover-button{min-height:46px;padding:10px 12px;font-size:13px}body.vivero-accordion .vivero-cover-locations{flex-direction:column;gap:7px;width:calc(100% - 20px);padding-right:170px;margin-bottom:10px}body.vivero-accordion .vivero-cover-locations>div{flex-basis:auto;padding:9px 11px;font-size:11px}}
 
-/* Keep the first-screen address cards clear; reveal helper buttons after the cover. */
-body.vivero-accordion .float-email-vivero,body.vivero-accordion .vivero-avatar-widget .victoria-ruiz-fab{transition:opacity .2s ease,transform .2s ease,visibility .2s}
-body.vivero-accordion.vivero-cover-controls-ready:not(.vivero-cover-controls-visible) .float-email-vivero,body.vivero-accordion.vivero-cover-controls-ready:not(.vivero-cover-controls-visible) .vivero-avatar-widget .victoria-ruiz-fab{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateY(9px)!important}
-body.vivero-accordion.vivero-cover-controls-ready:not(.vivero-cover-controls-visible) #floatingViveroForm,body.vivero-accordion.vivero-cover-controls-ready:not(.vivero-cover-controls-visible) #viveroAvatarPanel{visibility:hidden!important;pointer-events:none!important}
 </style>
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}">
@@ -1615,25 +1611,7 @@ if(window.MutationObserver){
 }
 ;;
 
-/* Show the Vivero helper buttons only after its cover/address strip. */
-(function(){
- var body=document.body;
- if(!body||!body.classList.contains('vivero-accordion'))return;
- var cover=document.querySelector('.vivero-hero-cover');
- var address=document.querySelector('.vivero-cover-locations');
- var edge=address||cover;
- if(!edge)return;
- body.classList.add('vivero-cover-controls-ready');
- function update(){
-  var bottom=edge.getBoundingClientRect().bottom+(window.pageYOffset||0);
-  var scroll=window.pageYOffset||window.scrollY||0;
-  body.classList.toggle('vivero-cover-controls-visible',scroll>=bottom-70);
- }
- window.addEventListener('scroll',update,{passive:true});
- window.addEventListener('resize',update);
- window.addEventListener('load',update,{once:true});
- update();
-})();
+;
 </script>
 </body>
 </html>
