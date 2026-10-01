@@ -396,6 +396,8 @@ body.vivero-accordion .vivero-cover-locations{display:flex;flex-wrap:wrap;justif
 body.vivero-accordion .vivero-cover-locations>div{flex:1 1 320px;padding:10px 14px;border:1px solid #dceadd;border-radius:14px;background:#fff;color:#294338;font-size:12px;line-height:1.45;box-shadow:0 3px 10px rgba(34,75,51,.05)}
 @media(max-width:640px){body.vivero-accordion .vivero-hero-cover{min-height:390px;margin:10px auto 9px;width:calc(100% - 20px);border-radius:20px}body.vivero-accordion .vivero-cover-photo{object-position:86% center}body.vivero-accordion .vivero-hero-cover:after{background:linear-gradient(0deg,rgba(17,47,31,.94) 0%,rgba(17,47,31,.70) 44%,rgba(17,47,31,.14) 100%)}body.vivero-accordion .vivero-cover-content{align-self:stretch;justify-content:flex-end;max-width:none;padding:22px 20px 23px}body.vivero-accordion .vivero-cover-kicker{font-size:11px}body.vivero-accordion .vivero-cover-content h2{margin:8px 0 7px;font-size:clamp(32px,8.5vw,40px)}body.vivero-accordion .vivero-cover-content p{font-size:15px}body.vivero-accordion .vivero-cover-note{font-size:12px}body.vivero-accordion .vivero-cover-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px;margin-top:16px}body.vivero-accordion .vivero-cover-button{min-height:46px;padding:10px 12px;font-size:13px}body.vivero-accordion .vivero-cover-locations{flex-direction:column;gap:7px;width:calc(100% - 20px);padding-right:170px;margin-bottom:10px}body.vivero-accordion .vivero-cover-locations>div{flex-basis:auto;padding:9px 11px;font-size:11px}}
 
+
+@media(prefers-reduced-motion: reduce){body.vivero-accordion .vivero-cover-video{display:none}}
 </style>
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% endif %}">
@@ -485,7 +487,8 @@ body.vivero-accordion .vivero-cover-locations>div{flex:1 1 320px;padding:10px 14
 {% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
 {% if catalogo.slug == 'vivero-los-colibries' %}
 <section class="vivero-hero-cover" aria-label="Portada de Vivero Los Colibríes">
- <img class="vivero-cover-photo" src="/static/vivero_portada_octubre_20261001.png?v=20261001" alt="Plantas y macetas de Vivero Los Colibríes" fetchpriority="high" decoding="async">
+ <img class="vivero-cover-photo" src="/static/vivero_portada_octubre_20261001.png?v=20261001" alt="Jardín florido de Vivero Los Colibríes" fetchpriority="high" decoding="async">
+ <video class="vivero-cover-photo vivero-cover-video" autoplay muted loop playsinline preload="metadata" poster="/static/vivero_portada_octubre_20261001.png?v=20261001" aria-hidden="true"><source src="/static/vivero_portada_paneo_20261001.mp4?v=20261001" type="video/mp4"></video>
  <div class="vivero-cover-content">
   <span class="vivero-cover-kicker">🌿 Vivero Los Colibríes</span>
   <h2>Dale vida a tu espacio</h2>
