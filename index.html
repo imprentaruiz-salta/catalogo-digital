@@ -378,7 +378,7 @@ body.has-ruiz .abigail-form input{border-color:#93c5fd} body.has-ruiz .abigail-f
 @media(max-width:599px){.abigail-helper{left:-65px;bottom:101px}.abigail-magic-cart{left:-98px;bottom:3px}}
 video.vivero-cover-video{object-fit:contain!important;object-position:center center!important;background:#000!important;background-image:none!important}
 .vivero-hero-cover{background:#000!important}
-@media(prefers-reduced-motion:no-preference){body.vivero-accordion img.vivero-cover-photo{display:none!important}}@media(prefers-reduced-motion:reduce){body.vivero-accordion img.vivero-cover-photo{display:block!important}}
+
 </style>
 <style id="vivero-cover-styles">
 body.vivero-accordion .vivero-hero-cover{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(320px,33vw,430px);margin:14px auto 12px;width:calc(100% - 24px);max-width:1320px;overflow:hidden;border-radius:24px;background:#2f6f55;box-shadow:0 14px 34px rgba(31,70,47,.16)}
@@ -490,8 +490,7 @@ body.vivero-accordion .vivero-cover-locations>div{flex:1 1 320px;padding:10px 14
 {% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
 {% if catalogo.slug == 'vivero-los-colibries' %}
 <section class="vivero-hero-cover" aria-label="Portada de Vivero Los Colibríes">
- <img class="vivero-cover-photo" src="{{ vivero_cover_poster_url }}" alt="Vivero colorido lleno de flores y luz natural" fetchpriority="high" decoding="async">
- <video class="vivero-cover-photo vivero-cover-video" autoplay muted loop playsinline preload="metadata" poster="{{ vivero_cover_poster_url }}" aria-hidden="true"><source src="{{ vivero_cover_video_url }}" type="video/mp4"></video>
+<video class="vivero-cover-photo vivero-cover-video" autoplay muted loop playsinline preload="metadata" poster="{{ vivero_cover_poster_url }}" aria-hidden="true"><source src="{{ vivero_cover_video_url }}" type="video/mp4"></video>
  <div class="vivero-cover-content">
   <span class="vivero-cover-kicker">🌿 Vivero Los Colibríes</span>
   <h2>Dale vida a tu espacio</h2>
