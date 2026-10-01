@@ -85,6 +85,7 @@ tr:hover td{background:#f9fffe}
 <div class="toolbar">
   <input class="search" type="text" placeholder="🔍 Buscar producto..." id="searchInput" oninput="filtrar(this.value)">
   <a class="btn-new" href="/admin/producto/nuevo">+ Agregar producto</a>
+  {% if catalogo and catalogo.slug == 'vivero-los-colibries' %}<a class="btn-new" href="/vivero/portada/subir">🎬 Subir video de portada</a>{% endif %}
   <form method="POST" action="/admin/productos/disponibles" onsubmit="return confirm('¿Marcar todos los productos de este catálogo como disponibles?')"><button class="btn-edit" type="submit" style="border:0;cursor:pointer;background:#dcfce7;color:#166534">✅ Marcar todo disponible</button></form>
 </div>
 

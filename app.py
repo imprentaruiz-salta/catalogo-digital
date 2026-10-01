@@ -1,13 +1,13 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, re, urllib.request, urllib.error, urllib.parse
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse
 from datetime import datetime
-from flask import (Flask, render_template, render_template_string, request, redirect,
+from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
 app.secret_key = "catalogo_ruiz_2026_secret_x7k"
-app.config['MAX_CONTENT_LENGTH']=80*1024*1024
+app.config['MAX_CONTENT_LENGTH']=52*1024*1024
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -16,11 +16,7 @@ os.makedirs(DATA_DIR,exist_ok=True)
 DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
 UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
 BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
-VIDEO_FOLDER=os.path.join(DATA_DIR,"fleming_videos")
-ZIP_STAGE=os.path.join(DATA_DIR,"zip_staging")
-os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True); os.makedirs(VIDEO_FOLDER,exist_ok=True); os.makedirs(ZIP_STAGE,exist_ok=True)
-ALLOWED_VIDEO_EXT={"mp4","webm","mov","m4v"}
-MAX_VIDEO_BYTES=80*1024*1024
+os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True)
 
 # Optional durable cloud snapshot. Render Free can restart at any time, so the
 # local SQLite database and optimized images are mirrored to Supabase Storage.
@@ -36,13 +32,13 @@ def cloud_enabled():
 def cloud_endpoint(path):
     return f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{path.lstrip('/')}"
 
-def cloud_request(path, method="GET", data=None, content_type="application/octet-stream"):
+def cloud_request(path, method="GET", data=None, content_type="application/octet-stream", timeout=30):
     req=urllib.request.Request(cloud_endpoint(path), data=data, method=method, headers={
         "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}",
         "apikey":SUPABASE_SERVICE_KEY,
         "Content-Type":content_type,
         "x-upsert":"true"})
-    return urllib.request.urlopen(req, timeout=30)
+    return urllib.request.urlopen(req, timeout=timeout)
 
 def cloud_sync():
     """Upload one atomic catalog snapshot after a successful local change."""
@@ -63,11 +59,8 @@ def cloud_sync():
         for root,_,files in os.walk(UPLOAD_FOLDER):
             for name in files:
                 z.write(os.path.join(root,name),os.path.join("imagenes",name))
-        for root,_,files in os.walk(VIDEO_FOLDER):
-            for name in files:
-                z.write(os.path.join(root,name),os.path.join("videos",name))
     try:
-        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip") as response:
+        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip",timeout=180) as response:
             response.read()
         return True
     except Exception:
@@ -109,9 +102,6 @@ def restore_from_cloud():
                 if name.startswith("imagenes/") and not name.endswith("/"):
                     target=os.path.join(UPLOAD_FOLDER,os.path.basename(name))
                     with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
-                if name.startswith("videos/") and not name.endswith("/"):
-                    target=os.path.join(VIDEO_FOLDER,os.path.basename(name))
-                    with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
         return True
     except urllib.error.HTTPError as exc:
         if exc.code != 404: app.logger.warning("No se pudo restaurar la copia persistente: %s",exc)
@@ -127,7 +117,7 @@ MAX_IMAGE_SIDE=1600
 MAX_IMAGE_BYTES=12*1024*1024
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={
- "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","escritura":"🖊️","papeleria":"📄","papel":"📄","oficina":"🗂️","escolar":"🎒","carpetas":"📁","adhesivos":"🧴","resaltadores":"🖍️","marcadores":"🖊️","colores":"🌈","arte":"🎨","dibujo":"🎨","organizadores":"🗃️","mochilas":"🎒","accesorios":"✂️","cinta adhesiva":"📎","corrector en cinta":"✏️","regla":"📏","reglas":"📏","calculadoras":"🧮","sellos":"🔖","anillados":"📚","plantines":"🌱","arboles":"🌳","herbaceas":"🌿","frutales":"🍎","macetas":"🪴","tierra":"🟫","arreglos florales":"💐","plantines de pasto":"🌱","aromaticas":"🌿","plantines de cesped":"🌱","yuyos":"🌿","yuyos y hierbas":"🌿","otros productos":"🧺","hojas":"🍃","flores":"🌼","semillas":"🌰","raices":"🌱","cortezas":"🪵","ramas":"🌿","infusiones":"🍵"}
+ "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
 def product_name(name):
@@ -142,7 +132,6 @@ app.jinja_env.globals['cat_icon']=cat_icon
 def price_label(product):
     code=str(product.get('codigo','')) if hasattr(product,'get') else ''
     desc=str(product.get('desc_','')) if hasattr(product,'get') else ''
-    if not code.upper().startswith('AB-'): return 'Precio por unidad'
     if code in {'AB-PH-016','AB-PH-017','AB-PH-018','AB-PN-008'}: return 'Precio por fardo'
     if code == 'AB-PN-001': return 'Pack $2.100 · fardo x10 $20.000'
     if 'fardo' in desc.lower(): return 'Pack + precio de fardo en detalle'
@@ -169,24 +158,7 @@ def init_db():
             try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
         db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1)")
-        db.execute("CREATE TABLE IF NOT EXISTS fleming_videos (property_id TEXT PRIMARY KEY, filename TEXT NOT NULL, title TEXT DEFAULT '', uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP)")
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS fleming_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, session_id TEXT DEFAULT '', evento TEXT NOT NULL, property_id TEXT DEFAULT '', pagina TEXT DEFAULT '/fleming', meta TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS catalog_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, catalogo_slug TEXT NOT NULL, session_id TEXT NOT NULL, evento TEXT NOT NULL DEFAULT 'page_view', pagina TEXT DEFAULT '')")
-        db.execute("CREATE TABLE IF NOT EXISTS libreria_pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id TEXT UNIQUE NOT NULL, catalogo_slug TEXT NOT NULL DEFAULT 'libreria-ruiz', cliente_nombre TEXT DEFAULT '', cliente_celular TEXT DEFAULT '', entrega TEXT DEFAULT '', direccion TEXT DEFAULT '', observaciones TEXT DEFAULT '', items TEXT NOT NULL DEFAULT '[]', total REAL NOT NULL DEFAULT 0, sena REAL NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente_sena', payment_id TEXT DEFAULT '', payment_status TEXT DEFAULT '', pago_tipo TEXT NOT NULL DEFAULT 'sena', monto_pago REAL NOT NULL DEFAULT 0, creado TEXT DEFAULT CURRENT_TIMESTAMP, actualizado TEXT DEFAULT CURRENT_TIMESTAMP)")
-        for col,definition in [('avisado_whatsapp','INTEGER DEFAULT 0'),('pago_tipo',"TEXT DEFAULT 'sena'"),('monto_pago','REAL DEFAULT 0')]:
-            try: db.execute(f"ALTER TABLE libreria_pedidos ADD COLUMN {col} {definition}")
-            except sqlite3.OperationalError: pass
-        db.execute("CREATE INDEX IF NOT EXISTS idx_libreria_pedidos_estado ON libreria_pedidos(estado,creado)")
-        # Anonymous catalog analytics: page views and product interactions.
-        for col,definition in [('producto_codigo',"TEXT DEFAULT ''"),('producto_nombre',"TEXT DEFAULT ''"),('meta',"TEXT DEFAULT ''")]:
-            try: db.execute(f"ALTER TABLE catalog_analytics ADD COLUMN {col} {definition}")
-            except sqlite3.OperationalError: pass
-        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_creado ON catalog_analytics(creado)")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_slug ON catalog_analytics(catalogo_slug,creado)")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_catalog_analytics_producto ON catalog_analytics(catalogo_slug,evento,producto_codigo,creado)")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_creado ON fleming_analytics(creado)")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_fleming_analytics_evento ON fleming_analytics(evento)")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
@@ -241,7 +213,7 @@ def save_optimized_image(file):
 
 @app.errorhandler(413)
 def too_large(_error):
-    return 'La imagen es demasiado grande. El límite es de 12 MB antes de comprimirla.',400
+    return 'El archivo es demasiado grande. Los videos de portada admiten hasta 50 MB; las imágenes, hasta 12 MB.',400
 def login_required(f):
     from functools import wraps
     @wraps(f)
@@ -257,7 +229,7 @@ def get_catalogo(slug='libreria-ruiz'):
     with get_db() as db: rows=db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()
     cats={}
     for row in rows: cats.setdefault(row['categoria'],{}).setdefault(row['marca'],[]).append(dict(row))
-    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}
+    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}     # Abigail: order categories as a simple shopping journey, not alphabetically.     if slug == 'limpieza-abigail':         orden.update({cat:i for i,cat in enumerate([             'jabones en pan','papel higienicos','rollo de cocina','shampoo',             'acondicionador','desodorantes','pastas dentales','cepillos de dientes',             'protectores diarios','máquinas de afeitar','talcos','cremas'         ])})     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
 def get_showcase(slug='libreria-ruiz'):
     # Curated visual shelves are derived from the catalog until explicit merchandising fields are added.
@@ -309,7 +281,7 @@ def static_asset(filename):
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
         return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
-    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_') or filename.startswith('logo_'):
+    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_'):
         return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
@@ -317,145 +289,10 @@ def static_asset(filename):
 def menu_digital():
     return render_template('menu.html')
 
-def _video_extension(filename):
-    return filename.rsplit('.',1)[1].lower() if '.' in filename else ''
-
-def _valid_property_id(value):
-    value=(value or '').strip().lower()
-    return value if value.startswith('p') and value[1:].isdigit() and 1 <= int(value[1:]) <= 999 else ''
-
-@app.route('/fleming/video-list.json')
-def fleming_video_list():
-    with get_db() as db:
-        rows=db.execute('SELECT property_id,filename,title FROM fleming_videos ORDER BY property_id').fetchall()
-    return jsonify({r['property_id']:{'url':url_for('fleming_video_file',filename=r['filename']),'title':r['title']} for r in rows})
-
-@app.route('/fleming/videos/<path:filename>')
-def fleming_video_file(filename):
-    return send_from_directory(VIDEO_FOLDER, filename, conditional=True)
-
-@app.route('/fleming/preview/<int:number>.jpg')
-def fleming_property_preview(number):
-    if number < 1 or number > 999:
-        return ('',404)
-    import re, base64, textwrap
-    from PIL import Image, ImageDraw, ImageFont, ImageOps
-    template=render_template('fleming.html')
-    chosen=None
-    for match in re.finditer(r'<article class=\"property-card\b[^>]*>[\s\S]*?</article>',template):
-        block=match.group(0)
-        lm=re.search(r'<div class=\"card-label\">([\s\S]*?)</div>',block)
-        if not lm: continue
-        label=re.sub(r'<[^>]+>','',lm.group(1)).strip()
-        prefix=re.match(r'0?([0-9]+)\s*[·.]',label)
-        if prefix and int(prefix.group(1))==number:
-            hm=re.search(r'<h2>([\s\S]*?)</h2>',block)
-            title=re.sub(r'<[^>]+>','',hm.group(1)).strip() if hm else label
-            im=re.search(r'<img[^>]+src=\"data:image/[^;]+;base64,([^\"]+)',block)
-            chosen=(label,title,im.group(1) if im else '')
-            break
-    if not chosen: return ('',404)
-    label,title,encoded=chosen
-    canvas=Image.new('RGB',(1080,1080),'#f8fbf9')
-    if encoded:
-        try:
-            photo=Image.open(io.BytesIO(base64.b64decode(encoded))).convert('RGB')
-            photo=ImageOps.fit(photo,(1080,650),method=Image.Resampling.LANCZOS)
-            canvas.paste(photo,(0,0))
-        except Exception:
-            pass
-    draw=ImageDraw.Draw(canvas)
-    bold=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',42)
-    title_font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',43)
-    small=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',27)
-    draw.rectangle((0,650,1080,1080),fill='#3e5a54')
-    draw.text((58,695),f'PROPIEDAD {number:02d}',font=bold,fill='#d9c18a')
-    lines=textwrap.wrap(title,width=31)[:3]
-    draw.multiline_text((58,765),'\n'.join(lines),font=title_font,fill='white',spacing=8)
-    draw.text((58,965),'Inmobiliaria Fleming & Asociados · Salta',font=small,fill='#e8eee9')
-    out=io.BytesIO(); canvas.save(out,format='JPEG',quality=88,optimize=True); out.seek(0)
-    response=send_file(out,mimetype='image/jpeg',max_age=0,download_name=f'fleming-propiedad-{number}.jpg')
-    response.headers['Cache-Control']='no-cache, max-age=0'
-    return response
-
-def _render_fleming_page(selected=''):
-    html=render_template('fleming.html')
-    selected=(selected or '').strip()
-    if selected.isdigit():
-        number=int(selected)
-        import re, html as html_module
-        chosen=None
-        for match in re.finditer(r'<article class="property-card\b[^>]*>[\s\S]*?</article>',html):
-            block=match.group(0)
-            label_match=re.search(r'<div class="card-label">([\s\S]*?)</div>',block)
-            if not label_match: continue
-            label=re.sub(r'<[^>]+>','',label_match.group(1)).strip()
-            prefix=re.match(r'0?([0-9]+)\s*[·.]',label)
-            if prefix and int(prefix.group(1))==number:
-                title_match=re.search(r'<h2>([\s\S]*?)</h2>',block)
-                title=re.sub(r'<[^>]+>','',title_match.group(1)).strip() if title_match else label
-                chosen=(label,title,block); break
-        if chosen:
-            label,title,chosen_block=chosen
-            # Shared pages are server-rendered with one card only; this remains correct even without JavaScript.
-            html=re.sub(r'(<section class="catalog-grid" id="venta">)[\s\S]*?(</section>)',r'\1'+chosen_block+r'\2',html,count=1)
-            safe_title=html_module.escape(f'{title} · Inmobiliaria Fleming & Asociados',quote=True)
-            safe_desc=html_module.escape(f'Conocé esta propiedad: {label}. Consultá fotos, descripción, precio y ubicación.',quote=True)
-            preview_token=re.sub(r'[^A-Za-z0-9_-]','',request.args.get('preview','4'))[:40] or '4'
-            share_url=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/inmueble/propiedad-{number}?preview={preview_token}',quote=True)
-            preview_image=html_module.escape(f'https://catalogo-app-zm3w.onrender.com/fleming/preview/{number}.jpg?v={preview_token}',quote=True)
-            html=re.sub(r'(<title>)[\s\S]*?(</title>)',r'\1'+safe_title+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+name="description")',r'\1'+safe_desc+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:title")',r'\1'+safe_title+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:description")',r'\1'+safe_desc+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:url")',r'\1'+share_url+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+property="og:image")',r'\1'+preview_image+r'\2',html,count=1)
-            html=re.sub(r'(<meta\s+content=")[^"]*("\s+name="twitter:image")',r'\1'+preview_image+r'\2',html,count=1)
-    return html
-
-
-FLEMING_DEMO_TOKEN='fleming-victoria-2-demo-9c7f4e'
-
-@app.route('/fleming/demo/<token>')
-def fleming_demo_victoria(token):
-    # Demo unlinked: intentionally separate from the public catalogue.
-    if token != FLEMING_DEMO_TOKEN:
-        from flask import abort
-        abort(404)
-    html=render_template('fleming.html')
-    demo_css='''<style id="victoria-2-demo-css">
-.v2-launch{position:fixed;right:18px;bottom:118px;z-index:9998;border:0;border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,#0f6b55,#2f9b72);color:#fff;box-shadow:0 10px 28px #0d4d3c44;font:800 13px Arial;cursor:pointer}.v2-launch small{display:block;font-size:9px;opacity:.8;margin-top:2px}.v2-panel{position:fixed;right:18px;bottom:174px;width:min(360px,calc(100vw - 28px));height:min(610px,calc(100vh - 205px));z-index:9999;display:none;flex-direction:column;overflow:hidden;border:1px solid #cde4d6;border-radius:22px;background:#fbfffc;box-shadow:0 18px 60px #184a3740;font:14px Arial;color:#183d35}.v2-panel.open{display:flex}.v2-head{padding:16px 17px 13px;background:linear-gradient(135deg,#0d5949,#2d9471);color:white}.v2-head-row{display:flex;justify-content:space-between;align-items:flex-start}.v2-head strong{font-size:17px}.v2-head span{display:block;margin-top:4px;font-size:11px;opacity:.84}.v2-close{border:0;background:#ffffff22;color:white;border-radius:8px;font-size:20px;line-height:1;width:30px;height:30px;cursor:pointer}.v2-demo-badge{display:inline-flex;margin-top:10px;padding:4px 8px;border-radius:999px;background:#ffffff1f;border:1px solid #ffffff55;font-size:10px;font-weight:700}.v2-body{flex:1;overflow:auto;padding:13px;background:linear-gradient(#f8fffa,#fff)}.v2-welcome{padding:12px;border-radius:14px;background:#eaf7ef;border:1px solid #d0eadd;line-height:1.45;color:#315b4d}.v2-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.v2-suggestions button{border:1px solid #b9dbca;border-radius:999px;padding:7px 9px;background:#fff;color:#236249;font:700 11px Arial;cursor:pointer}.v2-msg{max-width:91%;margin:9px 0;padding:10px 11px;border-radius:13px;line-height:1.4;white-space:pre-line}.v2-msg.user{margin-left:auto;background:#d9efe2;color:#245742}.v2-msg.bot{background:#f0f5f2;border:1px solid #dfebe3}.v2-result{margin-top:8px;padding:9px;border-radius:11px;background:#fff;border:1px solid #dbe9df}.v2-result strong{display:block;color:#174b3c}.v2-result small{display:block;margin-top:3px;color:#64746e}.v2-result button{margin-top:7px;border:0;border-radius:7px;padding:6px 8px;background:#e4f4ea;color:#226348;font:700 10px Arial;cursor:pointer}.v2-foot{display:flex;gap:7px;padding:11px;border-top:1px solid #e2eee7;background:#fff}.v2-input{flex:1;min-width:0;border:1px solid #c8ddd0;border-radius:10px;padding:10px;font:13px Arial;outline:0}.v2-send{border:0;border-radius:10px;padding:0 13px;background:#1e805d;color:#fff;font:800 12px Arial;cursor:pointer}@media(max-width:560px){.v2-launch{right:12px;bottom:94px}.v2-panel{right:10px;bottom:10px;width:calc(100vw - 20px);height:min(650px,calc(100vh - 20px));border-radius:18px}}
-</style>'''
-    props=[
-      {'id':1,'type':'Departamento','zone':'Zona Shopping','price':'USD 68.500','text':'1 dormitorio, cochera y apto crédito.'},
-      {'id':2,'type':'Departamento','zone':'Barrio Bancario','price':'USD 38.000','text':'3 dormitorios, living comedor y cochera cerrada.'},
-      {'id':3,'type':'Departamento','zone':'20 de Febrero al 1400','price':'USD 95.000','text':'Piscina, balcón con asador, SUM, gimnasio y coworking.'},
-      {'id':4,'type':'Departamento','zone':'Centro','price':'USD 88.000','text':'2 dormitorios, balcón, cochera y lavadero.'},
-      {'id':5,'type':'Casa','zone':'Centro','price':'USD 111.000','text':'6 dormitorios, 3 plantas, terraza y estacionamiento para 10 vehículos.'},
-      {'id':6,'type':'Departamento','zone':'Monoblock Salta','price':'USD 90.000','text':'3 dormitorios, 2 baños, toilette y cochera.'},
-      {'id':7,'type':'Casa','zone':'Barrio Norte Grande','price':'$55.000.000','text':'4 dormitorios, garage, patio con asador y cuarto de servicio.'},
-      {'id':8,'type':'Terreno','zone':'Vaqueros','price':'USD 30.000','text':'20 × 50 metros, superficie total de 1.000 m².'},
-      {'id':9,'type':'Casa','zone':'Tres Cerritos','price':'USD 160.000','text':'3 dormitorios, jardín, patio, garage y asador.'},
-      {'id':10,'type':'Casa','zone':'Tres Cerritos · primera rotonda','price':'USD 180.000','text':'3 dormitorios, galería, patio y estacionamiento.'},
-      {'id':11,'type':'Departamento en alquiler','zone':'Centro · Deán Funes 330','price':'$600.000/mes','text':'2 dormitorios, patio chico y lavadero. Expensas: $170.000.'},
-      {'id':12,'type':'Casa','zone':'Villa Las Rosas','price':'USD 70.000','text':'3 dormitorios, patio y estacionamiento.'}
-    ]
-    import json as _json
-    demo_js=r'''<script id="victoria-2-demo-js">(function(){var P=__PROPS__;var launch=document.createElement('button');launch.className='v2-launch';launch.innerHTML='✨ Probar Victoria 2.0<small>demo privada · no publicada</small>';var panel=document.createElement('section');panel.className='v2-panel';panel.innerHTML='<div class="v2-head"><div class="v2-head-row"><div><strong>Victoria 2.0</strong><span>Asesora virtual de Fleming</span></div><button class="v2-close" aria-label="Cerrar">×</button></div><div class="v2-demo-badge">● DEMO PRIVADA · no afecta el catálogo</div></div><div class="v2-body"><div class="v2-welcome">Hola, soy Victoria. Probame con una consulta como <b>“casas en Tres Cerritos”</b>, <b>“departamentos hasta USD 90.000”</b> o <b>“propiedad 8”</b>.</div><div class="v2-suggestions"><button>Casas en Tres Cerritos</button><button>Hasta USD 90.000</button><button>Propiedad 8</button></div><div class="v2-chat"></div></div><form class="v2-foot"><input class="v2-input" autocomplete="off" placeholder="Escribí tu consulta…"><button class="v2-send">Enviar</button></form>';document.body.appendChild(launch);document.body.appendChild(panel);var body=panel.querySelector('.v2-body'),chat=panel.querySelector('.v2-chat'),input=panel.querySelector('.v2-input');function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}function add(text,who){var d=document.createElement('div');d.className='v2-msg '+who;d.textContent=text;chat.appendChild(d);body.scrollTop=body.scrollHeight}function result(q){var n=norm(q),m=P.slice();var num=n.match(/(?:propiedad|numero|nro|n°|\b)(?:\s*)(\d{1,2})\b/);if(num){m=m.filter(function(x){return x.id===parseInt(num[1],10)})}else{if(n.includes('alquil'))m=m.filter(function(x){return x.id===11)}if(n.includes('casa'))m=m.filter(function(x){return x.type==='Casa')}if(n.includes('departamento'))m=m.filter(function(x){return x.type.indexOf('Departamento')===0)}if(n.includes('terreno'))m=m.filter(function(x){return x.type==='Terreno')}['shopping','bancario','centro','monoblock','vaqueros','tres cerritos','norte grande','villa las rosas'].forEach(function(z){if(n.includes(z))m=m.filter(function(x){return norm(x.zone).includes(z)})});var max=n.match(/(?:hasta|maximo|max|menos de)\s*(?:usd|u\$s|dolares|\$)?\s*([0-9][0-9\.\,]*)/);if(max){var v=parseInt(max[1].replace(/[\.\,]/g,''),10);m=m.filter(function(x){var z=norm(x.price).replace(/[^0-9]/g,'');return x.price.indexOf('USD')>=0&&parseInt(z,10)<=v})}}return m}function answer(q){var m=result(q);add(q,'user');var b=document.createElement('div');b.className='v2-msg bot';if(!m.length){b.textContent='No encontré una coincidencia exacta. Puedo buscar por número, tipo, barrio, precio u operación.'}else{b.innerHTML='Encontré '+m.length+' opción'+(m.length===1?'':'es')+':';m.slice(0,6).forEach(function(x){var r=document.createElement('div');r.className='v2-result';r.innerHTML='<strong>Propiedad '+String(x.id).padStart(2,'0')+' · '+x.type+'</strong><small>'+x.zone+' · '+x.price+'<br>'+x.text+'</small><button data-id="'+x.id+'">Ver ficha en el catálogo</button>';b.appendChild(r)})}chat.appendChild(b);body.scrollTop=body.scrollHeight}function open(){panel.classList.add('open');input.focus()}launch.addEventListener('click',open);panel.querySelector('.v2-close').addEventListener('click',function(){panel.classList.remove('open')});panel.querySelectorAll('.v2-suggestions button').forEach(function(x){x.addEventListener('click',function(){answer(x.textContent)})});panel.querySelector('.v2-foot').addEventListener('submit',function(e){e.preventDefault();var q=input.value.trim();if(q){answer(q);input.value=''}});chat.addEventListener('click',function(e){var btn=e.target.closest('button[data-id]');if(!btn)return;panel.classList.remove('open');var card=document.querySelector('[data-property="p'+btn.dataset.id+'"]');if(card)card.scrollIntoView({behavior:'smooth',block:'center'})});})();</script>'''.replace('__PROPS__',_json.dumps(props,ensure_ascii=False))
-    html=html.replace('</head>',demo_css+'</head>',1)
-    html=html.replace('</body>',demo_js+'</body>',1)
-    return html
-
 @app.route('/fleming')
 @app.route('/fleming/')
 def fleming_brochure():
-    return _render_fleming_page(request.args.get('ubicacion',''))
-
-@app.route('/fleming/inmueble/<slug>')
-def fleming_property_page(slug):
-    import re
-    match=re.search(r'(?:propiedad-|p)([0-9]+)',(slug or '').lower())
-    return _render_fleming_page(match.group(1) if match else '')
+    return render_template('fleming.html')
 
 @app.route('/fleming/cargar')
 @app.route('/fleming/cargar/')
@@ -486,321 +323,119 @@ def cargar_fotos_manifest():
 def cargar_fotos_service_worker():
     return send_from_directory(BASE_DIR, 'cargar_fotos-sw.js', mimetype='application/javascript')
 
+VIVERO_COVER_SETTINGS=os.path.join(UPLOAD_FOLDER,'vivero-los-colibries-cover.json')
+VIVERO_COVER_POSTER='/static/vivero_portada_purocolor_20261001.webp?v=20261001c'
+VIVERO_COVER_VIDEO='/static/vivero_portada_purocolor_20261001.mp4?v=20261001c'
+MAX_VIVERO_VIDEO_BYTES=50*1024*1024
+
+def get_vivero_cover_urls():
+    video_url=VIVERO_COVER_VIDEO
+    try:
+        with open(VIVERO_COVER_SETTINGS,'r',encoding='utf-8') as source:
+            settings=json.load(source)
+        filename=settings.get('video','')
+        if (isinstance(filename,str) and secure_filename(filename)==filename and
+                filename.lower().endswith('.mp4') and os.path.isfile(os.path.join(UPLOAD_FOLDER,filename))):
+            video_url=url_for('uploaded_file',filename=filename)
+    except (OSError,ValueError,TypeError):
+        pass
+    return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
+
+def render_catalog_page(cats,showcase,catalogo):
+    return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls())
+
+@app.route('/vivero/portada/subir',methods=['GET','POST'])
+@login_required
+def vivero_portada_upload():
+    if not get_catalogo_config('vivero-los-colibries'):
+        return ('Vivero Los Colibríes no está disponible',404)
+    message=None; error=None
+    if request.method=='POST':
+        uploaded=request.files.get('video')
+        if not uploaded or not uploaded.filename:
+            error='Elegí un video MP4 para continuar.'
+        elif secure_filename(uploaded.filename).lower().rsplit('.',1)[-1]!='mp4':
+            error='El formato admitido es MP4.'
+        else:
+            token=uuid.uuid4().hex
+            temp_path=os.path.join(UPLOAD_FOLDER,'.vivero-cover-'+token+'.upload')
+            final_name='vivero_portada_'+token+'.mp4'
+            final_path=os.path.join(UPLOAD_FOLDER,final_name)
+            temp_settings=VIVERO_COVER_SETTINGS+'.tmp'
+            old_settings=None
+            try:
+                try:
+                    with open(VIVERO_COVER_SETTINGS,'rb') as previous:
+                        old_settings=previous.read()
+                except FileNotFoundError:
+                    pass
+                header=uploaded.stream.read(16)
+                uploaded.stream.seek(0)
+                if len(header)<12 or header[4:8]!=b'ftyp':
+                    raise ValueError('El archivo no parece ser un video MP4 válido.')
+                total=0
+                with open(temp_path,'wb') as destination:
+                    while True:
+                        chunk=uploaded.stream.read(1024*1024)
+                        if not chunk: break
+                        total+=len(chunk)
+                        if total>MAX_VIVERO_VIDEO_BYTES:
+                            raise ValueError('El video supera el límite de 50 MB.')
+                        destination.write(chunk)
+                if total==0:
+                    raise ValueError('El archivo está vacío.')
+                os.replace(temp_path,final_path)
+                with open(temp_settings,'w',encoding='utf-8') as settings_file:
+                    json.dump({'video':final_name,'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},settings_file)
+                os.replace(temp_settings,VIVERO_COVER_SETTINGS)
+                try:
+                    synced=cloud_sync()
+                except Exception:
+                    app.logger.exception('Falló la confirmación de respaldo en la nube del video del vivero')
+                    synced=False
+                if not synced:
+                    if old_settings is None:
+                        try: os.remove(VIVERO_COVER_SETTINGS)
+                        except OSError: pass
+                    else:
+                        with open(VIVERO_COVER_SETTINGS,'wb') as previous:
+                            previous.write(old_settings)
+                    try: os.remove(final_path)
+                    except OSError: pass
+                    error='No se pudo confirmar el respaldo en la nube. La portada anterior quedó sin cambios; probá nuevamente más tarde.'
+                else:
+                    log_change('portada-video-vivero','vivero-los-colibries',final_name)
+                    message='✅ Video actualizado y respaldado en la nube. La portada nueva ya está activa.'
+            except ValueError as exc:
+                error=str(exc)
+                try: os.remove(final_path)
+                except OSError: pass
+            except Exception:
+                app.logger.exception('No se pudo actualizar el video de portada del vivero')
+                error='No se pudo procesar el video. La portada anterior se mantiene.'
+                try:
+                    if old_settings is None:
+                        os.remove(VIVERO_COVER_SETTINGS)
+                    else:
+                        with open(VIVERO_COVER_SETTINGS,'wb') as previous:
+                            previous.write(old_settings)
+                except OSError: pass
+                try: os.remove(final_path)
+                except OSError: pass
+            finally:
+                for leftover in (temp_path,temp_settings):
+                    try: os.remove(leftover)
+                    except OSError: pass
+    urls=get_vivero_cover_urls()
+    return render_template('vivero_portada_upload.html',message=message,error=error,video_url=urls['vivero_cover_video_url'],poster_url=urls['vivero_cover_poster_url'])
 @app.route('/')
 def index():
-    cfg=current_config(); return render_template('index.html',cats=get_catalogo(current_slug()),showcase=get_showcase(current_slug()),catalogo=cfg)
+    cfg=current_config(); return render_catalog_page(get_catalogo(current_slug()),get_showcase(current_slug()),cfg)
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
-    # Restored at the user's request; other auxiliary catalogs remain private.
-    if slug not in {'libreria-ruiz', 'pizzeria-demo', 'vivero-los-colibries', 'limpieza-abigail', 'infusiones'}: return ('Catálogo no disponible', 404)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
-    if slug == 'infusiones':
-        with get_db() as db:
-            productos=[dict(r) for r in db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()]
-        for producto in productos:
-            producto['presentacion']='500 g' if '500g' in _norm(producto.get('nombre','')).replace(' ','') else '100 g'
-        prioridades=['Flores','Hojas','Semillas','Raíces','Cortezas','Ramas','Yuyos y hierbas','Otros productos']
-        categorias={}
-        for producto in productos:
-            categorias.setdefault(producto['categoria'],[]).append(producto)
-        categorias=dict(sorted(categorias.items(),key=lambda par:(prioridades.index(par[0]) if par[0] in prioridades else len(prioridades),par[0].lower())))
-        return render_template('infusiones.html',categorias=categorias,productos=productos,catalogo=cfg)
-    if slug == 'pizzeria-demo':
-        grouped=get_catalogo(slug)
-        pizzas=[p for brands in grouped.values() for products in brands.values() for p in products]
-        return render_template('pizzeria.html',cats=pizzas,catalogo=cfg)
-    response=app.make_response(render_template('index.html',cats=get_catalogo(slug),showcase=get_showcase(slug),catalogo=cfg))
-    if slug in {'vivero-los-colibries','libreria-ruiz'}:
-        visitor_id=request.cookies.get('catalog_visitor_id') or uuid.uuid4().hex
-        try:
-            with get_db() as db:
-                db.execute('INSERT INTO catalog_analytics(catalogo_slug,session_id,evento,pagina) VALUES(?,?,?,?)',(slug,visitor_id,'page_view','/c/'+slug))
-                db.commit()
-        except Exception:
-            app.logger.exception('No se pudo registrar la visita del catálogo')
-        response.set_cookie('catalog_visitor_id',visitor_id,max_age=31536000,httponly=True,samesite='Lax',secure=True)
-    return response
-
-@app.route('/api/catalog/analytics',methods=['POST'])
-def catalog_analytics_event_api():
-    """Store anonymous page and product interactions for public catalogs."""
-    data=request.get_json(silent=True) or {}
-    slug=str(data.get('slug') or '').strip().lower()
-    allowed_slugs={'libreria-ruiz','vivero-los-colibries'}
-    allowed_events={'product_view','add_to_cart','whatsapp_click','category_view','assistant_open','search'}
-    evento=str(data.get('evento') or '').strip()[:40]
-    if slug not in allowed_slugs or evento not in allowed_events: return jsonify(ok=False),400
-    session_id=request.cookies.get('catalog_visitor_id') or uuid.uuid4().hex
-    code=str(data.get('producto_codigo') or '').strip()[:80]
-    name=str(data.get('producto_nombre') or '').strip()[:160]
-    pagina=str(data.get('pagina') or '').strip()[:160]
-    meta=data.get('meta') or {}
-    if not isinstance(meta,(dict,list,str,int,float,bool)): meta={}
-    meta_text=json.dumps(meta,ensure_ascii=False)[:500] if not isinstance(meta,str) else meta[:500]
-    with get_db() as db:
-        db.execute('INSERT INTO catalog_analytics(catalogo_slug,session_id,evento,pagina,producto_codigo,producto_nombre,meta) VALUES(?,?,?,?,?,?,?)',(slug,session_id,evento,pagina,code,name,meta_text))
-        db.commit()
-    resp=jsonify(ok=True)
-    resp.set_cookie('catalog_visitor_id',session_id,max_age=31536000,httponly=True,samesite='Lax',secure=True)
-    return resp
-
-@app.route('/api/catalog/analytics/summary')
-def catalog_analytics_summary_api():
-    slug=str(request.args.get('slug') or '').strip().lower()
-    if slug not in {'vivero-los-colibries','libreria-ruiz'}: return jsonify(ok=False),404
-    try:
-        hours=max(1,min(744,int(request.args.get('hours','168'))))
-    except ValueError: hours=168
-    since=f'-{hours} hour'
-    with get_db() as db:
-        row=db.execute("SELECT COUNT(DISTINCT session_id) AS visitantes, SUM(CASE WHEN evento='page_view' THEN 1 ELSE 0 END) AS paginas, SUM(CASE WHEN evento='product_view' THEN 1 ELSE 0 END) AS fichas, SUM(CASE WHEN evento='add_to_cart' THEN 1 ELSE 0 END) AS carritos, SUM(CASE WHEN evento='whatsapp_click' THEN 1 ELSE 0 END) AS whatsapp FROM catalog_analytics WHERE catalogo_slug=? AND creado >= datetime('now', ?)",(slug,since)).fetchone()
-        products=db.execute("SELECT producto_codigo AS codigo, producto_nombre AS nombre, SUM(CASE WHEN evento='product_view' THEN 1 ELSE 0 END) AS vistas, SUM(CASE WHEN evento='add_to_cart' THEN 1 ELSE 0 END) AS agregados FROM catalog_analytics WHERE catalogo_slug=? AND producto_codigo!='' AND creado >= datetime('now', ?) GROUP BY producto_codigo,producto_nombre ORDER BY vistas DESC,agregados DESC LIMIT 20",(slug,since)).fetchall()
-        days=db.execute("SELECT date(creado) AS dia, COUNT(DISTINCT session_id) AS visitantes, SUM(CASE WHEN evento='page_view' THEN 1 ELSE 0 END) AS paginas FROM catalog_analytics WHERE catalogo_slug=? AND creado >= datetime('now', ?) GROUP BY date(creado) ORDER BY dia DESC",(slug,since)).fetchall()
-    return jsonify(ok=True,catalogo=slug,hours=hours,visitors=int(row['visitantes'] or 0),page_views=int(row['paginas'] or 0),product_views=int(row['fichas'] or 0),add_to_cart=int(row['carritos'] or 0),whatsapp_clicks=int(row['whatsapp'] or 0),top_products=[dict(x) for x in products],daily=[dict(x) for x in days])
-
-@app.route('/admin/analytics/catalogo')
-@login_required
-def catalog_analytics_dashboard():
-    return render_template_string('''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Analítica de Librería Ruiz</title><style>body{font-family:Arial,sans-serif;background:#f7fafc;color:#17324d;margin:0;padding:20px}main{max-width:900px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.card,section{background:#fff;border:1px solid #dbeafe;border-radius:14px;padding:14px;box-shadow:0 2px 8px #17324d12}.card b{display:block;font-size:25px;color:#1d4ed8}.card span{font-size:12px;color:#64748b}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid #e5e7eb}th{color:#1d4ed8}.muted{color:#64748b;font-size:12px}@media(max-width:650px){.cards{grid-template-columns:repeat(2,1fr)}}button{border:0;border-radius:20px;background:#2563eb;color:white;padding:9px 13px;font-weight:bold}</style></head><body><main><div class="top"><div><h1>Analítica · Librería Ruiz</h1><div class="muted">Datos anónimos de los últimos 7 días</div></div><button onclick="load()">Actualizar</button></div><div class="cards"><div class="card"><b id="vis">—</b><span>Personas aproximadas</span></div><div class="card"><b id="pages">—</b><span>Entradas al catálogo</span></div><div class="card"><b id="views">—</b><span>Fichas abiertas</span></div><div class="card"><b id="wa">—</b><span>Clics en WhatsApp</span></div></div><section><h2>Productos más mirados</h2><table><thead><tr><th>Producto</th><th>Fichas abiertas</th><th>Agregados</th></tr></thead><tbody id="products"><tr><td colspan="3">Cargando…</td></tr></tbody></table></section><p class="muted">La medición es anónima y aproximada: una misma persona puede aparecer como otra si cambia de dispositivo o borra las cookies.</p></main><script>function load(){fetch('/api/catalog/analytics/summary?slug=libreria-ruiz&hours=168').then(r=>r.json()).then(d=>{document.getElementById('vis').textContent=d.visitors;document.getElementById('pages').textContent=d.page_views;document.getElementById('views').textContent=d.product_views;document.getElementById('wa').textContent=d.whatsapp_clicks;document.getElementById('products').innerHTML=d.top_products.length?d.top_products.map(p=>'<tr><td>'+p.nombre+'<br><small>'+p.codigo+'</small></td><td>'+p.vistas+'</td><td>'+p.agregados+'</td></tr>').join(''):'<tr><td colspan="3">Todavía no hay datos</td></tr>'}).catch(()=>{document.getElementById('products').innerHTML='<tr><td colspan="3">No se pudo cargar</td></tr>'})}load();</script></body></html>''')
-@app.route('/api/fleming/analytics', methods=['POST'])
-def fleming_analytics_event():
-    """Store anonymous interaction events for the Fleming catalog."""
-    data=request.get_json(silent=True) or {}
-    allowed={'page_view','property_view','assistant_open','whatsapp_click','telegram_click','map_open','facade_open','video_open','email_click','assistant_chat_open'}
-    evento=str(data.get('evento') or '').strip()[:40]
-    if evento not in allowed:
-        return jsonify(ok=False),400
-    session_id=str(data.get('session_id') or '').strip()[:80]
-    property_id=str(data.get('property_id') or '').strip()[:20]
-    pagina=str(data.get('pagina') or '/fleming').strip()[:160]
-    meta=str(data.get('meta') or '').strip()[:240]
-    with get_db() as db:
-        db.execute('INSERT INTO fleming_analytics(session_id,evento,property_id,pagina,meta) VALUES(?,?,?,?,?)',(session_id,evento,property_id,pagina,meta))
-        db.commit()
-    return jsonify(ok=True)
-
-def _fleming_analytics_summary(days=1):
-    days=max(1,min(90,int(days or 1)))
-    with get_db() as db:
-        totals=db.execute("SELECT evento,COUNT(*) AS cantidad FROM fleming_analytics WHERE session_id!='verify-session' AND creado >= datetime('now', ?) GROUP BY evento ORDER BY cantidad DESC",(f'-{days} day',)).fetchall()
-        props=db.execute("SELECT property_id,COUNT(*) AS cantidad FROM fleming_analytics WHERE session_id!='verify-session' AND evento='property_view' AND property_id!='' AND creado >= datetime('now', ?) GROUP BY property_id ORDER BY cantidad DESC LIMIT 12",(f'-{days} day',)).fetchall()
-        visitors=db.execute("SELECT COUNT(DISTINCT session_id) AS cantidad FROM fleming_analytics WHERE session_id!='' AND session_id!='verify-session' AND creado >= datetime('now', ?)",(f'-{days} day',)).fetchone()['cantidad']
-    return {'days':days,'visitors':visitors,'events':{r['evento']:r['cantidad'] for r in totals},'top_properties':[dict(r) for r in props]}
-
-@app.route('/api/fleming/analytics/summary')
-def fleming_analytics_summary_api():
-    """Aggregate-only endpoint used by the owner's daily briefing; no raw data."""
-    try: days=int(request.args.get('days','1'))
-    except ValueError: days=1
-    return jsonify(_fleming_analytics_summary(days))
-
-@app.route('/fleming/estadisticas')
-@login_required
-def fleming_analytics_dashboard():
-    summary=_fleming_analytics_summary(7)
-    with get_db() as db:
-        daily=db.execute("SELECT date(creado) AS dia, COUNT(*) AS eventos, COUNT(DISTINCT session_id) AS visitantes FROM fleming_analytics WHERE session_id!='verify-session' AND creado >= datetime('now','-30 day') GROUP BY date(creado) ORDER BY dia DESC").fetchall()
-    return render_template('fleming_analytics.html',summary=summary,daily=[dict(r) for r in daily])
-
-
-# ---------------------------------------------------------------------------
-# Señas de Librería Comercial Ruiz (Mercado Pago)
-# ---------------------------------------------------------------------------
-MP_ACCESS_TOKEN=os.environ.get('MERCADOPAGO_ACCESS_TOKEN','').strip()
-LIBRERIA_PUBLIC_URL='https://catalogo-app-zm3w.onrender.com/c/libreria-ruiz'
-
-def _libreria_order_id():
-    return 'LR-'+datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:4].upper()
-
-def _mp_json_request(url, method='GET', payload=None):
-    body=None
-    headers={'Authorization':'Bearer '+MP_ACCESS_TOKEN,'Accept':'application/json'}
-    if payload is not None:
-        body=json.dumps(payload,ensure_ascii=False).encode('utf-8')
-        headers['Content-Type']='application/json'
-    req=urllib.request.Request(url,data=body,headers=headers,method=method)
-    with urllib.request.urlopen(req,timeout=18) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-def _libreria_validar_items(items):
-    """Return canonical catalog items, total, and any price/stock conflicts."""
-    if not isinstance(items,list) or not items:
-        return [],0,[{'code':'','name':'Pedido','qty':0,'stock':0,'price':0,'reason':'empty'}]
-    if len(items)>30:
-        return [],0,[{'code':'','name':'Pedido','qty':0,'stock':0,'price':0,'reason':'too_many_items'}]
-    requested={}
-    conflicts=[]
-    for raw in items:
-        if not isinstance(raw,dict):
-            conflicts.append({'code':'','name':'Producto','qty':0,'stock':0,'price':0,'reason':'invalid_item'})
-            continue
-        code=str(raw.get('code') or '').strip()[:50]
-        try: qty=int(raw.get('qty') or 0)
-        except (TypeError,ValueError): qty=0
-        if not code or qty<1 or qty>999:
-            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'invalid_qty'})
-            continue
-        client_price=None
-        if 'price' in raw:
-            try: client_price=round(float(raw.get('price') or 0),2)
-            except (TypeError,ValueError):
-                conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'invalid_price'})
-                continue
-        entry=requested.setdefault(code,{'qty':0,'client_price':client_price})
-        if entry['client_price'] is None and client_price is not None:
-            entry['client_price']=client_price
-        elif client_price is not None and entry['client_price']!=client_price:
-            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':qty,'stock':0,'price':0,'reason':'inconsistent_price'})
-        entry['qty']+=qty
-        if entry['qty']>999:
-            conflicts.append({'code':code,'name':str(raw.get('name') or 'Producto')[:160],'qty':entry['qty'],'stock':0,'price':0,'reason':'invalid_qty'})
-    canonical=[]
-    total=0.0
-    with get_db() as db:
-        for code,entry in requested.items():
-            qty=entry['qty']
-            row=db.execute('SELECT codigo,nombre,precio,stock_actual FROM productos WHERE codigo=? AND catalogo_slug=? AND activo=1',(code,'libreria-ruiz')).fetchone()
-            if not row:
-                conflicts.append({'code':code,'name':'Producto no disponible','qty':qty,'stock':0,'price':0,'reason':'not_available'})
-                continue
-            try: price=max(0,round(float(row['precio'] or 0),2))
-            except (TypeError,ValueError): price=0
-            try: stock=max(0,int(row['stock_actual'] or 0))
-            except (TypeError,ValueError): stock=0
-            name=str(row['nombre'] or 'Producto')[:160]
-            canonical.append({'code':code,'name':name,'qty':qty,'price':price,'stock':stock})
-            if price<=0:
-                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'price_unconfirmed'})
-            if stock<=0:
-                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'stock_unconfirmed'})
-            elif qty>stock:
-                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'reason':'stock_exceeded'})
-            client_price=entry['client_price']
-            if client_price is not None and client_price!=price:
-                conflicts.append({'code':code,'name':name,'qty':qty,'stock':stock,'price':price,'old_price':client_price,'reason':'price_changed'})
-            total+=price*qty
-    return canonical,round(total,2),conflicts
-
-def _libreria_conflict_message(conflicts):
-    reasons={str(item.get('reason') or '') for item in conflicts}
-    if 'price_changed' in reasons:
-        return 'Cambió un precio del catálogo. Revisá el precio actualizado y volvé a intentar.'
-    if 'stock_exceeded' in reasons:
-        return 'El stock cambió o la cantidad supera lo disponible. Revisá el máximo indicado y volvé a intentar.'
-    if 'stock_unconfirmed' in reasons:
-        return 'Hay un producto sin disponibilidad confirmada. Consultá por WhatsApp antes de continuar.'
-    if 'not_available' in reasons:
-        return 'Uno de los productos ya no está disponible en el catálogo. Revisá el pedido.'
-    return 'No se pudo validar el pedido. Revisá los productos y las cantidades.'
-
-@app.route('/api/libreria/validar-pedido',methods=['POST'])
-def api_libreria_validar_pedido():
-    data=request.get_json(silent=True) or {}
-    canonical,total,conflicts=_libreria_validar_items(data.get('items'))
-    if conflicts:
-        return jsonify(ok=False,error=_libreria_conflict_message(conflicts),items=canonical,total=total,conflicts=conflicts),409
-    if total<=0:
-        return jsonify(ok=False,error='El pedido debe tener precios confirmados',items=canonical,total=total),400
-    return jsonify(ok=True,items=canonical,total=total)
-
-@app.route('/api/libreria/pedido',methods=['POST'])
-def api_libreria_pedido():
-    if not MP_ACCESS_TOKEN:
-        return jsonify(ok=False,error='Mercado Pago todavía no está configurado'),503
-    data=request.get_json(silent=True) or {}
-    canonical,total,conflicts=_libreria_validar_items(data.get('items'))
-    if conflicts:
-        return jsonify(ok=False,error=_libreria_conflict_message(conflicts),items=canonical,total=total,conflicts=conflicts),409
-    if total<=0 or not canonical:
-        return jsonify(ok=False,error='El pedido debe tener precios confirmados'),400
-    nombre=str(data.get('nombre') or '').strip()[:120]
-    celular=str(data.get('celular') or '').strip()[:60]
-    if not nombre or not celular:
-        return jsonify(ok=False,error='Completá nombre y celular para continuar'),400
-    entrega=str(data.get('entrega') or 'Retiro en el local').strip()[:80]
-    direccion=str(data.get('direccion') or '').strip()[:180]
-    observaciones=str(data.get('observaciones') or '').strip()[:300]
-    pago_tipo='total' if str(data.get('pago_tipo') or '').strip().lower()=='total' else 'sena'
-    sena=round(total*0.50,2)
-    monto_pago=total if pago_tipo=='total' else sena
-    estado_inicial='pendiente_pago' if pago_tipo=='total' else 'pendiente_sena'
-    pedido_id=str(data.get('pedido_id') or _libreria_order_id())[:50]
-    with get_db() as db:
-        db.execute('INSERT OR REPLACE INTO libreria_pedidos(pedido_id,cliente_nombre,cliente_celular,entrega,direccion,observaciones,items,total,sena,estado,pago_tipo,monto_pago,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)',(pedido_id,nombre,celular,entrega,direccion,observaciones,json.dumps(canonical,ensure_ascii=False),total,sena,estado_inicial,pago_tipo,monto_pago))
-        db.commit()
-    label='Pago total' if pago_tipo=='total' else 'Seña 50%'
-    title=label+' — Pedido '+pedido_id+' — Librería Ruiz'
-    try:
-        pref=_mp_json_request('https://api.mercadopago.com/checkout/preferences','POST',{
-            'items':[{'title':title,'quantity':1,'currency_id':'ARS','unit_price':monto_pago}],
-            'external_reference':pedido_id,
-            'statement_descriptor':'LIBRERIA RUIZ',
-            'back_urls':{'success':LIBRERIA_PUBLIC_URL+'?pago=aprobado&pedido='+urllib.parse.quote(pedido_id),'failure':LIBRERIA_PUBLIC_URL+'?pago=fallido&pedido='+urllib.parse.quote(pedido_id),'pending':LIBRERIA_PUBLIC_URL+'?pago=pendiente&pedido='+urllib.parse.quote(pedido_id)},
-            'notification_url':'https://catalogo-app-zm3w.onrender.com/api/libreria/pago/webhook',
-            'auto_return':'approved'
-        })
-        link=pref.get('init_point') or pref.get('sandbox_init_point')
-        if not link: raise RuntimeError('Mercado Pago no devolvió link')
-        with get_db() as db:
-            db.execute('UPDATE libreria_pedidos SET payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',('link_generado',pedido_id)); db.commit()
-        return jsonify(ok=True,pedido_id=pedido_id,total=total,sena=sena,monto_pago=monto_pago,pago_tipo=pago_tipo,checkout_url=link,estado=estado_inicial)
-    except Exception:
-        app.logger.exception('No se pudo crear la preferencia de Mercado Pago')
-        return jsonify(ok=False,error='No se pudo generar el link de pago'),502
-
-@app.route('/api/libreria/pago/webhook',methods=['GET','POST'])
-def api_libreria_pago_webhook():
-    payload=request.get_json(silent=True) or {}
-    payment_id=str((payload.get('data') or {}).get('id') or request.args.get('data.id') or request.args.get('id') or '').strip()
-    if not payment_id or not MP_ACCESS_TOKEN:
-        return jsonify(ok=True)
-    try:
-        payment=_mp_json_request('https://api.mercadopago.com/v1/payments/'+urllib.parse.quote(payment_id,safe=''))
-        status=str(payment.get('status') or '')
-        ref=str(payment.get('external_reference') or '').strip()
-        if ref:
-            with get_db() as db:
-                row=db.execute('SELECT pago_tipo FROM libreria_pedidos WHERE pedido_id=?',(ref,)).fetchone()
-                if row:
-                    pago_tipo=str(row['pago_tipo'] or 'sena')
-                    if status=='approved': new_state='pago_confirmado' if pago_tipo=='total' else 'sena_confirmada'
-                    elif status in {'rejected','cancelled'}: new_state='pago_rechazado' if pago_tipo=='total' else 'sena_rechazada'
-                    else: new_state='pendiente_pago' if pago_tipo=='total' else 'pendiente_sena'
-                    db.execute('UPDATE libreria_pedidos SET estado=?,payment_id=?,payment_status=?,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=?',(new_state,payment_id,status,ref)); db.commit()
-        return jsonify(ok=True)
-    except Exception:
-        app.logger.exception('Webhook de Mercado Pago no procesado')
-        return jsonify(ok=True)
-
-@app.route('/api/libreria/pagos/aprobados',methods=['GET'])
-def api_libreria_pagos_aprobados():
-    key=request.args.get('key','')
-    if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
-        return jsonify(ok=False,error='No autorizado'),403
-    with get_db() as db:
-        rows=db.execute("SELECT pedido_id,cliente_nombre,cliente_celular,items,total,sena,pago_tipo,monto_pago,estado,entrega,direccion,observaciones,payment_id,creado FROM libreria_pedidos WHERE estado IN ('sena_confirmada','pago_confirmado') AND COALESCE(avisado_whatsapp,0)=0 ORDER BY creado ASC LIMIT 20").fetchall()
-    result=[]
-    for row in rows:
-        item=dict(row); item['items']=json.loads(item.get('items') or '[]'); result.append(item)
-    return jsonify(ok=True,pedidos=result)
-
-@app.route('/api/libreria/pagos/<pedido_id>/ack',methods=['POST'])
-def api_libreria_pago_ack(pedido_id):
-    key=request.args.get('key','') or (request.get_json(silent=True) or {}).get('key','')
-    if not key or key != os.environ.get('MERCADOPAGO_MONITOR_KEY',''):
-        return jsonify(ok=False,error='No autorizado'),403
-    with get_db() as db:
-        db.execute("UPDATE libreria_pedidos SET avisado_whatsapp=1,actualizado=CURRENT_TIMESTAMP WHERE pedido_id=? AND estado IN ('sena_confirmada','pago_confirmado')",(pedido_id,)); db.commit()
-    return jsonify(ok=True,pedido_id=pedido_id)
-
-@app.route('/api/libreria/pago/<pedido_id>',methods=['GET'])
-def api_libreria_pago_estado(pedido_id):
-    with get_db() as db:
-        row=db.execute('SELECT pedido_id,total,sena,pago_tipo,monto_pago,estado,payment_status,creado,actualizado FROM libreria_pedidos WHERE pedido_id=?',(pedido_id,)).fetchone()
-    if not row: return jsonify(ok=False,error='Pedido no encontrado'),404
-    return jsonify(ok=True,**dict(row))
-
+    return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
     """Send a catalog order directly to the owner's Telegram bot chat."""
@@ -839,52 +474,6 @@ def api_sugerencia():
     cloud_sync()
     return jsonify(ok=True)
 
-@app.route('/fleming/admin/videos',methods=['GET','POST'])
-@login_required
-def fleming_video_admin():
-    error=None
-    if request.method=='POST':
-        property_id=_valid_property_id(request.form.get('property_id'))
-        uploaded=request.files.get('video')
-        title=(request.form.get('title') or '').strip()[:120]
-        if not property_id: error='Elegí una propiedad válida, por ejemplo p11.'
-        elif not uploaded or not uploaded.filename: error='Seleccioná un video.'
-        elif _video_extension(uploaded.filename) not in ALLOWED_VIDEO_EXT: error='Usá MP4, WEBM, MOV o M4V.'
-        else:
-            raw=uploaded.read(MAX_VIDEO_BYTES+1)
-            if len(raw)>MAX_VIDEO_BYTES: error='El video supera el límite de 80 MB.'
-            else:
-                ext=_video_extension(uploaded.filename); filename=f'{property_id}-{uuid.uuid4().hex}.{ext}'
-                target=os.path.join(VIDEO_FOLDER,filename)
-                with open(target,'wb') as out: out.write(raw)
-                backup_db('antes-video-fleming')
-                with get_db() as db:
-                    old=db.execute('SELECT filename FROM fleming_videos WHERE property_id=?',(property_id,)).fetchone()
-                    db.execute('INSERT INTO fleming_videos(property_id,filename,title,uploaded_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(property_id) DO UPDATE SET filename=excluded.filename,title=excluded.title,uploaded_at=CURRENT_TIMESTAMP',(property_id,filename,title))
-                    db.commit()
-                if old and old['filename'] != filename:
-                    try: os.remove(os.path.join(VIDEO_FOLDER,old['filename']))
-                    except OSError: pass
-                cloud_sync(); log_change('video-fleming',property_id,filename)
-                flash(f'✅ Video guardado en la propiedad {property_id[1:]}')
-                return redirect(url_for('fleming_video_admin'))
-    with get_db() as db: videos=[dict(r) for r in db.execute('SELECT * FROM fleming_videos ORDER BY property_id').fetchall()]
-    return render_template('fleming-videos.html',videos=videos,error=error)
-
-@app.route('/fleming/admin/videos/<property_id>/eliminar',methods=['POST'])
-@login_required
-def fleming_video_delete(property_id):
-    property_id=_valid_property_id(property_id)
-    if property_id:
-        with get_db() as db:
-            row=db.execute('SELECT filename FROM fleming_videos WHERE property_id=?',(property_id,)).fetchone()
-            db.execute('DELETE FROM fleming_videos WHERE property_id=?',(property_id,)); db.commit()
-        if row:
-            try: os.remove(os.path.join(VIDEO_FOLDER,row['filename']))
-            except OSError: pass
-        cloud_sync(); log_change('eliminar-video-fleming',property_id,'')
-    return redirect(url_for('fleming_video_admin'))
-
 @app.route('/admin/login',methods=['GET','POST'])
 def admin_login():
     error=None
@@ -894,159 +483,6 @@ def admin_login():
     return render_template('login.html',error=error)
 @app.route('/admin/logout')
 def admin_logout(): session.clear(); return redirect(url_for('admin_login'))
-def _compact_name(value):
-    return ''.join(ch for ch in _norm(value) if ch.isalnum())
-
-def _zip_batch_dir(batch):
-    safe=secure_filename(str(batch or ''))
-    return os.path.join(ZIP_STAGE,safe) if safe and safe==str(batch) else None
-
-def _zip_product_match(stem, products):
-    key=_compact_name(re.sub(r'^\d+[-_ ]*','',stem))
-    if not key: return 0
-    for product in products:
-        if key in {_compact_name(product['codigo']),_compact_name(product['nombre'])}:
-            return product['id']
-    return 0
-
-def _zip_view(batch, message=None, error=None):
-    folder=_zip_batch_dir(batch)
-    if not folder or not os.path.exists(os.path.join(folder,'manifest.json')):
-        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=message,error=error or 'El ZIP ya no está disponible. Subilo nuevamente.')
-    with open(os.path.join(folder,'manifest.json'),encoding='utf-8') as fh: manifest=json.load(fh)
-    with get_db() as db:
-        products=[dict(row) for row in db.execute('SELECT id,codigo,nombre FROM productos WHERE catalogo_slug=? AND activo=1 ORDER BY nombre',(manifest.get('slug') or current_slug(),)).fetchall()]
-    return render_template('cargar_zip.html',batch=batch,items=manifest.get('items',[]),products=products,message=message,error=error)
-
-@app.route('/admin/cargar-fotos-zip',methods=['GET','POST'])
-def admin_cargar_fotos_zip():
-    return redirect(url_for('cargar_collage'))
-    if request.method=='GET': return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error=None)
-    uploaded=request.files.get('archivo')
-    if not uploaded or not uploaded.filename or not uploaded.filename.lower().endswith('.zip'):
-        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error='Elegí un archivo ZIP válido.')
-    batch=uuid.uuid4().hex[:12]; folder=os.path.join(ZIP_STAGE,batch); os.makedirs(folder,exist_ok=True)
-    items=[]
-    try:
-        with zipfile.ZipFile(uploaded.stream) as archive:
-            names=archive.infolist()
-            if len(names)>60: raise ValueError('El ZIP puede contener como máximo 60 archivos.')
-            with get_db() as db: products=[dict(row) for row in db.execute('SELECT id,codigo,nombre FROM productos WHERE catalogo_slug=? AND activo=1 ORDER BY nombre',(current_slug(),)).fetchall()]
-            for index,info in enumerate(names,1):
-                original=info.filename.replace('\\','/')
-                if info.is_dir() or original.startswith('/') or '..' in original.split('/') or not allowed_file(original): continue
-                if info.file_size>MAX_IMAGE_BYTES: continue
-                safe=secure_filename(os.path.basename(original)) or f'foto-{index}.jpg'
-                stored=f'{index:03d}-{safe}'
-                raw=archive.read(info)
-                if len(raw)>MAX_IMAGE_BYTES: continue
-                with open(os.path.join(folder,stored),'wb') as fh: fh.write(raw)
-                stem=os.path.splitext(os.path.basename(original))[0]
-                items.append({'file':stored,'original':original,'match_id':_zip_product_match(stem,products)})
-        if not items: raise ValueError('No encontré imágenes válidas dentro del ZIP.')
-        with open(os.path.join(folder,'manifest.json'),'w',encoding='utf-8') as fh: json.dump({'slug':current_slug(),'items':items},fh,ensure_ascii=False)
-        return _zip_view(batch)
-    except (zipfile.BadZipFile,ValueError) as exc:
-        shutil.rmtree(folder,ignore_errors=True)
-        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error=str(exc) or 'No se pudo leer el ZIP.')
-    except Exception:
-        shutil.rmtree(folder,ignore_errors=True)
-        app.logger.exception('No se pudo preparar el ZIP de fotos')
-        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=None,error='No se pudo leer el ZIP. Probá nuevamente.')
-
-@app.route('/admin/cargar-fotos-zip/preview/<batch>/<path:filename>')
-@login_required
-def admin_cargar_fotos_zip_preview(batch,filename):
-    folder=_zip_batch_dir(batch); safe=secure_filename(os.path.basename(filename))
-    if not folder or not safe or safe!=os.path.basename(filename): return 'No encontrado',404
-    return send_from_directory(folder,safe)
-
-@app.route('/admin/cargar-fotos-zip/aplicar',methods=['POST'])
-@login_required
-def admin_aplicar_fotos_zip():
-    batch=request.form.get('batch',''); folder=_zip_batch_dir(batch)
-    if not folder or not os.path.exists(os.path.join(folder,'manifest.json')): return _zip_view(None,error='El ZIP ya no está disponible. Subilo nuevamente.')
-    with open(os.path.join(folder,'manifest.json'),encoding='utf-8') as fh: manifest=json.load(fh)
-    selected=[]; duplicate_ids=set()
-    for index,item in enumerate(manifest.get('items',[])):
-        try: pid=int(request.form.get(f'product_{index}','0') or 0)
-        except ValueError: pid=0
-        if pid: selected.append((pid,item))
-    seen=set(); unique=[]
-    for pid,item in selected:
-        if pid in seen: duplicate_ids.add(pid); continue
-        seen.add(pid); unique.append((pid,item))
-    if not unique: return _zip_view(batch,error='Elegí al menos un producto para cargar.')
-    backup_db('antes-carga-fotos-zip'); updated=0
-    try:
-        with get_db() as db:
-            for pid,item in unique:
-                product=db.execute('SELECT id FROM productos WHERE id=? AND catalogo_slug=? AND activo=1',(pid,manifest.get('slug') or current_slug())).fetchone()
-                if not product: continue
-                source=os.path.join(folder,item['file'])
-                if not os.path.exists(source): continue
-                with open(source,'rb') as fh: photo_name=save_optimized_image(io.BytesIO(fh.read()))
-                db.execute('UPDATE productos SET foto=? WHERE id=?',(photo_name,pid)); updated+=1
-            db.commit()
-        cloud_sync(); log_change('fotos-zip',manifest.get('slug') or current_slug(),f'{updated} fotos desde {batch}')
-        shutil.rmtree(folder,ignore_errors=True)
-        extra=f' Se omitieron {len(duplicate_ids)} asignaciones repetidas.' if duplicate_ids else ''
-        return render_template('cargar_zip.html',batch=None,items=[],products=[],message=f'Se cargaron {updated} fotos al catálogo.{extra}',error=None)
-    except Exception:
-        app.logger.exception('No se pudieron aplicar las fotos del ZIP')
-        return _zip_view(batch,error='No se pudieron cargar las fotos. Revisá el ZIP e intentá nuevamente.')
-
-
-@app.route('/cargar-collage',methods=['GET','POST'])
-@app.route('/cargar-collage/',methods=['GET','POST'])
-def cargar_collage():
-    if request.method=='GET': return render_template('cargar_collage.html',link=None,image_url=None,error=None)
-    uploaded=request.files.get('archivo')
-    if not uploaded or not uploaded.filename or not uploaded.filename.lower().endswith('.zip'):
-        return render_template('cargar_collage.html',link=None,image_url=None,error='Elegí un archivo ZIP válido.')
-    batch=uuid.uuid4().hex[:16]; tiles=[]; total=0
-    try:
-        with zipfile.ZipFile(uploaded.stream) as archive:
-            entries=archive.infolist()
-            if len(entries)>60: raise ValueError('El ZIP puede contener como máximo 60 imágenes.')
-            for info in entries:
-                original=info.filename.replace('\\','/')
-                if info.is_dir() or original.startswith('/') or '..' in original.split('/') or not allowed_file(original): continue
-                if info.file_size>MAX_IMAGE_BYTES: continue
-                raw=archive.read(info); total+=len(raw)
-                if total>120*1024*1024: raise ValueError('El total de imágenes es demasiado grande.')
-                try:
-                    with Image.open(io.BytesIO(raw)) as source:
-                        image=ImageOps.exif_transpose(source).convert('RGB')
-                        image.thumbnail((300,300),Image.Resampling.LANCZOS)
-                        tile=Image.new('RGB',(320,350),'white')
-                        x=(320-image.width)//2; y=12+(300-image.height)//2
-                        tile.paste(image,(x,y)); tiles.append(tile)
-                except (UnidentifiedImageError,OSError,ValueError): continue
-        if not tiles: raise ValueError('No encontré imágenes válidas dentro del ZIP.')
-        columns=4; rows=(len(tiles)+columns-1)//columns; collage=Image.new('RGB',(columns*320,rows*350),(241,247,245))
-        for index,tile in enumerate(tiles): collage.paste(tile,((index%columns)*320,(index//columns)*350))
-        filename=f'collage-{batch}.webp'; collage.save(os.path.join(UPLOAD_FOLDER,filename),'WEBP',quality=88,method=6); cloud_sync()
-        link=url_for('collage_view',batch=batch,_external=True); image_url=url_for('collage_image',batch=batch,_external=True)
-        return render_template('cargar_collage.html',link=link,image_url=image_url,error=None)
-    except (zipfile.BadZipFile,ValueError) as exc:
-        return render_template('cargar_collage.html',link=None,image_url=None,error=str(exc) or 'No se pudo leer el ZIP.')
-    except Exception:
-        app.logger.exception('No se pudo armar el collage')
-        return render_template('cargar_collage.html',link=None,image_url=None,error='No se pudo armar el collage. Probá nuevamente.')
-
-@app.route('/collage/<batch>')
-def collage_view(batch):
-    filename=f'collage-{secure_filename(batch)}.webp'
-    if not batch or secure_filename(batch)!=batch or not os.path.exists(os.path.join(UPLOAD_FOLDER,filename)): return 'Collage no encontrado',404
-    return render_template('collage_view.html',image_url=url_for('collage_image',batch=batch,_external=True))
-
-@app.route('/collage/<batch>/imagen')
-def collage_image(batch):
-    filename=f'collage-{secure_filename(batch)}.webp'
-    if not batch or secure_filename(batch)!=batch: return 'Imagen no encontrada',404
-    return send_from_directory(UPLOAD_FOLDER,filename)
-
 @app.route('/admin')
 @app.route('/admin/')
 @login_required
@@ -1056,40 +492,6 @@ def admin_index():
         productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute('SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre').fetchall()
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
     return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias])
-@app.route('/admin/cargar-infusiones',methods=['GET','POST'])
-@login_required
-def admin_cargar_infusiones():
-    """Add the user-approved Infusiones product list without replacing other catalogs."""
-    seed_path=os.path.join(BASE_DIR,'infusiones_seed.json')
-    if not os.path.isfile(seed_path): return jsonify(ok=False,error='No está el archivo de productos Infusiones'),500
-    try:
-        with open(seed_path,encoding='utf-8') as fh: items=json.load(fh)
-    except Exception:
-        return jsonify(ok=False,error='No se pudo leer el listado Infusiones'),500
-    if not isinstance(items,list) or len(items)!=251: return jsonify(ok=False,error='El listado debe contener los 251 productos'),400
-    required_assets={item.get('image_asset') for item in items}
-    if any(not asset or not os.path.isfile(os.path.join(BASE_DIR,asset)) for asset in required_assets):
-        return jsonify(ok=False,error='Falta una imagen ilustrativa de categoría'),500
-    backup_db('antes-carga-infusiones')
-    os.makedirs(UPLOAD_FOLDER,exist_ok=True)
-    for item in items:
-        source=os.path.join(BASE_DIR,item['image_asset'])
-        target=os.path.join(UPLOAD_FOLDER,os.path.basename(item['foto']))
-        if not os.path.isfile(target): shutil.copy2(source,target)
-    slug='infusiones'
-    with get_db() as db:
-        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner,activo) VALUES(?,?,?,?,?,?,?,1)",(slug,'Infusiones','Hierbas y productos para infusión · Bragado, Buenos Aires','','5493872101274','',''))
-        db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,whatsapp=?,telegram='',activo=1 WHERE slug=?",('Infusiones','Hierbas y productos para infusión · Bragado, Buenos Aires','5493872101274',slug))
-        for item in items:
-            db.execute("INSERT OR IGNORE INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(item['codigo'],item['nombre'],item['descripcion'],item['precio'],item['categoria'],'Infusiones',item['foto'],1,0,slug,0,0,0,'','Estándar'))
-        db.commit()
-        total=db.execute('SELECT COUNT(*) FROM productos WHERE catalogo_slug=? AND activo=1',(slug,)).fetchone()[0]
-        priced=db.execute('SELECT COUNT(*) FROM productos WHERE catalogo_slug=? AND activo=1 AND precio>0',(slug,)).fetchone()[0]
-    cloud_sync()
-    log_change('carga-infusiones',slug,f'{total} productos; {priced} con precio y {total-priced} a consultar')
-    session['catalogo_slug']=slug
-    return jsonify(ok=True,catalogo=slug,productos=total,con_precio=priced,a_consultar=total-priced)
-
 @app.route('/admin/catalogo/seleccionar',methods=['POST'])
 @login_required
 def seleccionar_catalogo():
@@ -1103,7 +505,6 @@ def editar_catalogo():
     slug=request.form.get('slug','')
     with get_db() as db:
         db.execute('UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=? WHERE slug=?',(request.form.get('nombre','').strip(),request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp',''),request.form.get('telegram','').lstrip('@'),request.form.get('banner',''),slug)); db.commit()
-    cloud_sync()
     session['catalogo_slug']=slug
     return redirect(url_for('admin_index'))
 @app.route('/admin/catalogo/nuevo',methods=['POST'])

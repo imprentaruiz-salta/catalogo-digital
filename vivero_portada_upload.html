@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#52755c">
+  <title>Subir video de portada · Vivero Los Colibríes</title>
+  <style>
+    :root{color-scheme:light;--green:#52755c;--green-dark:#34513d;--cream:#f5f3e9;--ink:#24352a;--muted:#66736a;--line:#dce4d8}
+    *{box-sizing:border-box}body{margin:0;padding:18px;background:linear-gradient(150deg,#edf4e9,#faf8f0 65%);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);min-height:100vh}
+    main{width:min(100%,650px);margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:2px 0 16px}.top a{color:var(--green-dark);font-weight:700;text-decoration:none;font-size:14px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:clamp(18px,5vw,30px);box-shadow:0 14px 40px #33452b12}.brand{font-size:13px;letter-spacing:.04em;color:var(--green);font-weight:800;text-transform:uppercase}.brand span{font-size:22px;vertical-align:middle;margin-right:5px}
+    h1{font-size:clamp(25px,6vw,34px);line-height:1.12;margin:10px 0 8px;color:var(--green-dark)}.intro{color:var(--muted);line-height:1.55;margin:0 0 20px}
+    .note{padding:13px 14px;background:#f2f7ed;border:1px solid #dce9d5;border-radius:14px;font-size:14px;line-height:1.5;margin:16px 0}.note strong{color:var(--green-dark)}
+    label{display:block;font-weight:750;margin:18px 0 8px}input[type=file]{display:block;width:100%;padding:14px;border:1px dashed #97b09a;background:#fbfdf9;border-radius:14px;font:inherit;font-size:14px;color:var(--muted)}
+    #fileInfo{font-size:13px;color:var(--muted);min-height:20px;margin:7px 2px 0}video{display:block;width:100%;max-height:280px;object-fit:cover;border-radius:15px;background:#15251a;margin-top:14px}.preview{margin:12px 0;color:var(--muted);font-size:13px}
+    button{border:0;border-radius:14px;background:linear-gradient(135deg,#62896a,#42664a);color:#fff;font:inherit;font-weight:800;padding:15px 18px;width:100%;font-size:16px;cursor:pointer;margin-top:15px;box-shadow:0 5px 14px #42664a2b}button:disabled{opacity:.65;cursor:wait}
+    .alert{padding:13px 15px;border-radius:13px;margin:0 0 16px;line-height:1.45;font-size:14px}.success{background:#e9f7eb;border:1px solid #bce0c1;color:#245331}.error{background:#fff0ec;border:1px solid #f2c2b4;color:#813d2d}.links{display:flex;gap:12px;flex-wrap:wrap;margin-top:17px}.links a{color:var(--green-dark);font-weight:700;font-size:14px}.small{font-size:12px;color:var(--muted);line-height:1.5;margin-top:16px}
+    @media(max-width:420px){body{padding:11px}.card{border-radius:18px}.top{align-items:flex-start}}
+  </style>
+</head>
+<body>
+<main>
+  <nav class="top"><a href="/admin">← Panel administrador</a><a href="/admin/logout">Salir</a></nav>
+  <section class="card">
+    <div class="brand"><span>🌿</span>Vivero Los Colibríes</div>
+    <h1>Subir video de portada</h1>
+    <p class="intro">Elegí el video desde tu teléfono o computadora. Cuando termine la carga, se activará en la portada del catálogo.</p>
+    {% if message %}<div class="alert success" role="status">{{ message }}</div>{% endif %}
+    {% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}
+    <div class="note"><strong>Antes de subir:</strong> el archivo debe ser MP4 y pesar hasta 50 MB. El video se verá en reproducción automática, sin sonido y en bucle continuo. La portada actual se mantiene si la carga o el respaldo en la nube no se completan.</div>
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+      <label for="video">Seleccionar video MP4</label>
+      <input id="video" name="video" type="file" accept="video/mp4,.mp4" required>
+      <div id="fileInfo" aria-live="polite"></div>
+      <video id="localPreview" controls playsinline hidden></video>
+      <div class="preview">Vista previa de la portada activa:</div>
+      <video src="{{ video_url }}" poster="{{ poster_url }}" autoplay muted loop playsinline controls preload="metadata" aria-label="Vista previa del video activo"></video>
+      <button id="submitButton" type="submit">🎬 Actualizar video de portada</button>
+    </form>
+    <div class="links"><a href="/c/vivero-los-colibries" target="_blank" rel="noopener">Abrir catálogo público ↗</a></div>
+    <p class="small">El video nuevo reemplaza el de portada en el catálogo de Vivero Los Colibríes. Los demás catálogos no se modifican. No cierres esta página hasta que aparezca la confirmación.</p>
+  </section>
+</main>
+<script>
+const picker=document.getElementById('video'),info=document.getElementById('fileInfo'),preview=document.getElementById('localPreview'),form=document.getElementById('uploadForm'),button=document.getElementById('submitButton');
+let localUrl='';
+picker.addEventListener('change',()=>{const f=picker.files&&picker.files[0];if(localUrl)URL.revokeObjectURL(localUrl);localUrl='';preview.hidden=true;if(!f){info.textContent='';return}const mb=f.size/(1024*1024);info.textContent=f.name+' · '+mb.toFixed(1)+' MB';if(mb>50){info.textContent+=' — supera el límite de 50 MB';return}if(f.type==='video/mp4'||f.name.toLowerCase().endsWith('.mp4')){localUrl=URL.createObjectURL(f);preview.src=localUrl;preview.hidden=false;preview.load()}});
+form.addEventListener('submit',e=>{const f=picker.files&&picker.files[0];if(!f){e.preventDefault();info.textContent='Elegí un video MP4.';return}if(f.size>50*1024*1024){e.preventDefault();info.textContent='El video supera el límite de 50 MB.';return}button.disabled=true;button.textContent='⏳ Subiendo y guardando respaldo…'});
+</script>
+</body>
+</html>
