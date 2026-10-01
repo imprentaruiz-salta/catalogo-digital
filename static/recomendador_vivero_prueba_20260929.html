@@ -43,6 +43,7 @@
     .result{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(38,75,54,.05)}
     .result img{display:block;width:100%;height:142px;object-fit:cover;background:#edf4eb}
     .result-body{padding:12px}.result h3{font-size:16px;margin:0 0 6px;color:#28543d}.result p{font-size:12px;line-height:1.4;color:var(--muted);margin:0 0 10px}.result .btn{min-height:38px;padding:8px 13px;font-size:12px;background:#edf4eb;color:var(--green)}
+    .result-price{margin:0 0 10px;color:#28543d;font-size:13px;font-weight:700}.result-price strong{font-size:16px}.result-price.pending{color:var(--muted);font-size:11px;font-weight:600}
     .tag{display:inline-block;margin-bottom:7px;padding:4px 8px;border-radius:999px;background:#eef7ee;color:#2f6f55;font-size:10px;font-weight:800}
     .no-result{padding:18px;border-radius:15px;background:#fff8ef;border:1px solid #f0ddc5;color:#634d3a;font-size:14px;line-height:1.5}
     .footer{display:flex;justify-content:center;margin-top:17px}.footer a{color:var(--green);font-size:13px;font-weight:800;text-decoration:none}
@@ -75,15 +76,18 @@
     {name:'Gramínea · Stipa',code:'HERB-GRAMINEA-STIPA-001',category:'Herbáceas',image:'/static/uploads/a03db052115442828393f243990216fa.webp',places:['patio','jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo una vez establecida · Tamaño aprox. 40 a 90 cm.'},
     {name:'Hemerocallis amarillo',code:'HERB-HEMEROCALLIS-AMARILLO-001',category:'Herbáceas',image:'/static/uploads/52d40240ce844257837a62bf2571ae1a.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o media sombra · Riego moderado · Flores amarillas.'},
     {name:'Iris',code:'HERB-IRIS-001',category:'Herbáceas',image:'/static/uploads/fe4aa903eab94adea50dd7641af43fc9.webp',places:['patio','jardin'],lights:['sol','semi'],water:'moderate',flowers:true,fruit:false,detail:'Sol o semisombra luminosa · Riego moderado · Floración vistosa.'},
-    {name:'Molle',code:'ARB-MOLLE-001',category:'Árboles',image:'/static/uploads/438c9560f0e343a495dc0176f4bafd68.webp',places:['jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo a moderado una vez establecido · Árbol para jardín amplio.'}
+    {name:'Molle',code:'ARB-MOLLE-001',category:'Árboles',image:'/static/uploads/438c9560f0e343a495dc0176f4bafd68.webp',places:['jardin'],lights:['sol'],water:'low',flowers:false,fruit:false,detail:'Sol pleno · Riego bajo a moderado una vez establecido · Árbol para jardín amplio.'},
+    {name:'Geranio florido',code:'GERANIO-VIV-001',category:'Herbáceas',image:'/static/uploads/25463bf0dd704970a2873d89af81979f.webp',places:['patio'],lights:['semi'],water:'moderate',flowers:true,fruit:false,price:'$2.500',detail:'Flores rojas · Luz abundante, sol suave o de mañana · Riego moderado. Ideal para balcones y patios luminosos.'},
+    {name:'Ficus lyrata mediano',code:'FICUS-LYRATA-001',category:'Árboles',image:'/static/uploads/8bc5ba511fa144478c78dffa3b568d51.webp',places:['interior','patio'],lights:['semi'],water:'moderate',flowers:false,fruit:false,price:'$35.000',detail:'Luz abundante indirecta o sol suave · Riego moderado. Para interiores luminosos o galerías protegidas.'},
+    {name:'Ficus lyrata grande',code:'FICUS-LYRATA-002',category:'Árboles',image:'/static/uploads/29dc1d719b74464cbeb14f8e9d162f01.webp',places:['interior','patio'],lights:['semi'],water:'moderate',flowers:false,fruit:false,price:'$50.000',detail:'Luz abundante indirecta o sol suave · Riego moderado. Para interiores luminosos, galerías o espacios protegidos.'}
   ];
   var panel=document.getElementById('panel'),progress=document.getElementById('progress');
-  function waLink(name){var msg='Hola, quiero consultar por '+name+' del catálogo de Vivero Los Colibríes. ¿Me indican precio y disponibilidad? Local: Ruta Nacional 68 km 154, El Carril, Salta. Punto de entrega: Azahares 55, Barrio Tres Cerritos, Salta.';return 'https://wa.me/5493874425245?text='+encodeURIComponent(msg)}
+  function waLink(name,price){var question=price?'Veo publicado '+price+'. ¿Me confirman si sigue vigente y hay disponibilidad?':'¿Me indican precio y disponibilidad?';var msg='Hola, quiero consultar por '+name+' del catálogo de Vivero Los Colibríes. '+question+' Local: Ruta Nacional 68 km 154, El Carril, Salta. Punto de entrega: Azahares 55, Barrio Tres Cerritos, Salta.';return 'https://wa.me/5493874425245?text='+encodeURIComponent(msg)}
   function render(){
     progress.innerHTML=stages.map(function(s,i){var state=i===step?'active':(i<step?'done':'');return '<span class="'+state+'"><i class="step-icon" aria-hidden="true">'+['🌱','🍃','🌼'][i]+'</i><b class="step-label">'+['Espacio','Luz','Preferencia'][i]+'</b></span>'}).join('');
     if(step<3){
       var s=stages[step];
-      panel.innerHTML='<div class="step-count">Paso '+(step+1)+' de 3</div><h2>'+s.question+'</h2><div class="choices">'+s.choices.map(function(c){return '<button type="button" class="choice" aria-pressed="'+(answers[s.key]===c[0]?'true':'false')+'" data-value="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small></button>'}).join('')+'</div><div class="actions">'+(step>0?'<button class="btn secondary" id="back">← Atrás</button>':'<span></span>')+'<button class="btn primary" id="next" '+(answers[s.key]?'':'disabled')+'>Continuar →</button></div><p class="helper">El precio y la disponibilidad se confirman al consultar.</p>';
+      panel.innerHTML='<div class="step-count">Paso '+(step+1)+' de 3</div><h2>'+s.question+'</h2><div class="choices">'+s.choices.map(function(c){return '<button type="button" class="choice" aria-pressed="'+(answers[s.key]===c[0]?'true':'false')+'" data-value="'+c[0]+'"><span class="emoji">'+c[1]+'</span><strong>'+c[2]+'</strong><small>'+c[3]+'</small></button>'}).join('')+'</div><div class="actions">'+(step>0?'<button class="btn secondary" id="back">← Atrás</button>':'<span></span>')+'<button class="btn primary" id="next" '+(answers[s.key]?'':'disabled')+'>Continuar →</button></div><p class="helper">Si hay un precio publicado, lo vas a ver en la opción; la disponibilidad se confirma al consultar.</p>';
       panel.querySelectorAll('.choice').forEach(function(b){b.onclick=function(){answers[s.key]=b.dataset.value;render()}});
       var next=panel.querySelector('#next');if(next)next.onclick=function(){if(answers[s.key]){step++;render()}};
       var back=panel.querySelector('#back');if(back)back.onclick=function(){step--;render()};
@@ -95,7 +99,7 @@
       var preferenceOk=answers.preference==='any'||(answers.preference==='poco'?p.water==='low':answers.preference==='flores'?p.flowers:false);
       return placeOk&&lightOk&&preferenceOk;
     });
-    var note='Opciones orientativas según las fichas del catálogo. Precio y disponibilidad se confirman al consultar.';
+    var note='Opciones orientativas según las fichas del catálogo. Los precios publicados aparecen en cada opción; la disponibilidad se confirma al consultar.';
     function labelFor(stageIndex,value){var choices=stages[stageIndex].choices;for(var j=0;j<choices.length;j++){if(choices[j][0]===value)return choices[j][2]}return ''}
     var placeIcon=answers.place==='interior'?'🏠':answers.place==='patio'?'🪴':answers.place==='jardin'?'🌳':'🤔';
     var lightIcon=answers.light==='sol'?'☀️':answers.light==='semi'?'🌤️':answers.light==='sombra'?'🌥️':'🤔';
@@ -105,7 +109,7 @@
       matches=[{name:'Frutales',code:'FRUT-001',category:'Frutales',image:'/static/vivero_frutales.png',detail:'Variedades, espacio y cuidados a confirmar con el vivero.'}];
       note='En el catálogo figura la categoría Frutales; la variedad y los cuidados se confirman por consulta.';
     }
-    var cards=matches.map(function(p){return '<article class="result"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy" onerror="this.onerror=null;this.src=\'/static/vivero_herbaceas.png\'"><div class="result-body"><span class="tag">'+p.category+'</span><h3>'+p.name+'</h3><p>'+p.detail+'</p><a class="btn" href="'+waLink(p.name)+'" target="_blank" rel="noopener">Consultar</a></div></article>'}).join('');
+    var cards=matches.map(function(p){var priceHtml=p.price?'<div class="result-price">Precio publicado: <strong>'+p.price+'</strong></div>':'<div class="result-price pending">Precio a confirmar</div>';return '<article class="result"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy" onerror="this.onerror=null;this.src=\'/static/vivero_herbaceas.png\'"><div class="result-body"><span class="tag">'+p.category+'</span><h3>'+p.name+'</h3><p>'+p.detail+'</p>'+priceHtml+'<a class="btn" href="'+waLink(p.name,p.price)+'" target="_blank" rel="noopener">Consultar</a></div></article>'}).join('');
     var empty=matches.length?'':'<div class="no-result">No encontramos una coincidencia con cuidados confirmados para esta combinación. Consultanos y te orientamos según tu espacio.</div>';
     panel.innerHTML='<div class="step-count">Resultado</div><h2>Opciones para tu espacio</h2>'+summaryHtml+'<p class="helper" style="margin:0 0 14px">'+note+'</p><div class="results">'+cards+empty+'</div><div class="actions"><button class="btn secondary" id="edit">← Cambiar respuestas</button><a class="btn primary" href="'+waLink('plantas para mi espacio')+'" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>';
     panel.querySelector('#edit').onclick=function(){step=0;render()};
