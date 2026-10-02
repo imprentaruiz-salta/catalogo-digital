@@ -117,7 +117,7 @@ MAX_IMAGE_SIDE=1600
 MAX_IMAGE_BYTES=12*1024*1024
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={
- "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎"}
+ "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎","encendedores":"🔥"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
 def product_name(name):
