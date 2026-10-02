@@ -686,7 +686,7 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
  {% for m, prods in marcas.items() %}
   {% set marca_visible = namespace(si=false) %}
   {% for pp in prods %}
-   {% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026'] %}
+   {% if catalogo.slug != 'libreria-ruiz' or pp.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20'] %}
     {% set total.n = total.n + 1 %}
     {% set marca_visible.si = true %}
    {% endif %}
@@ -703,7 +703,7 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
  </div>
 
  {% for marca, productos in marcas.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global'] %}
  <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
@@ -717,7 +717,7 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
  </button>
  <div class="brand-products{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}">
  {% for p in productos %}
- {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20'] %}
  {% set display_name = p.nombre|product_name %}
  <div class="product-card" data-code="{{ p.codigo }}" data-category="{{ p.categoria|lower }}" data-brand="{{ p.marca|lower }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
@@ -1504,7 +1504,7 @@ window.addEventListener('scroll', function(){
 /* Asistente de catálogo vivo, conversación segura y sin inventar productos. */
 var RUIZ_ASSISTANT = {{ (catalogo.slug == 'libreria-ruiz')|tojson }};
 var ABIGAIL_PRODUCTS = [
-{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026'] %}
+{% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20'] %}
 {code:{{ p.codigo|tojson }},name:{{ p.nombre|tojson }},brand:{{ p.marca|tojson }},category:{{ p.categoria|tojson }},price:{{ (p.precio|default(0))|float }},stock:{{ (p.stock_actual|default(0))|int }},desc:{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},level:{{ (p.nivel_precio|default('Estándar'))|tojson }},image:{{ (('/static/uploads/' ~ p.foto) if p.foto else '')|tojson }}},
 {% endif %}{% endfor %}{% endfor %}{% endfor %}
 ];
