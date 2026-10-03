@@ -132,7 +132,7 @@ app.jinja_env.globals['cat_icon']=cat_icon
 def price_label(product):
     code=str(product.get('codigo','')) if hasattr(product,'get') else ''
     desc=str(product.get('desc_','')) if hasattr(product,'get') else ''
-    if code in {'ENC-BIC-MAXI-2026','ENC-BIC-MINI-2026'}: return 'Precio por unidad'
+    if code in {'ENC-BIC-MAXI-2026','ENC-BIC-MINI-2026','MAR-IBI-570104-2026'}: return 'Precio por unidad'
     if code in {'AB-PH-016','AB-PH-017','AB-PH-018','AB-PN-008'}: return 'Precio por fardo'
     if code == 'AB-PN-001': return 'Pack $2.100 · fardo x10 $20.000'
     if 'fardo' in desc.lower(): return 'Pack + precio de fardo en detalle'
