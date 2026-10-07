@@ -282,7 +282,7 @@ def static_asset(filename):
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
         return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
-    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_'):
+    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_') or filename.startswith('renata-beauty-'):
         return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
@@ -443,28 +443,28 @@ def catalogo_publico(slug):
 def admin_cargar_renata():
     """Install/update only the confirmed-price beauty products for Rena's Beauty."""
     slug='renas-beauty'
-    banner='https://share.zapia.com/gwrorhnm591sfvij82dlbn'
+    banner='/static/renata-beauty-banner.jpg'
     products=[
-        ('REN-BEA-001','Máscara de pestañas Pum Pum',4800,'https://share.zapia.com/nni9mq0ug2amnyh6gh425y'),
-        ('REN-BEA-002','Delineador',2000,'https://share.zapia.com/nxupllabgceo89mdvu9u2r'),
-        ('REN-BEA-003','Sombra de ojos',3500,'https://share.zapia.com/1zd4w0upejemmp7vr3vdz9'),
-        ('REN-BEA-004','Iluminador',2800,'https://share.zapia.com/ez64zjqwtw3iw4pjvrbzl8'),
-        ('REN-BEA-005','Rímel ($4.000)',4000,'https://share.zapia.com/yrul2ztqa6w7khfwnieljk'),
-        ('REN-BEA-006','Crema de manos',1600,'https://share.zapia.com/6gcg1db6w1o7k8tx64cmol'),
-        ('REN-BEA-007','Rímel ($3.400)',3400,'https://share.zapia.com/r1ron95xhn233q3lvhuxam'),
-        ('REN-BEA-008','Corrector',3600,'https://share.zapia.com/2sbevlxthxbsgbeyue5gyx'),
-        ('REN-BEA-009','Base',3500,'https://share.zapia.com/ny3p8itbi4zhg2gf9alf28'),
-        ('REN-BEA-010','Lipgloss ($4.200)',4200,'https://share.zapia.com/o4xm1zyb87tb11cz909xvn'),
-        ('REN-BEA-011','Lipgloss ($3.600)',3600,'https://share.zapia.com/5yyui2t182a3csibsj7ut8'),
-        ('REN-BEA-012','Delineador de labios',2500,'https://share.zapia.com/qeoak3on527wmjm415jszq'),
-        ('REN-BEA-013','Combo delineador + lipgloss matte',5000,'https://share.zapia.com/goulh7ovggx05qbqawhhzh'),
-        ('REN-BEA-014','Lipgloss matte',3800,'https://share.zapia.com/2z1nq354hises2jft9csu7'),
+        ('REN-BEA-001','Máscara de pestañas Pum Pum',4800,'/static/renata-beauty-rimel-pum-pum.webp'),
+        ('REN-BEA-002','Delineador',2000,'/static/renata-beauty-delineador.webp'),
+        ('REN-BEA-003','Sombra de ojos',3500,'/static/renata-beauty-sombra.webp'),
+        ('REN-BEA-004','Iluminador',2800,'/static/renata-beauty-iluminador.webp'),
+        ('REN-BEA-005','Rímel ($4.000)',4000,'/static/renata-beauty-rimel-4000.webp'),
+        ('REN-BEA-006','Crema de manos',1600,'/static/renata-beauty-crema-manos.webp'),
+        ('REN-BEA-007','Rímel ($3.400)',3400,'/static/renata-beauty-rimel-3400.webp'),
+        ('REN-BEA-008','Corrector',3600,'/static/renata-beauty-corrector.webp'),
+        ('REN-BEA-009','Base',3500,'/static/renata-beauty-base.webp'),
+        ('REN-BEA-010','Lipgloss ($4.200)',4200,'/static/renata-beauty-lipgloss-4200.webp'),
+        ('REN-BEA-011','Lipgloss ($3.600)',3600,'/static/renata-beauty-lipgloss-3600.webp'),
+        ('REN-BEA-012','Delineador de labios',2500,'/static/renata-beauty-delineador-labios.webp'),
+        ('REN-BEA-013','Combo delineador + lipgloss matte',5000,'/static/renata-beauty-combo.webp'),
+        ('REN-BEA-014','Lipgloss matte',3800,'/static/renata-beauty-lipgloss-matte.webp'),
     ]
     backup_db('antes-carga-renata')
     with get_db() as db:
         db.execute("INSERT INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner,activo) VALUES(?,?,?,?,?,?,?,1) ON CONFLICT(slug) DO UPDATE SET nombre=excluded.nombre,subtitulo=excluded.subtitulo,logo=excluded.logo,whatsapp=excluded.whatsapp,banner=excluded.banner,activo=1",(slug,"Rena’s Beauty","Maquillaje y belleza",banner,"5493874832731","",banner))
         for code,name,price,image in products:
-            desc='Precio publicado confirmado en ARS. Disponibilidad a confirmar con Renata.'
+            desc=''
             db.execute("INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(codigo) DO UPDATE SET nombre=excluded.nombre,desc_=excluded.desc_,precio=excluded.precio,categoria=excluded.categoria,marca=excluded.marca,foto=excluded.foto,activo=1,catalogo_slug=excluded.catalogo_slug,stock_actual=0,nivel_precio=excluded.nivel_precio",(code,name,desc,price,'Maquillaje','Varios',image,1,1,slug,0,0,0,'','Estándar'))
         db.commit()
     cloud_sync()
