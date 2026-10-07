@@ -670,7 +670,7 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
  </div>{% endif %}
  {% endif %}
 
- {% if catalogo.slug != 'libreria-ruiz' %}
+ {% if catalogo.slug not in ['libreria-ruiz','renas-beauty'] %}
  {% if showcase.total %}
  <section class="showcase-wrap" aria-label="Vidriera visual">
  {% if showcase.destacados %}<div class="showcase-section"><div class="showcase-head"><h2 class="showcase-title"><span class="showcase-icon">{{ '📚' if catalogo.slug == 'libreria-ruiz' else '✨' }}</span> Productos destacados</h2><span class="showcase-note">Elegidos para vos</span></div><div class="showcase-rail">{% for p in showcase.destacados %}{{ showcase_card(p, 'Destacado' if loop.first else '') }}{% endfor %}</div><div class="showcase-progress" aria-label="Indicador de movimiento"><span class="showcase-progress-hint">Deslizá ↔</span><span class="showcase-progress-track"><span class="showcase-progress-bar"></span></span><span class="showcase-progress-count">1/{{ showcase.destacados|length }}</span></div></div>{% endif %}
@@ -709,8 +709,8 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
 
  {% for marca, productos in marcas.items() %}
  {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global','ibi','genérica'] %}
- <div class="brand-block{% if catalogo.slug == 'libreria-ruiz' %} brand-open{% endif %}">
- <button class="brand-header{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}" onclick="toggleBrand(this)">
+ <div class="brand-block{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} brand-open{% endif %}">
+ <button class="brand-header{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
  <div class="brand-icon">{{ marca[0] }}</div>
  <div>
@@ -720,7 +720,7 @@ body.vivero-accordion .vivero-sound-toggle:focus-visible{outline:3px solid #fde6
  </div>
  <span class="chevron">▼</span>
  </button>
- <div class="brand-products{% if catalogo.slug == 'libreria-ruiz' %} open{% endif %}">
+ <div class="brand-products{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} open{% endif %}">
  {% for p in productos %}
  {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20','ENC-BIC-MINI-2026','MAR-IBI-570104-2026','CAR-A4-40F-1070CP-2026'] %}
  {% set display_name = p.nombre|product_name %}
