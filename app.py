@@ -117,7 +117,7 @@ MAX_IMAGE_SIDE=1600
 MAX_IMAGE_BYTES=12*1024*1024
 ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
 CAT_ICONS={
- "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎","encendedores":"🔥"}
+ "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎","encendedores":"🔥","maquillaje":"💄"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
 def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
 def product_name(name):
@@ -437,6 +437,41 @@ def catalogo_publico(slug):
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
+
+@app.route('/admin/cargar-renata')
+@login_required
+def admin_cargar_renata():
+    """Install/update only the confirmed-price beauty products for Rena's Beauty."""
+    slug='renas-beauty'
+    banner='https://share.zapia.com/gwrorhnm591sfvij82dlbn'
+    products=[
+        ('REN-BEA-001','Máscara de pestañas Pum Pum',4800,'https://share.zapia.com/nni9mq0ug2amnyh6gh425y'),
+        ('REN-BEA-002','Delineador',2000,'https://share.zapia.com/nxupllabgceo89mdvu9u2r'),
+        ('REN-BEA-003','Sombra de ojos',3500,'https://share.zapia.com/1zd4w0upejemmp7vr3vdz9'),
+        ('REN-BEA-004','Iluminador',2800,'https://share.zapia.com/ez64zjqwtw3iw4pjvrbzl8'),
+        ('REN-BEA-005','Rímel ($4.000)',4000,'https://share.zapia.com/yrul2ztqa6w7khfwnieljk'),
+        ('REN-BEA-006','Crema de manos',1600,'https://share.zapia.com/6gcg1db6w1o7k8tx64cmol'),
+        ('REN-BEA-007','Rímel ($3.400)',3400,'https://share.zapia.com/r1ron95xhn233q3lvhuxam'),
+        ('REN-BEA-008','Corrector',3600,'https://share.zapia.com/2sbevlxthxbsgbeyue5gyx'),
+        ('REN-BEA-009','Base',3500,'https://share.zapia.com/ny3p8itbi4zhg2gf9alf28'),
+        ('REN-BEA-010','Lipgloss ($4.200)',4200,'https://share.zapia.com/o4xm1zyb87tb11cz909xvn'),
+        ('REN-BEA-011','Lipgloss ($3.600)',3600,'https://share.zapia.com/5yyui2t182a3csibsj7ut8'),
+        ('REN-BEA-012','Delineador de labios',2500,'https://share.zapia.com/qeoak3on527wmjm415jszq'),
+        ('REN-BEA-013','Combo delineador + lipgloss matte',5000,'https://share.zapia.com/goulh7ovggx05qbqawhhzh'),
+        ('REN-BEA-014','Lipgloss matte',3800,'https://share.zapia.com/2z1nq354hises2jft9csu7'),
+    ]
+    backup_db('antes-carga-renata')
+    with get_db() as db:
+        db.execute("INSERT INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner,activo) VALUES(?,?,?,?,?,?,?,1) ON CONFLICT(slug) DO UPDATE SET nombre=excluded.nombre,subtitulo=excluded.subtitulo,logo=excluded.logo,whatsapp=excluded.whatsapp,banner=excluded.banner,activo=1",(slug,"Rena’s Beauty","Maquillaje y belleza",banner,"5493874832731","",banner))
+        for code,name,price,image in products:
+            desc='Precio publicado confirmado en ARS. Disponibilidad a confirmar con Renata.'
+            db.execute("INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(codigo) DO UPDATE SET nombre=excluded.nombre,desc_=excluded.desc_,precio=excluded.precio,categoria=excluded.categoria,marca=excluded.marca,foto=excluded.foto,activo=1,catalogo_slug=excluded.catalogo_slug,stock_actual=0,nivel_precio=excluded.nivel_precio",(code,name,desc,price,'Maquillaje','Varios',image,1,1,slug,0,0,0,'','Estándar'))
+        db.commit()
+    cloud_sync()
+    log_change('carga-renata',slug,str(len(products)))
+    session['catalogo_slug']=slug
+    return jsonify(ok=True,catalogo=slug,productos=len(products))
+
 @app.route('/api/pedido-telegram',methods=['POST'])
 def api_pedido_telegram():
     """Send a catalog order directly to the owner's Telegram bot chat."""
