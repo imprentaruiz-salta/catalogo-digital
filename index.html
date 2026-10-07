@@ -449,6 +449,59 @@ body.has-renata .renata-image-tab:focus-visible{outline:2px solid #fde68a;outlin
 .renata-image-grid[data-active-category="ojos"] .renata-cell:not([data-category="ojos"]),.renata-image-grid[data-active-category="labios"] .renata-cell:not([data-category="labios"]),.renata-image-grid[data-active-category="rostro"] .renata-cell:not([data-category="rostro"]),.renata-image-grid[data-active-category="manos"] .renata-cell:not([data-category="manos"]),.renata-image-grid[data-active-category="accesorios"] .renata-cell:not([data-category="accesorios"]){visibility:hidden;pointer-events:none}
 @media(max-width:480px){body.has-renata .renata-image-menu{left:0;right:0;top:22%;bottom:auto;min-height:35px;padding:2px 3px;gap:1px}body.has-renata .renata-image-tab{min-height:30px;border-radius:5px}body.has-renata .renata-image-tab span{font-size:13px}body.has-renata .renata-image-tab small{font-size:7px}}
 </style>
+<style id="renata-fashion-card-overrides">
+body.has-renata{--g:#1fa95a;--gd:#168746;--brd:#f0c6df;--mut:#806b82;background:#fff7fb;color:#35213c}
+body.has-renata main>:not(.hero):not(.purchase-info-strip):not(.catalog-section-title):not(.cat-section){display:none!important}
+body.has-renata main>.hero{display:block!important;width:100%;max-width:760px;margin:0 auto 10px;padding:0;background:transparent;box-shadow:none;border-radius:0}
+body.has-renata main>.purchase-info-strip{display:block!important;max-width:980px;margin:8px auto 12px;padding:12px 16px;border:1px solid #edc4dc;border-radius:16px;background:linear-gradient(135deg,#fff8fc,#f7eafa);color:#6d476c;text-align:center;box-shadow:0 5px 16px rgba(114,42,111,.08)}
+body.has-renata main>.purchase-info-strip strong{display:block;margin-bottom:4px;color:#9c2c77}
+body.has-renata main>.catalog-section-title{display:block!important;max-width:980px;margin:14px auto 10px;padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,#f7d9ec,#eee0f7);color:#56205f;font-size:15px;font-weight:900;text-align:center;letter-spacing:.03em}
+body.has-renata main>.cat-section{display:block!important;max-width:980px;margin:0 auto 28px;padding:0 12px;border:0;background:transparent}
+body.has-renata .cat-header,body.has-renata .brand-header{display:none!important}
+body.has-renata .brand-block{display:block!important;margin:0;padding:0;border:0;background:transparent}
+body.has-renata .brand-products,body.has-renata .brand-products.open{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:0!important;background:transparent!important}
+body.has-renata .product-card{position:relative;display:flex;min-width:0;min-height:0;flex-direction:column;overflow:hidden;border:1px solid #edc8df;border-radius:18px;background:linear-gradient(180deg,#fff 0%,#fffafd 100%);box-shadow:0 6px 18px rgba(101,37,104,.11);transition:transform .2s,box-shadow .2s}
+body.has-renata .product-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(132,47,118,.18)}
+body.has-renata .product-card[data-hidden="true"]{display:none!important}
+body.has-renata .prod-img{height:168px!important;min-height:168px!important;padding:8px;box-sizing:border-box;background:linear-gradient(135deg,#fff1f8,#f0e5fa)!important;cursor:zoom-in}
+body.has-renata .prod-img img{width:100%;height:100%;object-fit:contain;background:transparent!important;border-radius:12px}
+body.has-renata .prod-body{display:flex;flex:1;flex-direction:column;padding:10px 12px 12px;background:transparent}
+body.has-renata .prod-code,body.has-renata .stock-note,body.has-renata .price-note,body.has-renata .price-level,body.has-renata .prod-desc,body.has-renata .showcase-detail-btn{display:none!important}
+body.has-renata .prod-name{min-height:40px;margin:0 0 8px;color:#51245e;font-size:14px;font-weight:850;line-height:1.25}
+body.has-renata .prod-footer{margin-top:auto;align-items:center;gap:6px}
+body.has-renata .prod-price{color:#d73793;font-size:16px;font-weight:950;white-space:nowrap}
+body.has-renata .prod-price small{display:none!important}
+body.has-renata .add-btn{width:40px;height:40px;flex:none;border:2px solid #fff;border-radius:50%;background:linear-gradient(135deg,#25c86a,#138c4b)!important;color:#fff;font-size:23px;box-shadow:0 4px 11px rgba(27,135,74,.25)}
+body.has-renata .renata-pending-card .prod-img{display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff0f7,#efe1f8)!important;color:#b7388b;cursor:pointer}
+body.has-renata .renata-pending-card .prod-img span{font-size:42px}
+body.has-renata .renata-pending-card .prod-img small{font-size:10px;font-weight:700;color:#826985}
+body.has-renata .renata-pending-card .prod-price{font-size:13px;color:#92648d}
+body.has-renata .consultar-card-btn{border:1px solid #d64197;background:#fff2f9;color:#a02f78;border-radius:50px;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}
+body.has-renata .hero-banner{position:relative;display:flex!important;flex-direction:column;align-items:stretch;width:100%;max-width:760px;margin:0 auto;overflow:visible!important;border-radius:0;background:transparent;line-height:normal!important}
+body.has-renata .hero-banner>img{display:block;width:100%;height:35vw!important;min-height:112px!important;max-height:266px!important;object-fit:cover!important;object-position:top center!important;background:#fff}
+body.has-renata .renata-image-grid{display:none!important}
+body.has-renata .renata-image-menu{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;z-index:40;box-sizing:border-box;display:flex!important;align-items:center;justify-content:space-around;gap:4px;width:calc(100% - 20px);max-width:740px;min-height:48px;margin:9px auto 4px;padding:5px;background:linear-gradient(135deg,#f7d7eb,#ece0f7);border:1px solid #eabbd9;border-radius:15px;box-shadow:0 5px 15px rgba(102,38,108,.12);line-height:normal;pointer-events:auto}
+body.has-renata .renata-image-tab{flex:1 1 0;min-width:0;min-height:37px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:3px 1px;border:1px solid rgba(255,255,255,.7);border-radius:11px;background:rgba(255,255,255,.76);color:#55245f;font:inherit;cursor:pointer;touch-action:manipulation}
+body.has-renata .renata-image-tab span{font-size:clamp(12px,3vw,18px);line-height:1.02}
+body.has-renata .renata-image-tab small{font-size:clamp(6px,1.65vw,10px);font-weight:850;line-height:1.05;white-space:nowrap}
+body.has-renata .renata-image-tab.active{border-color:#d83b98;background:linear-gradient(135deg,#e85aa8,#ba3c93);color:#fff;box-shadow:0 3px 8px rgba(153,43,123,.24)}
+body.has-renata .renata-poster-actions{max-width:740px;margin:7px auto 12px;border-color:#edc4dc;background:linear-gradient(135deg,#fff8fc,#f5e6f8);box-shadow:0 5px 16px rgba(101,37,104,.10)}
+body.has-renata .product-overlay{background:rgba(57,20,65,.42);backdrop-filter:blur(4px)}
+body.has-renata .product-modal{width:min(480px,100%);padding:17px;border:2px solid #edc2dc;border-radius:23px;background:linear-gradient(180deg,#fff 0%,#fff7fb 100%);box-shadow:0 20px 60px rgba(81,26,88,.28)}
+body.has-renata .product-modal-close{background:#fff0f8;color:#9e2c78;box-shadow:0 2px 8px rgba(105,34,91,.15)}
+body.has-renata .modal-product-image{height:clamp(220px,38vh,330px);border:1px solid #f1d4e6;border-radius:18px;background:linear-gradient(135deg,#fff0f7,#f1e7fa)}
+body.has-renata .modal-product-image img{object-fit:contain;background:transparent}
+body.has-renata .modal-product-code,body.has-renata .modal-product-brand,body.has-renata .modal-product-desc{display:none!important}
+body.has-renata .modal-product-name{margin:8px 0;color:#54205f;font-size:25px;font-weight:900}
+body.has-renata .modal-product-price{margin:12px 0 15px;color:#d73591;font-size:26px}
+body.has-renata #modalBuyBtn{display:none!important}
+body.has-renata .modal-product-actions{display:block}
+body.has-renata .modal-add{display:block!important;width:100%;min-height:50px;border:0!important;border-radius:14px;background:linear-gradient(135deg,#25c86a,#138c4b)!important;color:#fff!important;font-size:15px;font-weight:900}
+body.has-renata .renata-modal-close-bottom{display:block;width:100%;min-height:42px;margin:9px 0 0;border:1px solid #d94399;border-radius:13px;background:#fff2f9;color:#9f2e78;font:inherit;font-size:14px;font-weight:850;cursor:pointer}
+@media(min-width:760px){body.has-renata .brand-products.open,body.has-renata .brand-products{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}body.has-renata .prod-img{height:205px!important;min-height:205px!important}}
+@media(max-width:480px){body.has-renata .hero-banner>img{height:35vw!important;min-height:112px!important;max-height:168px!important}body.has-renata .renata-image-menu{width:calc(100% - 12px);gap:2px;padding:4px}body.has-renata .renata-image-tab{min-height:39px;border-radius:9px}body.has-renata .renata-image-tab span{font-size:clamp(11px,3.2vw,15px)}body.has-renata .renata-image-tab small{font-size:clamp(5.5px,1.7vw,7px)}body.has-renata .product-card{border-radius:15px}body.has-renata .prod-img{height:145px!important;min-height:145px!important;padding:6px}body.has-renata .prod-body{padding:9px}body.has-renata .prod-name{font-size:12px;min-height:34px}body.has-renata .prod-price{font-size:14px}body.has-renata .add-btn{width:35px;height:35px;font-size:20px}body.has-renata .product-modal{padding:14px;border-radius:19px}body.has-renata .modal-product-image{height:clamp(210px,34vh,285px)}}
+</style>
+
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% elif catalogo.slug == 'renas-beauty' %} has-renata{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
@@ -694,7 +747,7 @@ body.has-renata .renata-image-tab:focus-visible{outline:2px solid #fde68a;outlin
 <button type="button" class="renata-image-tab" data-menu-category="labios" aria-label="Mostrar productos para labios" aria-pressed="false" onclick="filterRenataCategory('labios',this)"><span>💋</span><small>Labios</small></button>
 <button type="button" class="renata-image-tab" data-menu-category="rostro" aria-label="Mostrar productos para rostro" aria-pressed="false" onclick="filterRenataCategory('rostro',this)"><span>✨</span><small>Rostro</small></button>
 <button type="button" class="renata-image-tab" data-menu-category="manos" aria-label="Mostrar productos para manos" aria-pressed="false" onclick="filterRenataCategory('manos',this)"><span>🧴</span><small>Manos</small></button>
-<button type="button" class="renata-image-tab" data-menu-category="accesorios" aria-label="Mostrar accesorios" aria-pressed="false" onclick="filterRenataCategory('accesorios',this)"><span>🎀</span><small>Acces.</small></button>
+<button type="button" class="renata-image-tab" data-menu-category="accesorios" aria-label="Mostrar accesorios" aria-pressed="false" onclick="filterRenataCategory('accesorios',this)"><span>🎀</span><small>Accesorios</small></button>
 </div>{% endif %}</div>{% if catalogo.slug == 'renas-beauty' %}<div class="renata-poster-actions"><button class="cart-btn renata-image-cart" type="button" onclick="toggleCart()" aria-label="Abrir carrito"><svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true" focusable="false"><path d="M3 4h3.2l2.9 14.1a3.1 3.1 0 0 0 3 2.4h12.7a3.1 3.1 0 0 0 3-2.4l2-9.1H7.7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12.5h15.7M11 16.5h13.8" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/><circle cx="13" cy="26" r="1.8" fill="#fff"/><circle cx="23" cy="26" r="1.8" fill="#fff"/></svg><span id="cartCount">0</span></button>
 <button class="float-cart renata-poster-cart" id="floatCart" onclick="toggleCart()" aria-label="Abrir pedido">🛒 Mi pedido · <span id="floatTotal">ARS $0</span></button>
 <button class="renata-image-whatsapp" type="button" onclick="openRenataWhatsappForm()" aria-label="Completar pedido por WhatsApp" title="Completar pedido por WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.3.6 4.47 1.74 6.4L3.1 29l6.77-1.6A12.94 12.94 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3Zm0 23.7c-2.02 0-3.9-.6-5.47-1.63l-.39-.23-4.02.95.97-3.91-.25-.4A10.7 10.7 0 1 1 16 26.7Zm5.87-7.98c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.33-.85 1.05-1.04 1.27-.19.22-.38.25-.7.08-.33-.16-1.38-.51-2.63-1.63-.97-.86-1.63-1.92-1.82-2.25-.19-.32-.02-.5.14-.66.15-.15.33-.38.49-.57.16-.19.22-.33.33-.55.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56h-.63c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.14 1.33 3.36c.16.22 2.3 3.51 5.57 4.92.78.34 1.39.54 1.87.69.79.25 1.5.21 2.07.13.63-.09 1.9-.78 2.17-1.53.27-.76.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg></button></div>{% endif %}{% endif %}
@@ -775,29 +828,38 @@ body.has-renata .renata-image-tab:focus-visible{outline:2px solid #fde68a;outlin
  <div class="brand-products{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} open{% endif %}">
  {% for p in productos %}
  {% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-RO-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20','ENC-BIC-MINI-2026','MAR-IBI-570104-2026','CAR-A4-40F-1070CP-2026'] %}
- {% set display_name = p.nombre|product_name %}
- <div class="product-card" data-code="{{ p.codigo }}" data-category="{{ p.categoria|lower }}" data-brand="{{ p.marca|lower }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
+ {% set renata_names = {'REN-BEA-001':'Máscara Pum Pum','REN-BEA-002':'Delineador','REN-BEA-003':'Sombra de ojos','REN-BEA-004':'Iluminador','REN-BEA-005':'Rímel','REN-BEA-006':'Crema de manos','REN-BEA-007':'Rímel','REN-BEA-008':'Corrector','REN-BEA-009':'Base','REN-BEA-010':'Lipgloss','REN-BEA-011':'Lipgloss','REN-BEA-012':'Delineador de labios','REN-BEA-013':'Combo delineador + lipgloss matte','REN-BEA-014':'Lipgloss matte'} %}
+ {% set renata_photos = {'REN-BEA-001':'/static/renata-beauty-card-001-v1.jpg','REN-BEA-002':'/static/renata-beauty-card-002-v1.jpg','REN-BEA-003':'/static/renata-beauty-card-003-v1.jpg','REN-BEA-004':'/static/renata-beauty-card-004-v1.jpg','REN-BEA-005':'/static/renata-beauty-card-005-v1.jpg','REN-BEA-006':'/static/renata-beauty-card-006-v1.jpg','REN-BEA-007':'/static/renata-beauty-card-007-v1.jpg','REN-BEA-008':'/static/renata-beauty-card-008-v1.jpg','REN-BEA-009':'/static/renata-beauty-card-009-v1.jpg','REN-BEA-010':'/static/renata-beauty-card-010-v1.jpg','REN-BEA-011':'/static/renata-beauty-card-011-v1.jpg','REN-BEA-012':'/static/renata-beauty-card-012-v1.jpg','REN-BEA-013':'/static/renata-beauty-card-013-v1.jpg','REN-BEA-014':'/static/renata-beauty-card-014-v1.jpg'} %}
+ {% set renata_categories = {'REN-BEA-001':'ojos','REN-BEA-002':'ojos','REN-BEA-003':'ojos','REN-BEA-004':'rostro','REN-BEA-005':'ojos','REN-BEA-006':'manos','REN-BEA-007':'ojos','REN-BEA-008':'rostro','REN-BEA-009':'rostro','REN-BEA-010':'labios','REN-BEA-011':'labios','REN-BEA-012':'labios','REN-BEA-013':'labios','REN-BEA-014':'labios'} %}
+ {% set display_name = renata_names.get(p.codigo,p.nombre|product_name) if catalogo.slug == 'renas-beauty' else p.nombre|product_name %}
+ {% set product_photo = renata_photos.get(p.codigo,p.foto|default('')) if catalogo.slug == 'renas-beauty' else p.foto|default('') %}
+ {% set product_category = renata_categories.get(p.codigo,p.categoria|lower) if catalogo.slug == 'renas-beauty' else p.categoria|lower %}
+ <div class="product-card" data-code="{{ p.codigo }}" data-category="{{ product_category }}" data-brand="{{ p.marca|lower }}" data-name="{{ p.nombre|lower }} {{ p.marca|lower }} {{ p.categoria|lower }} {{ p.desc_|lower }}" data-level="{{ p.nivel_precio|default('Estándar') }}">
  {% set is_new = p.codigo in ['AB-PH-016','AB-PH-017','AB-PN-008','AB-PH-018'] %}
  {% set is_offer = (p.nivel_precio|default('')) == 'Económico' or p.codigo in ['AB-PN-008','AB-PH-018'] %}
  {% set is_best = p.codigo in ['AB-PH-001','AB-PH-011','AB-PN-001'] %}
  {% if catalogo.slug != 'libreria-ruiz' and (is_new or is_offer or is_best) %}<div class="product-badges">{% if is_new %}<span class="product-badge badge-new">🆕 Nuevo</span>{% endif %}{% if is_offer %}<span class="product-badge badge-offer">🏷️ Oferta</span>{% endif %}{% if is_best %}<span class="product-badge badge-best">🔥 Más vendido</span>{% endif %}</div>{% endif %}
- <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
- {% if p.foto %}<img src="{{ p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
+ <div class="prod-img" role="button" tabindex="0" aria-label="Ver detalles de {{ display_name }}" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+ {% if product_photo %}<img src="{{ product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo }}" alt="{{ p.nombre|product_name }}" loading="lazy" decoding="async">{% else %}{{ cat_icon(p.categoria) }}{% endif %}
  </div>
  <div class="prod-body">
  <div class="prod-code" aria-label="Código {{ p.codigo }}">COD: {{ p.codigo }}</div>
  <div class="stock-note">{% if catalogo.slug in ['vivero-los-colibries','renas-beauty'] %}📋 Disponibilidad a confirmar{% elif catalogo.slug == 'libreria-ruiz' and p.stock_actual|default(0)|int > 0 %}✅ {{ p.stock_actual }} disponibles{% elif catalogo.slug == 'libreria-ruiz' %}✅ Precio confirmado · disponibilidad a consultar{% else %}✅ Disponible{% endif %}</div>
  <div class="price-note">{% if catalogo.slug in ['vivero-los-colibries','renas-beauty'] %}{% if p.precio|float > 0 %}Precio en ARS{% else %}Precio a confirmar{% endif %}{% else %}{{ price_label(p) }}{% endif %}</div>
- <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div>{% if catalogo.slug != 'libreria-ruiz' %}<span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>{% endif %}
- {% if p.desc_ %}<div class="prod-desc">{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|product_name }}</div><button class="showcase-detail-btn" type="button" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})'>Ver características</button>{% endif %}
+ <div class="prod-name" title="{{ display_name }}" role="button" tabindex="0" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">{{ display_name }}</div>{% if catalogo.slug != 'libreria-ruiz' %}<span class="price-level">{{ p.nivel_precio|default('Estándar') }}</span>{% endif %}
+ {% if p.desc_ %}<div class="prod-desc">{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|product_name }}</div><button class="showcase-detail-btn" type="button" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})'>Ver características</button>{% endif %}
  <div class="prod-footer">
  <div class="prod-price">{% if p.precio|float > 0 %}{{ 'ARS $' if catalogo.slug in ['vivero-los-colibries','renas-beauty'] else ('ARS ' if catalogo.slug == 'libreria-ruiz' else '$') }}{{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small>{% else %}A confirmar<small>precio</small>{% endif %}</div>
- <div class="prod-actions">{% if p.precio|float > 0 %}<button class="add-btn" title="Agregar al pedido" aria-label="Agregar {{ p.nombre }} al pedido" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }},{{ (((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson) }},{{ p.stock_actual|default(0)|int }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}</div>
+ <div class="prod-actions">{% if p.precio|float > 0 %}<button class="add-btn" title="Agregar al pedido" aria-label="Agregar {{ p.nombre }} al pedido" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }},{{ (((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson) }},{{ p.stock_actual|default(0)|int }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}</div>
  </div>
  </div>
  </div>
  {% endif %}
  {% endfor %}
+ {% if catalogo.slug == 'renas-beauty' %}
+ <article class="product-card renata-pending-card" data-code="REN-POLVO-CONSULTA" data-category="rostro" data-brand="renata" data-name="polvo compacto rostro" data-level="Consultar" data-hidden="false"><div class="prod-img renata-pending-img" role="button" tabindex="0" aria-label="Consultar por polvo compacto" onclick="openRenataWhatsappForm('Polvo compacto')"><span>✨</span><small>Foto a confirmar</small></div><div class="prod-body"><div class="prod-name">Polvo compacto</div><div class="prod-footer"><div class="prod-price">Consultar</div><div class="prod-actions"><button class="consultar-card-btn" type="button" onclick="openRenataWhatsappForm('Polvo compacto')">Consultar</button></div></div></div></article>
+ <article class="product-card renata-pending-card" data-code="REN-ACCESORIOS-CONSULTA" data-category="accesorios" data-brand="renata" data-name="accesorios belleza" data-level="Consultar" data-hidden="false"><div class="prod-img renata-pending-img" role="button" tabindex="0" aria-label="Consultar por accesorios" onclick="openRenataWhatsappForm('Accesorios')"><span>🎀</span><small>Foto a confirmar</small></div><div class="prod-body"><div class="prod-name">Accesorios</div><div class="prod-footer"><div class="prod-price">Consultar</div><div class="prod-actions"><button class="consultar-card-btn" type="button" onclick="openRenataWhatsappForm('Accesorios')">Consultar</button></div></div></div></article>
+ {% endif %}
  </div>
  </div>
  {% endif %}
@@ -966,7 +1028,7 @@ body.has-renata .renata-image-tab:focus-visible{outline:2px solid #fde68a;outlin
  <div class="modal-product-brand" id="modalProductBrand"></div>
  <div class="modal-product-desc" id="modalProductDesc"></div>
  <div class="modal-product-price" id="modalProductPrice"></div>
- <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>
+ <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>{% if catalogo.slug == 'renas-beauty' %}<button class="renata-modal-close-bottom" type="button" onclick="closeProduct()">Cerrar</button>{% endif %}
  </article>
 </div>
 
@@ -1767,28 +1829,14 @@ if(window.MutationObserver){
 function populateRenataWhatsappProducts(){
  var select=document.getElementById('renataWaProduct');
  if(!select||select.options.length>1)return;
- document.querySelectorAll('.renata-image-grid .renata-cell').forEach(function(cell){
-  var name=cell.querySelector('.renata-product-name');
-  var price=cell.querySelector('.renata-price');
-  if(!name)return;
-  var productName=name.textContent.trim();
-  var priceText=price?price.textContent.trim():'';
-  var option=document.createElement('option');
-  option.value=productName+(priceText?' — '+priceText:'');
-  option.textContent=productName+(priceText?' · '+priceText:'');
-  select.appendChild(option);
- });
+ document.querySelectorAll('body.has-renata .product-card').forEach(function(card){var name=card.querySelector('.prod-name'),price=card.querySelector('.prod-price');if(!name)return;var productName=name.textContent.trim(),priceText=price?price.textContent.replace(/\s+/g,' ').trim():'';var option=document.createElement('option');option.value=productName+(priceText?' — '+priceText:'');option.textContent=productName+(priceText?' · '+priceText:'');select.appendChild(option)});
 }
 function filterRenataCategory(category,button){
- var grid=document.querySelector('.renata-image-grid');
- if(!grid)return;
- grid.setAttribute('data-active-category',category);
- document.querySelectorAll('.renata-image-tab').forEach(function(tab){
-  var active=tab.getAttribute('data-menu-category')===category;
-  tab.classList.toggle('active',active);
-  tab.setAttribute('aria-pressed',active?'true':'false');
- });
+ category=category||'todos';var grid=document.querySelector('.renata-image-grid');if(grid)grid.setAttribute('data-active-category',category);
+ document.querySelectorAll('.renata-image-tab').forEach(function(tab){var active=tab.getAttribute('data-menu-category')===category;tab.classList.toggle('active',active);tab.setAttribute('aria-pressed',active?'true':'false')});
+ document.querySelectorAll('body.has-renata .product-card').forEach(function(card){var match=category==='todos'||card.getAttribute('data-category')===category;card.setAttribute('data-hidden',match?'false':'true')});
 }
+(function(){function init(){if(document.body.classList.contains('has-renata'))filterRenataCategory('todos',document.querySelector('.renata-image-tab[data-menu-category="todos"]'))}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init()})();
 function openRenataWhatsappForm(preselectedProduct){
  var modal=document.getElementById('renataWhatsappModal');
  if(!modal)return;
