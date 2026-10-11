@@ -1494,7 +1494,7 @@ function toggleBrand(btn) {
 
 /* Menús de categorías: marquesina continua, sin salto al volver a empezar. */
 (function(){
- var SPEED=document.body.classList.contains('catalog-libreria-ruiz')?16:22; // Librería: movimiento continuo más ágil, sin perder legibilidad
+ var SPEED=document.body.classList.contains('catalog-libreria-ruiz')?20:22; // Librería: movimiento continuo más ágil, sin perder legibilidad
  var rails=[document.getElementById('catNav')].concat(Array.prototype.slice.call(document.querySelectorAll('.quick-category-list'))).filter(Boolean);
  rails.forEach(function(rail){
   if(rail.id==='catNav' && document.body.classList.contains('vivero-accordion')) return;
