@@ -159,7 +159,9 @@ def init_db():
         for col,definition in [('catalogo_slug',"TEXT DEFAULT 'libreria-ruiz'"),('stock_actual','INTEGER DEFAULT 0'),('stock_minimo','INTEGER DEFAULT 0'),('costo','REAL DEFAULT 0'),('proveedor',"TEXT DEFAULT ''"),('ultima_reposicion',"TEXT DEFAULT ''"),('nivel_precio',"TEXT DEFAULT 'Estándar'")]:
             try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
-        db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1)")
+        db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1,visitas INTEGER NOT NULL DEFAULT 0)")
+        try: db.execute("ALTER TABLE catalogos ADD COLUMN visitas INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError: pass
         db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
@@ -344,6 +346,16 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
+    if catalogo and catalogo.get('slug') == 'libreria-ruiz':
+        user_agent=(request.headers.get('User-Agent') or '').lower()
+        automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
+        with get_db() as db:
+            if not any(token in user_agent for token in automated_agents):
+                db.execute("UPDATE catalogos SET visitas=COALESCE(visitas,0)+1 WHERE slug='libreria-ruiz'")
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        catalogo=dict(catalogo)
+        catalogo['visitas']=int(row['visitas'] or 0) if row else 0
+        catalogo['visitas_formateadas']=format(catalogo['visitas'], ',').replace(',', '.')
     return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls())
 
 @app.route('/vivero/portada/subir',methods=['GET','POST'])
