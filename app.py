@@ -346,7 +346,7 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
-    if catalogo and catalogo.get('slug') == 'libreria-ruiz':
+    if catalogo and catalogo.get('slug') == 'libreria-ruiz' and request.path.rstrip('/') == '/c/libreria-ruiz':
         user_agent=(request.headers.get('User-Agent') or '').lower()
         automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
         with get_db() as db:
