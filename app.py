@@ -486,7 +486,7 @@ def render_catalog_page(cats,showcase,catalogo):
         else:
             with get_db() as db:
                 row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
-            visits=int(row['visitas'] or 0) if row else 0
+            visits=max(int(row['visitas'] or 0) if row else 0,VISIT_COUNT_FLOOR)
         catalogo=dict(catalogo)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
