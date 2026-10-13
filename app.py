@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse, threading
 from datetime import datetime
 from flask import (Flask, render_template, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash)
@@ -25,6 +25,10 @@ SUPABASE_URL=os.environ.get("SUPABASE_URL","").rstrip("/")
 SUPABASE_SERVICE_KEY=os.environ.get("SUPABASE_SERVICE_KEY","")
 SUPABASE_BUCKET=os.environ.get("SUPABASE_BUCKET","product-images")
 SUPABASE_SNAPSHOT="system/catalogo-live.zip"
+SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.json"
+VISIT_COUNT_LOCK=threading.Lock()
+VISIT_COUNT_CACHE=None
+VISIT_COUNT_CACHE_READY=False
 
 def cloud_enabled():
     return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
@@ -174,6 +178,132 @@ def init_db():
             except sqlite3.OperationalError: pass
         # Keep the pre-existing product seed; the admin can replace it.
         db.commit()
+
+def _read_saved_visit_count():
+    if not cloud_enabled(): return None, True, False
+    try:
+        with cloud_request(SUPABASE_VISIT_COUNTER, timeout=8) as response:
+            payload=json.loads(response.read().decode('utf-8'))
+        count=max(0,int(payload.get('visitas',0)))
+        return count, True, True
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True, False
+        app.logger.warning('No se pudo leer el contador persistente: HTTP %s',exc.code)
+        return None, False, False
+    except Exception:
+        app.logger.exception('No se pudo leer el contador persistente')
+        return None, False, False
+
+def _legacy_snapshot_visit_count():
+    """Recover an older visits total from the last full catalog snapshot, once."""
+    if not cloud_enabled(): return None, True
+    temp_path=None
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT, timeout=90) as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            db_name='base/catalogo.sqlite3'
+            if db_name not in archive.namelist(): return None, True
+            db_bytes=archive.read(db_name)
+        temp_path=os.path.join(DATA_DIR,'.visitas-recuperacion-'+uuid.uuid4().hex+'.sqlite3')
+        with open(temp_path,'wb') as target: target.write(db_bytes)
+        if not _db_has_products(temp_path): return None, False
+        legacy_db=sqlite3.connect(temp_path)
+        try:
+            row=legacy_db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+            return (max(0,int(row[0] or 0)) if row else None), True
+        finally:
+            legacy_db.close()
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True
+        app.logger.warning('No se pudo revisar el respaldo anterior de visitas: HTTP %s',exc.code)
+        return None, False
+    except Exception:
+        app.logger.exception('No se pudo revisar el respaldo anterior de visitas')
+        return None, False
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try: os.remove(temp_path)
+            except OSError: pass
+
+def _write_saved_visit_count(count):
+    if not cloud_enabled(): return False
+    payload=json.dumps({'slug':'libreria-ruiz','visitas':int(count),
+                        'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
+                       ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    try:
+        with cloud_request(SUPABASE_VISIT_COUNTER,'POST',payload,'application/json',timeout=12) as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception('No se pudo guardar el contador de visitas')
+        return False
+
+def restore_visit_counter():
+    """Merge local, dedicated cloud counter, and legacy snapshot using max only."""
+    global VISIT_COUNT_CACHE,VISIT_COUNT_CACHE_READY
+    with VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        if not cloud_enabled():
+            VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=True
+            return local
+        remote,read_ok,counter_exists=_read_saved_visit_count()
+        if not read_ok:
+            VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=False
+            return local
+        if not counter_exists:
+            legacy,legacy_ok=_legacy_snapshot_visit_count()
+            if not legacy_ok:
+                VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=False
+                return local
+            if legacy is not None: remote=legacy
+        count=max(local,remote or 0)
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(count,))
+            db.commit()
+        VISIT_COUNT_CACHE=count; VISIT_COUNT_CACHE_READY=True
+        if not counter_exists or remote is None or count>remote:
+            _write_saved_visit_count(count)
+        return count
+
+def record_libreria_visit():
+    """Count a real page view only after the durable monotonic value is saved."""
+    global VISIT_COUNT_CACHE,VISIT_COUNT_CACHE_READY
+    with VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        current=max(local,VISIT_COUNT_CACHE or 0)
+        if not cloud_enabled():
+            current+=1
+        else:
+            remote,read_ok,counter_exists=_read_saved_visit_count()
+            if not read_ok:
+                app.logger.warning('Visita no sumada: no se pudo confirmar el contador persistente')
+                return current
+            if not counter_exists and not VISIT_COUNT_CACHE_READY:
+                legacy,legacy_ok=_legacy_snapshot_visit_count()
+                if not legacy_ok:
+                    app.logger.warning('Visita no sumada: no se pudo revisar el respaldo anterior')
+                    return current
+                if legacy is not None: remote=legacy
+            base=max(current,remote or 0)
+            next_count=base+1
+            if not _write_saved_visit_count(next_count):
+                app.logger.warning('Visita no sumada: no se pudo guardar el nuevo total')
+                with get_db() as db:
+                    db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(base,))
+                    db.commit()
+                VISIT_COUNT_CACHE=base; VISIT_COUNT_CACHE_READY=True
+                return base
+            current=next_count
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(current,))
+            db.commit()
+        VISIT_COUNT_CACHE=current; VISIT_COUNT_CACHE_READY=True
+        return current
 
 def backup_db(reason="manual"):
     """Create a timestamped SQLite backup without interrupting the live DB."""
@@ -349,13 +479,15 @@ def render_catalog_page(cats,showcase,catalogo):
     if catalogo and catalogo.get('slug') == 'libreria-ruiz' and request.path.rstrip('/') == '/c/libreria-ruiz':
         user_agent=(request.headers.get('User-Agent') or '').lower()
         automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
-        with get_db() as db:
-            if not any(token in user_agent for token in automated_agents):
-                db.execute("UPDATE catalogos SET visitas=COALESCE(visitas,0)+1 WHERE slug='libreria-ruiz'")
-            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        if not any(token in user_agent for token in automated_agents):
+            visits=record_libreria_visit()
+        else:
+            with get_db() as db:
+                row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+            visits=int(row['visitas'] or 0) if row else 0
         catalogo=dict(catalogo)
-        catalogo['visitas']=int(row['visitas'] or 0) if row else 0
-        catalogo['visitas_formateadas']=format(catalogo['visitas'], ',').replace(',', '.')
+        catalogo['visitas']=visits
+        catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
     return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls())
 
 @app.route('/vivero/portada/subir',methods=['GET','POST'])
@@ -773,4 +905,5 @@ def admin_foto_rapida(pid):
 # Uploading here could overwrite a valid catalog while Render is starting.
 restore_from_cloud()
 init_db()
+restore_visit_counter()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
