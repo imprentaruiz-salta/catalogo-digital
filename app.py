@@ -29,6 +29,8 @@ SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.json"
 VISIT_COUNT_LOCK=threading.Lock()
 VISIT_COUNT_CACHE=None
 VISIT_COUNT_CACHE_READY=False
+# Never fall below the last counter value verified before persistent storage was added.
+VISIT_COUNT_FLOOR=1
 
 def cloud_enabled():
     return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
@@ -259,7 +261,7 @@ def restore_visit_counter():
                 VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=False
                 return local
             if legacy is not None: remote=legacy
-        count=max(local,remote or 0)
+        count=max(local,remote or 0,VISIT_COUNT_FLOOR)
         with get_db() as db:
             db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(count,))
             db.commit()
@@ -275,7 +277,7 @@ def record_libreria_visit():
         with get_db() as db:
             row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
         local=max(0,int(row['visitas'] or 0)) if row else 0
-        current=max(local,VISIT_COUNT_CACHE or 0)
+        current=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
         if not cloud_enabled():
             current+=1
         else:
@@ -289,7 +291,7 @@ def record_libreria_visit():
                     app.logger.warning('Visita no sumada: no se pudo revisar el respaldo anterior')
                     return current
                 if legacy is not None: remote=legacy
-            base=max(current,remote or 0)
+            base=max(current,remote or 0,VISIT_COUNT_FLOOR)
             next_count=base+1
             if not _write_saved_visit_count(next_count):
                 app.logger.warning('Visita no sumada: no se pudo guardar el nuevo total')
