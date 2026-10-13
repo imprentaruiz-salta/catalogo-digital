@@ -25,12 +25,12 @@ SUPABASE_URL=os.environ.get("SUPABASE_URL","").rstrip("/")
 SUPABASE_SERVICE_KEY=os.environ.get("SUPABASE_SERVICE_KEY","")
 SUPABASE_BUCKET=os.environ.get("SUPABASE_BUCKET","product-images")
 SUPABASE_SNAPSHOT="system/catalogo-live.zip"
-SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.json"
+SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.zip"
 VISIT_COUNT_LOCK=threading.Lock()
 VISIT_COUNT_CACHE=None
 VISIT_COUNT_CACHE_READY=False
-# Never fall below the last counter value verified before persistent storage was added.
-VISIT_COUNT_FLOOR=1
+# Preserve the user-confirmed pre-reset baseline; old storage snapshots may be stale.
+VISIT_COUNT_FLOOR=45
 
 def cloud_enabled():
     return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
@@ -185,7 +185,9 @@ def _read_saved_visit_count():
     if not cloud_enabled(): return None, True, False
     try:
         with cloud_request(SUPABASE_VISIT_COUNTER, timeout=8) as response:
-            payload=json.loads(response.read().decode('utf-8'))
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            payload=json.loads(archive.read('libreria-ruiz-visitas.json').decode('utf-8'))
         count=max(0,int(payload.get('visitas',0)))
         return count, True, True
     except urllib.error.HTTPError as exc:
@@ -233,8 +235,11 @@ def _write_saved_visit_count(count):
     payload=json.dumps({'slug':'libreria-ruiz','visitas':int(count),
                         'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
                        ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    archive_buffer=io.BytesIO()
+    with zipfile.ZipFile(archive_buffer,'w',compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('libreria-ruiz-visitas.json',payload)
     try:
-        with cloud_request(SUPABASE_VISIT_COUNTER,'POST',payload,'application/json',timeout=12) as response:
+        with cloud_request(SUPABASE_VISIT_COUNTER,'POST',archive_buffer.getvalue(),'application/zip',timeout=12) as response:
             response.read()
         return True
     except Exception:
@@ -253,13 +258,21 @@ def restore_visit_counter():
             return local
         remote,read_ok,counter_exists=_read_saved_visit_count()
         if not read_ok:
-            VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=False
-            return local
+            safe=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
+            with get_db() as db:
+                db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(safe,))
+                db.commit()
+            VISIT_COUNT_CACHE=safe; VISIT_COUNT_CACHE_READY=False
+            return safe
         if not counter_exists:
             legacy,legacy_ok=_legacy_snapshot_visit_count()
             if not legacy_ok:
-                VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=False
-                return local
+                safe=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
+                with get_db() as db:
+                    db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(safe,))
+                    db.commit()
+                VISIT_COUNT_CACHE=safe; VISIT_COUNT_CACHE_READY=False
+                return safe
             if legacy is not None: remote=legacy
         count=max(local,remote or 0,VISIT_COUNT_FLOOR)
         with get_db() as db:
