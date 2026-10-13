@@ -296,12 +296,12 @@ def menu_digital():
 @app.route('/fleming')
 @app.route('/fleming/')
 def fleming_brochure():
-    return render_template('fleming.html')
+    return ('', 404)
 
 @app.route('/fleming/cargar')
 @app.route('/fleming/cargar/')
 def fleming_cargar():
-    return render_template('fleming-cargar.html')
+    return ('', 404)
 
 @app.route('/cargar-fotos')
 @app.route('/cargar-fotos/')
