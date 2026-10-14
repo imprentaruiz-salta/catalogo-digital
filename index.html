@@ -664,7 +664,8 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
  {% if catalogo.slug == 'libreria-ruiz' %}
- <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>23 productos</small></a>
+ <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small>24 productos</small></a>
+ {% for cat, marcas in cats.items() %}{% if cat|lower == 'pegamento' %}<a href="#sec-{{ loop.index }}" class="ruiz-category-menu" data-category="pegamento" aria-label="Ver pegamento" title="Ver pegamento" onclick="filtrarCategoriaMenu(event,'pegamento')"><span class="ruiz-category-icon">🧴</span><span>Pegamento</span><small>1 producto</small></a>{% endif %}{% endfor %}
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
  <a href="#sec-resaltadores" class="ruiz-category-menu" data-category="resaltadores" aria-label="Ver todos los resaltadores" title="Ver resaltadores" onclick="filtrarCategoriaMenu(event,'resaltadores')"><span class="ruiz-category-icon">🖍️</span><span>Resaltadores</span><small>8 productos · 4 marcas</small></a>
  <a href="#sec-libreria" class="ruiz-category-menu" data-category="libreria" aria-label="Ver notas adhesivas" title="Ver notas adhesivas" onclick="filtrarCategoriaMenu(event,'libreria')"><span class="ruiz-category-icon">🗒️</span><span>Notas adhesivas</span><small>4 productos · 3 marcas</small></a>
@@ -814,7 +815,7 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
  {% for cat, marcas in cats.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores','libreria','reglas','papel','pilas','cinta adhesiva','corrector en cinta','encendedores','marcadores','carpetas'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or cat|lower in ['biromes','resaltadores','libreria','reglas','papel','pilas','cinta adhesiva','corrector en cinta','encendedores','marcadores','carpetas','pegamento'] %}
  {% set total = namespace(n=0) %}
  {% set total_marcas = namespace(n=0) %}
  {% for m, prods in marcas.items() %}
@@ -837,7 +838,7 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
  </div>
 
  {% for marca, productos in marcas.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','paper mate','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global','ibi','genérica','leep','luma','duracell'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','paper mate','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global','ibi','genérica','leep','luma','duracell','la gotita'] %}
  <div class="brand-block{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
