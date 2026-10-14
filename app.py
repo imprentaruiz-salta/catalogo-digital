@@ -192,6 +192,13 @@ def _read_saved_visit_count():
         return count, True, True
     except urllib.error.HTTPError as exc:
         if exc.code == 404: return None, True, False
+        if exc.code == 400:
+            try: details=exc.read().decode('utf-8','replace').lower()
+            except Exception: details=''
+            # Supabase Storage may report a missing object as HTTP 400 with a
+            # not-found body; treat only that case as an unseeded counter.
+            if 'not found' in details and 'bucket not found' not in details:
+                return None, True, False
         app.logger.warning('No se pudo leer el contador persistente: HTTP %s',exc.code)
         return None, False, False
     except Exception:
