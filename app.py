@@ -412,7 +412,7 @@ def get_showcase(slug='libreria-ruiz'):
     for r in requests:
         product=by_name.get(r['producto'].strip().lower())
         if product: requested.append(product)
-    return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'total':len(rows)}
+    return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'pilas':unique([p for p in rows if str(p.get('categoria') or '').strip().lower()=='pilas']),'total':len(rows)}
 def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
 
