@@ -141,14 +141,52 @@ def product_name(name):
     return text
 app.jinja_env.globals['cat_icon']=cat_icon
 def price_label(product):
+    """Return the correct price basis; never call unrelated stationery items rolls."""
     code=str(product.get('codigo','')) if hasattr(product,'get') else ''
     desc=str(product.get('desc_','')) if hasattr(product,'get') else ''
-    if code in {'GOTITA-2ML-2026','ENC-BIC-MAXI-2026','ENC-BIC-MINI-2026','MAR-IBI-570104-2026','CAR-A4-40F-1070CP-2026','BIC-CRISTAL-AZ-2026','PAPERMATE-KM-AZ-2026','BIC-TR-NE-2026','BIC-TR-RO-2026','PAPERMATE-KM-NEG-2026'}: return 'Precio por unidad'
-    if code in {'NOTA-LEEP-50X50-250-2026','NOTA-EZCO-BANDERITA-2026','PAPEL-GLACE-LUMA-LUSTRE-10H-2026','PAPEL-GLACE-LUMA-METALIZADO-10H-2026','PILAS-DURACELL-AA-2-2026','PILAS-DURACELL-AAA-2-2026'}: return 'Precio por paquete'
+    ruiz_labels={
+        'GOTITA-2ML-2026':'Precio por unidad',
+        'BIC-CRISTAL-AZ-2026':'Precio por unidad',
+        'BIC-TR-NE-2026':'Precio por unidad',
+        'BIC-TR-RO-2026':'Precio por unidad',
+        'BIC-AZ-2026':'Precio por unidad',
+        'BIC-NEG-2026':'Precio por unidad',
+        'BIC-RO-2026':'Precio por unidad',
+        'PAPERMATE-KM-AZ-2026':'Precio por unidad',
+        'PAPERMATE-KM-NEG-2026':'Precio por unidad',
+        'CAR-A4-40F-1070CP-2026':'Precio por unidad',
+        'CINTA-AUCA-48X50-2026':'Precio por rollo',
+        'COR-FILGO-CINTA-2026':'Precio por unidad',
+        'ENC-BIC-MAXI-2026':'Precio por unidad',
+        'ENC-BIC-MINI-2026':'Precio por unidad',
+        'NOTA-EZCO-FLUO-2026':'Precio por unidad',
+        'NOTA-KATANIA-MULTI-2026':'Precio por unidad',
+        'NOTA-LEEP-PASTEL-400-2026':'Precio por paquete',
+        'NOTA-LEEP-50X50-250-2026':'Precio por paquete',
+        'MAR-IBI-570104-2026':'Precio por unidad',
+        'REG-ESC-2026':'Precio por unidad',
+        'RES-BIC-NAR-2026':'Precio por unidad',
+        'RES-BIC-ROS-2026':'Precio por unidad',
+        'RES-BIC-VER-2026':'Precio por unidad',
+        'RES-INTRA-AM-2026':'Precio por unidad',
+        'RES-INTRA-VE-2026':'Precio por unidad',
+        'RES-PELIKAN-AMA-2026':'Precio por unidad',
+        'RESAL-2026':'Precio por unidad',
+        'RES-FILGO-RO-2026':'Precio por unidad',
+        'NOTA-EZCO-BANDERITA-2026':'Precio por paquete',
+        'PAPEL-GLACE-LUMA-LUSTRE-10H-2026':'Precio por paquete',
+        'PAPEL-GLACE-LUMA-METALIZADO-10H-2026':'Precio por paquete',
+        'PAP-MATELINA-300G-2026':'Precio por paquete',
+        'PAPERG260A4-20':'Precio por paquete',
+        'PILAS-DURACELL-AA-2-2026':'Precio por blíster',
+        'PILAS-DURACELL-AAA-2-2026':'Precio por blíster',
+    }
+    if code in ruiz_labels: return ruiz_labels[code]
     if code in {'AB-PH-016','AB-PH-017','AB-PH-018','AB-PN-008'}: return 'Precio por fardo'
     if code == 'AB-PN-001': return 'Pack $2.100 · fardo x10 $20.000'
     if 'fardo' in desc.lower(): return 'Pack + precio de fardo en detalle'
     if 'pack' in desc.lower(): return 'Precio por pack'
+    if product.get('catalogo_slug') == 'libreria-ruiz': return 'Precio por unidad'
     return 'Precio por rollo'
 app.jinja_env.globals['price_label']=price_label
 app.jinja_env.filters['product_name']=product_name
