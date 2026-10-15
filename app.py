@@ -1,7 +1,8 @@
 import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse, threading
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from flask import (Flask, render_template, request, redirect,
-                   url_for, session, jsonify, send_from_directory, send_file, flash)
+                   url_for, session, jsonify, send_from_directory, send_file, flash, make_response)
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -26,9 +27,13 @@ SUPABASE_SERVICE_KEY=os.environ.get("SUPABASE_SERVICE_KEY","")
 SUPABASE_BUCKET=os.environ.get("SUPABASE_BUCKET","product-images")
 SUPABASE_SNAPSHOT="system/catalogo-live.zip"
 SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.zip"
+SUPABASE_VIVERO_VISIT_COUNTER="system/vivero-los-colibries-visitas.zip"
 VISIT_COUNT_LOCK=threading.Lock()
 VISIT_COUNT_CACHE=None
 VISIT_COUNT_CACHE_READY=False
+VIVERO_VISIT_COUNT_LOCK=threading.Lock()
+VIVERO_VISIT_COUNT_CACHE=0
+VIVERO_VISIT_COUNT_CACHE_READY=False
 # Preserve the user-confirmed pre-reset baseline; old storage snapshots may be stale.
 VISIT_COUNT_FLOOR=45
 
@@ -327,6 +332,107 @@ def record_libreria_visit():
         VISIT_COUNT_CACHE=current; VISIT_COUNT_CACHE_READY=True
         return current
 
+def _read_vivero_visit_count():
+    """Read the Vivero counter from its own durable object, never the library object."""
+    if not cloud_enabled(): return None, True, False
+    try:
+        with cloud_request(SUPABASE_VIVERO_VISIT_COUNTER, timeout=8) as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            payload=json.loads(archive.read('vivero-los-colibries-visitas.json').decode('utf-8'))
+        return max(0,int(payload.get('visitas',0))), True, True
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True, False
+        if exc.code == 400:
+            try: details=exc.read().decode('utf-8','replace').lower()
+            except Exception: details=''
+            if 'not found' in details and 'bucket not found' not in details:
+                return None, True, False
+        app.logger.warning('No se pudo leer el contador persistente del vivero: HTTP %s',exc.code)
+        return None, False, False
+    except Exception:
+        app.logger.exception('No se pudo leer el contador persistente del vivero')
+        return None, False, False
+
+def _write_vivero_visit_count(count):
+    if not cloud_enabled(): return False
+    payload=json.dumps({'slug':'vivero-los-colibries','visitas':int(count),
+                        'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
+                       ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    archive_buffer=io.BytesIO()
+    with zipfile.ZipFile(archive_buffer,'w',compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('vivero-los-colibries-visitas.json',payload)
+    try:
+        with cloud_request(SUPABASE_VIVERO_VISIT_COUNTER,'POST',archive_buffer.getvalue(),'application/zip',timeout=12) as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception('No se pudo guardar el contador persistente del vivero')
+        return False
+
+def restore_vivero_visit_counter():
+    """Restore only this catalog's total; merge with max so restarts cannot roll it back."""
+    global VIVERO_VISIT_COUNT_CACHE,VIVERO_VISIT_COUNT_CACHE_READY
+    with VIVERO_VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        if not cloud_enabled():
+            VIVERO_VISIT_COUNT_CACHE=local
+            VIVERO_VISIT_COUNT_CACHE_READY=bool(os.environ.get('CATALOGO_DATA_DIR'))
+            return local
+        remote,read_ok,counter_exists=_read_vivero_visit_count()
+        if not read_ok:
+            VIVERO_VISIT_COUNT_CACHE=max(local,VIVERO_VISIT_COUNT_CACHE)
+            VIVERO_VISIT_COUNT_CACHE_READY=False
+            return VIVERO_VISIT_COUNT_CACHE
+        count=max(local,remote or 0)
+        if not counter_exists or remote is None or count>remote:
+            if not _write_vivero_visit_count(count):
+                VIVERO_VISIT_COUNT_CACHE=count
+                VIVERO_VISIT_COUNT_CACHE_READY=False
+                return count
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='vivero-los-colibries'",(count,))
+            db.commit()
+        VIVERO_VISIT_COUNT_CACHE=count
+        VIVERO_VISIT_COUNT_CACHE_READY=True
+        return count
+
+def record_vivero_visit():
+    """Add one estimate only after durable storage confirms the new total."""
+    global VIVERO_VISIT_COUNT_CACHE,VIVERO_VISIT_COUNT_CACHE_READY
+    with VIVERO_VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        current=max(local,VIVERO_VISIT_COUNT_CACHE)
+        if cloud_enabled():
+            remote,read_ok,counter_exists=_read_vivero_visit_count()
+            if not read_ok:
+                app.logger.warning('Visita del vivero no sumada: no se pudo confirmar el contador persistente')
+                return current,False
+            if not counter_exists and not VIVERO_VISIT_COUNT_CACHE_READY:
+                # Seed a fresh dedicated object from the known local value; no historical backfill.
+                if not _write_vivero_visit_count(current):
+                    return current,False
+            current=max(current,remote or 0)
+            next_count=current+1
+            if not _write_vivero_visit_count(next_count):
+                app.logger.warning('Visita del vivero no sumada: no se pudo guardar el nuevo total')
+                return current,False
+        elif os.environ.get('CATALOGO_DATA_DIR'):
+            next_count=current+1
+        else:
+            app.logger.warning('Visita del vivero no sumada: no hay almacenamiento persistente configurado')
+            return current,False
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='vivero-los-colibries'",(next_count,))
+            db.commit()
+        VIVERO_VISIT_COUNT_CACHE=next_count
+        VIVERO_VISIT_COUNT_CACHE_READY=True
+        return next_count,True
+
 def backup_db(reason="manual"):
     """Create a timestamped SQLite backup without interrupting the live DB."""
     if not os.path.exists(DB_PATH): return None
@@ -498,6 +604,31 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
+    if catalogo and catalogo.get('slug') == 'vivero-los-colibries' and request.path.rstrip('/') == '/c/vivero-los-colibries':
+        catalogo=dict(catalogo)
+        zone=ZoneInfo('America/Argentina/Salta')
+        now=datetime.now(zone)
+        today=now.date().isoformat()
+        user_agent=(request.headers.get('User-Agent') or '').lower()
+        automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome','facebookexternalhit','whatsapp','telegrambot','discordbot','twitterbot','linkedinbot','bytespider','bingpreview')
+        cookie_day=request.cookies.get('vivero_visit_day','')
+        counted=False
+        if request.method == 'GET' and cookie_day != today and not any(token in user_agent for token in automated_agents):
+            visits,counted=record_vivero_visit()
+        else:
+            with get_db() as db:
+                row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+            visits=max(int(row['visitas'] or 0) if row else 0,VIVERO_VISIT_COUNT_CACHE)
+        catalogo['visitas']=visits
+        catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
+        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
+        rendered.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+        rendered.headers['Pragma']='no-cache'
+        if counted:
+            tomorrow=(now+timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+            max_age=max(1,int((tomorrow-now).total_seconds()))
+            rendered.set_cookie('vivero_visit_day',today,max_age=max_age,httponly=True,secure=request.is_secure,samesite='Lax',path='/')
+        return rendered
     if catalogo and catalogo.get('slug') == 'libreria-ruiz' and request.path.rstrip('/') == '/c/libreria-ruiz':
         user_agent=(request.headers.get('User-Agent') or '').lower()
         automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
@@ -928,4 +1059,5 @@ def admin_foto_rapida(pid):
 restore_from_cloud()
 init_db()
 restore_visit_counter()
+restore_vivero_visit_counter()
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
