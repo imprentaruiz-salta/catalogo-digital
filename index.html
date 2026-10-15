@@ -78,6 +78,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .ruiz-category-carousel-card{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:88px;padding:10px 8px;border:1px solid #bfdbfe;border-radius:15px;background:#fff;color:#164e7a;text-decoration:none;text-align:center;box-shadow:0 2px 7px rgba(29,78,121,.08);scroll-snap-align:start}
 .ruiz-category-carousel-card .ruiz-category-icon{font-size:27px;line-height:1}.ruiz-category-carousel-card span:not(.ruiz-category-icon):not(.sticky-notes-icon){font-size:12px;font-weight:850;line-height:1.15}.ruiz-category-carousel-card small{font-size:10px;color:#64748b;font-weight:750}.ruiz-category-carousel-card .cat-thumb{width:34px;height:34px;object-fit:contain}.ruiz-category-carousel-card:hover,.ruiz-category-carousel-card.active{border-color:#2563eb;background:#eff6ff;color:#0f3d68}
 @media(max-width:599px){.ruiz-category-carousel-wrap{margin:0 8px 16px;padding:12px 9px}.ruiz-category-carousel-track{grid-auto-columns:minmax(118px,38vw)}.ruiz-category-carousel-heading h2{font-size:16px}}
+/* BUSCADOR COMPACTO — LIBRERÍA RUIZ */
+.ruiz-search-wrap{margin:0 12px 18px;padding:11px 13px;background:#fff;border:1px solid #bfdbfe;border-radius:16px;box-shadow:0 2px 10px rgba(29,78,121,.07)}
+.ruiz-search-label{margin:0 0 7px;color:#164e7a;font-size:13px;font-weight:850}.ruiz-search-bar{padding:0!important;gap:7px}.ruiz-search-bar input{min-height:42px;padding:10px 14px;border:1px solid #bfdbfe;background:#f8fbff;color:#102a43;box-shadow:none}.ruiz-search-status{padding:5px 2px 0;color:#64748b;font-size:11px;min-height:18px}.ruiz-search-status:empty{display:none}
+@media(max-width:599px){.ruiz-search-wrap{margin:0 8px 16px;padding:10px}.ruiz-search-label{font-size:12px}}
 /* HERO */
 .hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
 .hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
@@ -835,7 +839,18 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
  </section>
  {% endif %}
  {% endif %}
- <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
+ {% if catalogo.slug == 'libreria-ruiz' %}
+<div class="ruiz-search-wrap">
+  <div class="ruiz-search-label">🔎 Encontrá rápido un producto</div>
+  <div class="search-bar ruiz-search-bar" role="search">
+    <input type="text" id="searchInput" aria-label="Buscar por producto o marca" placeholder="Ej.: Pilas AA, BIC o papel" oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){event.preventDefault();ejecutarBusquedaTradicional();}">
+    <button type="button" class="search-clear" id="searchClear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" onclick="limpiarBusqueda()">×</button>
+    <button type="button" class="search-submit" aria-label="Buscar" onclick="ejecutarBusquedaTradicional()">Buscar</button>
+  </div>
+  <div class="ruiz-search-status" id="searchStatus" aria-live="polite">Buscá por nombre o marca</div>
+</div>
+{% endif %}
+<div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
  {% for cat, marcas in cats.items() %}
