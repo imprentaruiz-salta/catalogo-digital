@@ -82,6 +82,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;position
 .ruiz-search-wrap{margin:0 12px 18px;padding:11px 13px;background:#fff;border:1px solid #bfdbfe;border-radius:16px;box-shadow:0 2px 10px rgba(29,78,121,.07)}
 .ruiz-search-label{margin:0 0 7px;color:#164e7a;font-size:13px;font-weight:850}.ruiz-search-bar{padding:0!important;gap:7px}.ruiz-search-bar input{min-height:42px;padding:10px 14px;border:1px solid #bfdbfe;background:#f8fbff;color:#102a43;box-shadow:none}.ruiz-search-status{padding:5px 2px 0;color:#64748b;font-size:11px;min-height:18px}.ruiz-search-status:empty{display:none}
 @media(max-width:599px){.ruiz-search-wrap{margin:0 8px 16px;padding:10px}.ruiz-search-label{font-size:12px}}
+
+.ruiz-category-carousel-controls{display:flex;align-items:center;gap:6px;white-space:nowrap}.ruiz-category-carousel-controls button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:1px solid #bfdbfe;border-radius:50%;background:#fff;color:#1d4ed8;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(29,78,121,.1)}.ruiz-category-carousel-controls button:hover{border-color:#2563eb;background:#eff6ff}.ruiz-category-carousel-controls button:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+
 /* HERO */
 .hero{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px 16px;text-align:center;margin:12px}
 .hero{border-radius:var(--r);box-shadow:var(--shadow,0 2px 12px rgba(0,0,0,.08))}
@@ -746,10 +749,10 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
 <main>
 {% if catalogo.slug == 'libreria-ruiz' %}
 <section class="ruiz-category-carousel-wrap" aria-label="Explorá las categorías de Librería Ruiz">
-  <div class="ruiz-category-carousel-heading"><h2>📚 Buscá por categoría</h2><span>Deslizá ↔</span></div>
+  <div class="ruiz-category-carousel-heading"><h2>📚 Buscá por categoría</h2><div class="ruiz-category-carousel-controls"><button type="button" aria-label="Categorías anteriores" title="Ver categorías anteriores" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(-1)">‹</button><span>Deslizá</span><button type="button" aria-label="Más categorías" title="Ver más categorías" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(1)">›</button></div></div>
   <div class="ruiz-category-carousel-track" id="ruizCategoryCarousel"></div>
 </section>
-<script>(function(){var source=document.querySelector('#catNav .category-track');var target=document.getElementById('ruizCategoryCarousel');if(!source||!target)return;source.querySelectorAll('a.ruiz-category-menu').forEach(function(item){var card=item.cloneNode(true);card.classList.remove('ruiz-category-menu','active');card.classList.add('ruiz-category-carousel-card');card.removeAttribute('onclick');card.addEventListener('click',function(ev){ev.preventDefault();item.click();target.querySelectorAll('.ruiz-category-carousel-card').forEach(function(other){other.classList.remove('active')});card.classList.add('active')});target.appendChild(card)})})();</script>
+<script>function moverCarruselCategoriasRuiz(direccion){var track=document.getElementById('ruizCategoryCarousel');if(!track)return;var card=track.querySelector('.ruiz-category-carousel-card');var paso=(card?card.getBoundingClientRect().width:130)+10;track.scrollBy({left:paso*direccion,behavior:'smooth'})}(function(){var source=document.querySelector('#catNav .category-track');var target=document.getElementById('ruizCategoryCarousel');if(!source||!target)return;source.querySelectorAll('a.ruiz-category-menu').forEach(function(item){var card=item.cloneNode(true);card.classList.remove('ruiz-category-menu','active');card.classList.add('ruiz-category-carousel-card');card.removeAttribute('onclick');card.addEventListener('click',function(ev){ev.preventDefault();item.click();target.querySelectorAll('.ruiz-category-carousel-card').forEach(function(other){other.classList.remove('active')});card.classList.add('active')});target.appendChild(card)})})();</script>
 {% endif %}
  {% macro showcase_card(p, tag='') -%}
  <article class="showcase-card" data-code="{{ p.codigo }}">
