@@ -754,6 +754,17 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
 </section>
 <script>function moverCarruselCategoriasRuiz(direccion){var track=document.getElementById('ruizCategoryCarousel');if(!track)return;var card=track.querySelector('.ruiz-category-carousel-card');var paso=(card?card.getBoundingClientRect().width:130)+10;track.scrollBy({left:paso*direccion,behavior:'smooth'})}(function(){var source=document.querySelector('#catNav .category-track');var target=document.getElementById('ruizCategoryCarousel');if(!source||!target)return;source.querySelectorAll('a.ruiz-category-menu').forEach(function(item){var card=item.cloneNode(true);card.classList.remove('ruiz-category-menu','active');card.classList.add('ruiz-category-carousel-card');card.removeAttribute('onclick');card.addEventListener('click',function(ev){ev.preventDefault();item.click();target.querySelectorAll('.ruiz-category-carousel-card').forEach(function(other){other.classList.remove('active')});card.classList.add('active')});target.appendChild(card)})})();</script>
 {% endif %}
+{% if catalogo.slug == 'libreria-ruiz' %}
+<div class="ruiz-search-wrap">
+  <div class="ruiz-search-label">🔎 Encontrá rápido un producto</div>
+  <div class="search-bar ruiz-search-bar" role="search">
+    <input type="text" id="searchInput" aria-label="Buscar por producto o marca" placeholder="Ej.: Pilas AA, BIC o papel" oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){event.preventDefault();ejecutarBusquedaTradicional();}">
+    <button type="button" class="search-clear" id="searchClear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" onclick="limpiarBusqueda()">×</button>
+    <button type="button" class="search-submit" aria-label="Buscar" onclick="ejecutarBusquedaTradicional()">Buscar</button>
+  </div>
+  <div class="ruiz-search-status" id="searchStatus" aria-live="polite">Buscá por nombre o marca</div>
+</div>
+{% endif %}
  {% macro showcase_card(p, tag='') -%}
  <article class="showcase-card" data-code="{{ p.codigo }}">
  {% if tag %}<span class="showcase-tag">{{ tag }}</span>{% endif %}
@@ -809,7 +820,6 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
  {% endif %}
 
  {% if catalogo.slug == 'libreria-ruiz' %}<div class="info-strip ruiz-visit-counter" aria-label="Contador de visitas" style="text-align:center;max-width:980px;margin:0 auto 10px;padding:8px 12px;border-color:#bfdbfe;background:#f8fbff;color:#164e7a;font-size:12px"><span aria-hidden="true">👁️ </span>Visitas a la página: <strong style="display:inline;margin:0;color:#1d4ed8;font-size:13px">{{ catalogo.visitas_formateadas|default(catalogo.visitas|default(0)) }}</strong></div>{% endif %}
- {% if catalogo.slug == 'vivero-los-colibries' %}<div class="info-strip vivero-visit-counter" aria-label="Visitas estimadas al catálogo" title="Estimación: cuenta una visita por navegador por día; no equivale a personas únicas." style="text-align:center;max-width:980px;margin:0 auto 10px;padding:8px 12px;border-color:#cfe3d1;background:#f6fbf5;color:#2f6f55;font-size:12px"><span aria-hidden="true">👁️ </span>Visitas estimadas al catálogo: <strong style="display:inline;margin:0;color:#2f6f55;font-size:13px">{{ catalogo.visitas_formateadas|default(catalogo.visitas|default(0)) }}</strong></div>{% endif %}
  {% if catalogo.slug == 'libreria-ruiz' %}<div class="info-strip ruiz-hours-strip" aria-label="Pedidos, retiro y horario"><strong>💬 Hacé tu pedido por WhatsApp y retiralo en Chacabuco 470, Salta</strong><span>🕒 Atención: lunes a viernes, 19:00–22:30 · sábados y domingos, 10:00–22:30</span></div>{% endif %}
 {% if catalogo.slug == 'libreria-ruiz' %}<div class="info-strip purchase-info-strip" aria-label="Información del catálogo"><strong>📚 Elegí una categoría o mirá todos los productos</strong>Elegí una categoría para encontrar biromes, resaltadores, marcadores permanentes, carpetas, notas adhesivas, encendedores, reglas, papel, corrector en cinta y cinta adhesiva.</div><div class="ruiz-buy-steps" aria-label="Pasos para comprar"><span><b>1</b> Categoría</span><i>→</i><span><b>2</b> Producto</span><i>→</i><span><b>3</b> Tocá +</span></div>{% elif catalogo.slug == 'renas-beauty' %}<div class="info-strip purchase-info-strip" aria-label="Cómo hacer tu pedido"><strong>💄 Elegí tus productos y tocá +</strong>Revisá el carrito, completá tus datos y enviá tu pedido por WhatsApp.</div>{% else %}<div class="info-strip purchase-info-strip" aria-label="Información de compra"><strong>🛍️ Comprá fácil y seguro</strong>🏪 Retiro en el local · 🛵 Consultá por envíos · 💵 Efectivo · 🏦 Transferencia · 📱 Mercado Pago</div>{% endif %}
  {% if catalogo.slug not in ['libreria-ruiz','renas-beauty'] %}
@@ -843,17 +853,7 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
  </section>
  {% endif %}
  {% endif %}
- {% if catalogo.slug == 'libreria-ruiz' %}
-<div class="ruiz-search-wrap">
-  <div class="ruiz-search-label">🔎 Encontrá rápido un producto</div>
-  <div class="search-bar ruiz-search-bar" role="search">
-    <input type="text" id="searchInput" aria-label="Buscar por producto o marca" placeholder="Ej.: Pilas AA, BIC o papel" oninput="buscar(this.value);actualizarLimpiarBusqueda()" onkeydown="if(event.key==='Enter'){event.preventDefault();ejecutarBusquedaTradicional();}">
-    <button type="button" class="search-clear" id="searchClear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" onclick="limpiarBusqueda()">×</button>
-    <button type="button" class="search-submit" aria-label="Buscar" onclick="ejecutarBusquedaTradicional()">Buscar</button>
-  </div>
-  <div class="ruiz-search-status" id="searchStatus" aria-live="polite">Buscá por nombre o marca</div>
-</div>
-{% endif %}
+ 
 <div class="no-results" id="noResults">😕 No encontramos productos para tu búsqueda</div>
  <!-- CATEGORÍAS -->
  {% if cats %}<div class="catalog-section-title">🛍️ PRODUCTOS DEL CATÁLOGO</div>{% endif %}
