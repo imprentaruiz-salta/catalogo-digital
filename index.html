@@ -1756,7 +1756,7 @@ window.addEventListener('scroll', function(){
 var RUIZ_ASSISTANT = {{ (catalogo.slug == 'libreria-ruiz')|tojson }};
 var ABIGAIL_PRODUCTS = [
 {% for cat, brands in cats.items() %}{% for brand, plist in brands.items() %}{% for p in plist %}{% if catalogo.slug != 'libreria-ruiz' or p.codigo in ['BIC-NEG-2026','BIC-AZ-2026','BIC-CRISTAL-AZ-2026','PAPERMATE-KM-AZ-2026','PILAS-DURACELL-AA-2-2026','PILAS-DURACELL-AAA-2-2026','GOTITA-2ML-2026','BIC-TR-NE-2026','BIC-RO-2026','BIC-TR-RO-2026','PAPERMATE-KM-NEG-2026','RES-INTRA-AM-2026','RES-INTRA-VE-2026','RESAL-2026','RES-FILGO-RO-2026','RES-BIC-VER-2026','RES-BIC-NAR-2026','RES-BIC-ROS-2026','RES-PELIKAN-AMA-2026','NOTA-EZCO-FLUO-2026','NOTA-EZCO-BANDERITA-2026','NOTA-KATANIA-MULTI-2026','COR-FILGO-CINTA-2026','CINTA-AUCA-48X50-2026','REG-ESC-2026','PAP-MATELINA-300G-2026','ENC-BIC-MAXI-2026','PAPERG260A4-20','ENC-BIC-MINI-2026','MAR-IBI-570104-2026','CAR-A4-40F-1070CP-2026','NOTA-LEEP-PASTEL-400-2026','NOTA-LEEP-50X50-250-2026','PAPEL-GLACE-LUMA-LUSTRE-10H-2026','PAPEL-GLACE-LUMA-METALIZADO-10H-2026'] %}
-{code:{{ p.codigo|tojson }},name:{{ p.nombre|tojson }},brand:{{ p.marca|tojson }},category:{{ p.categoria|tojson }},price:{{ (p.precio|default(0))|float }},stock:{{ (p.stock_actual|default(0))|int }},desc:{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},level:{{ (p.nivel_precio|default('Estándar'))|tojson }},image:{{ ((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson }}},
+{code:{{ p.codigo|tojson }},name:{{ p.nombre|tojson }},brand:{{ p.marca|tojson }},category:{{ p.categoria|tojson }},price:{{ (p.precio|default(0))|float }},stock:{{ (p.stock_actual|default(0))|int }},priceLabel:{{ price_label(p)|tojson }},desc:{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},level:{{ (p.nivel_precio|default('Estándar'))|tojson }},image:{{ ((p.foto if (p.foto.startswith('http') or p.foto.startswith('/static/')) else '/static/uploads/' ~ p.foto) if p.foto else '')|tojson }}},
 {% endif %}{% endfor %}{% endfor %}{% endfor %}
 ];
 (function(){
@@ -1798,7 +1798,7 @@ var ABIGAIL_PRODUCTS = [
    var row=document.createElement('div');row.className='abigail-result';
    var info=document.createElement('div');info.className='abigail-result-info';
    var name=document.createElement('span');name.className='abigail-result-name';name.textContent=displayName(p);
-   var meta=document.createElement('span');meta.className='abigail-result-meta';meta.textContent=p.brand+' · '+money(p.price)+' '+tx('c/u','each');
+   var meta=document.createElement('span');meta.className='abigail-result-meta';var priceText=RUIZ_ASSISTANT?(Number(p.price)>0?'ARS '+money(p.price).replace('$',''):'Precio a confirmar'):money(p.price);var unitText=RUIZ_ASSISTANT?(p.priceLabel||'Precio por unidad'):tx('c/u','each');var availability=RUIZ_ASSISTANT?(Number(p.stock)>0?' · '+p.stock+' disponibles':' · disponibilidad a consultar'):'';meta.textContent=p.brand+' · '+priceText+(RUIZ_ASSISTANT?' · '+unitText+availability:' '+tx('c/u','each'));
    info.appendChild(name);info.appendChild(meta);
    var add=document.createElement('button');add.className='abigail-result-add';add.type='button';add.textContent='+';add.setAttribute('aria-label',tx('Agregar '+p.name,'Add '+displayName(p)));add.onclick=function(){choose(p.code)};
    row.appendChild(info);row.appendChild(add);rows.appendChild(row);
@@ -1814,9 +1814,10 @@ var ABIGAIL_PRODUCTS = [
  }
  window.abigailChoose=choose;
  function search(q){
-  var query=norm(q), tokens=query.split(/\s+/).filter(function(t){return t.length>2&&!/^(quiero|busco|buscar|mostrar|dame|tenes|tienes|algo|para|del|una|uno|los|las|por|favor|que|necesito|necesitas|producto|productos|precio|precios|cuanto|cuantos|hola|abigail)$/.test(t)});
+  var query=norm(q),tokens=query.split(/\s+/).filter(function(t){return t.length>1&&!/^(quiero|busco|buscar|mostrar|dame|tenes|tienes|algo|para|del|una|uno|los|las|por|favor|que|necesito|necesitas|producto|productos|precio|precios|cuanto|cuantos|hola|abigail|alma)$/.test(t)});
   if(!tokens.length)return [];
-  var scored=ABIGAIL_PRODUCTS.map(function(p){var text=norm([p.name,p.brand,p.category,p.desc].join(' '));var score=0;tokens.forEach(function(t){if(norm(p.name).indexOf(t)>=0)score+=7;else if(norm(p.brand).indexOf(t)>=0)score+=5;else if(norm(p.category).indexOf(t)>=0)score+=4;else if(text.indexOf(t)>=0)score+=2});if(query.indexOf(norm(p.name))>=0)score+=12;return {p:p,score:score}}).filter(function(x){return x.score>0}).sort(function(a,b){return b.score-a.score||a.p.price-b.p.price});
+  var exactSizes=tokens.filter(function(t){return t==='aa'||t==='aaa'});
+  var scored=ABIGAIL_PRODUCTS.map(function(p){var name=norm(p.name),brand=norm(p.brand),category=norm(p.category),desc=norm(p.desc),text=[name,brand,category,desc].join(' '),score=0;tokens.forEach(function(t){if(t==='aa'||t==='aaa'){if(name.split(/\s+/).indexOf(t)>=0||desc.split(/\s+/).indexOf(t)>=0)score+=10}else if(name.indexOf(t)>=0)score+=7;else if(brand.indexOf(t)>=0)score+=5;else if(category.indexOf(t)>=0)score+=4;else if(text.indexOf(t)>=0)score+=2});if(name&&query.indexOf(name)>=0)score+=12;return {p:p,score:score}}).filter(function(x){var itemText=norm([x.p.name,x.p.desc].join(' ')).split(/\s+/);return x.score>0&&exactSizes.every(function(size){return itemText.indexOf(size)>=0})}).sort(function(a,b){return b.score-a.score||a.p.price-b.p.price});
   return scored.map(function(x){return x.p}).slice(0,8)
  }
  function showOffers(){return ABIGAIL_PRODUCTS.slice().sort(function(a,b){var ae=norm(a.level).indexOf('econom')>=0?0:1,be=norm(b.level).indexOf('econom')>=0?0:1;return ae-be||a.price-b.price}).slice(0,6)}
@@ -1836,12 +1837,12 @@ var ABIGAIL_PRODUCTS = [
   say(raw,'user');widget.classList.add('thinking');setTimeout(function(){widget.classList.remove('thinking')},520);
   clearTimeout(welcomeTimer);
   if(RUIZ_ASSISTANT){
-   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy Alma, tu vendedora virtual de Librería Ruiz. ¿Qué querés comprar?');return;}
+   if(/(hola|buenas|buen dia|que tal|buenas tardes|buenas noches)/.test(q)){replaceSay('Hola 😊 Soy Alma, tu vendedora virtual de Librería Ruiz. Puedo buscar por producto o marca, consultar precio y disponibilidad, y ayudarte con el pedido. ¿Qué necesitás?');return;}
    if(/(mi pedido|ver pedido|carrito|pedido|comprar|pagar|checkout)/.test(q)){replaceSay('Te abro tu pedido para que revises las cantidades y el total.');toggleCart();return;}
    if(/(oferta|ofertas|econom|barato|baratos|ahorro)/.test(q)){var roffers=showOffers();productBubble(roffers,'Mirá estas opciones:');followUp();return;}
    var rquery=raw;if(/(combo escolar|escuela|escolar)/.test(q))rquery='escolar';if(/(oficina|oficina)/.test(q))rquery='oficina';if(/(estudio|estudiar)/.test(q))rquery='cuaderno';
    var rresults=search(rquery);if(rresults.length){revealCatalog(rresults);productBubble(rresults,'Encontré estos artículos para vos:');followUp();return;}
-   replaceSay('No encontré ese artículo en el catálogo actual. Probá con birome, cuaderno, carpeta, resma, resaltador o marcador.');return;
+   replaceSay('No encontré ese artículo en el catálogo actual. Probá con una marca, el nombre del producto o una categoría, como BIC, Pilas AA o AAA, La Gotita, Papel o Resaltadores.');return;
   }
   if(awaiting==='soap'){
    awaiting='';var soaps=categoryResults('jabon');revealCatalog(soaps);productBubble(soaps);followUp();return;
