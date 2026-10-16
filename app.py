@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
-app.secret_key = "catalogo_ruiz_2026_secret_x7k"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH']=52*1024*1024
 
 # Isolated Alma preview: every deployment except the known production service is fail-closed.
@@ -814,9 +814,34 @@ def _alma_tokens(value):
     return {aliases.get(w,w) for w in words if w not in stop}
 
 def _alma_catalog_products():
-    with get_db() as db:
-        rows=db.execute("SELECT * FROM productos WHERE activo=1 AND catalogo_slug='libreria-ruiz' ORDER BY nombre").fetchall()
-    return [dict(row) for row in rows]
+    key=os.environ.get("ALMA_CATALOG_READONLY_KEY","").strip()
+    if not key:
+        raise RuntimeError("Read-only catalog key is not configured")
+    api_url="https://catalogo-app-zm3w.onrender.com/api/alma/catalog/libreria-ruiz"
+    req=urllib.request.Request(api_url,headers={"Authorization":f"Bearer {key}","Accept":"application/json"},method="GET")
+    with urllib.request.urlopen(req,timeout=20) as response:
+        payload=json.loads(response.read().decode("utf-8"))
+    items=payload.get("products") if isinstance(payload,dict) else None
+    if not isinstance(items,list):
+        raise RuntimeError("Invalid read-only catalog response")
+    products=[]
+    for item in items:
+        if not isinstance(item,dict):
+            continue
+        products.append({
+            "codigo":str(item.get("code") or ""),
+            "nombre":str(item.get("name") or "Producto"),
+            "desc_":str(item.get("description") or ""),
+            "precio":item.get("price_ars"),
+            "marca":str(item.get("brand") or ""),
+            "categoria":str(item.get("category") or ""),
+            "catalogo_slug":"libreria-ruiz",
+            "available":bool(item.get("available")),
+            "stock":1 if item.get("available") else 0,
+            "stock_quantity":item.get("stock_quantity"),
+            "image":item.get("image"),
+        })
+    return products
 
 def _alma_find(query,products):
     terms=_alma_tokens(query)
@@ -863,7 +888,7 @@ def _alma_answer(messages,products):
     name=product_name(product.get("nombre") or "Producto")
     unit=price_label(product)
     raw_price=product.get("precio")
-    availability="El catálogo lo marca como disponible." if int(product.get("stock") or 0)==1 else "El catálogo no lo marca como disponible; conviene confirmar existencia."
+    availability="El catálogo lo marca como disponible." if bool(product.get("available")) else "El catálogo no lo marca como disponible; conviene confirmar existencia."
     if raw_price is None or float(raw_price)<=0:
         return f"{name}: no tengo un precio vigente confirmado en el catálogo. {availability} ¿Querés que consulte por otra marca o presentación?"
     price=float(raw_price)
@@ -893,7 +918,11 @@ def alma_private_chat_completions():
     if not isinstance(body,dict): return jsonify({"error":"invalid JSON request"}),400
     messages=body.get("messages")
     if not isinstance(messages,list) or len(messages)>100: return jsonify({"error":"invalid messages"}),400
-    products=_alma_catalog_products()
+    try:
+        products=_alma_catalog_products()
+    except Exception:
+        app.logger.warning("Alma read-only catalog source unavailable")
+        return jsonify({"error":"catalog source unavailable"}),503
     reply=_alma_answer(messages,products)
     model=str(body.get("model") or "alma-libreria-ruiz-readonly")[:100]
     return _alma_chat_response(reply,model,bool(body.get("stream")))
@@ -902,7 +931,12 @@ def alma_private_chat_completions():
 def alma_private_health():
     if not ALMA_PRIVATE_PREVIEW: return jsonify({"error":"not found"}),404
     if not _alma_authorized(): return jsonify({"error":"unauthorized"}),401
-    return jsonify({"ok":True,"mode":"private-read-only","catalog_products":len(_alma_catalog_products()),"public_catalog_enabled":False,"writes_enabled":False})
+    try:
+        count=len(_alma_catalog_products())
+    except Exception:
+        app.logger.warning("Alma read-only catalog health check failed")
+        return jsonify({"ok":False,"mode":"private-read-only","error":"catalog source unavailable","public_catalog_enabled":False,"writes_enabled":False}),503
+    return jsonify({"ok":True,"mode":"private-read-only","catalog_products":count,"public_catalog_enabled":False,"writes_enabled":False})
 
 @app.route('/')
 def index():
