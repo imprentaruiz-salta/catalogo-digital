@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, urllib.request, urllib.error, urllib.parse, threading
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from flask import (Flask, render_template, request, redirect,
@@ -559,6 +559,54 @@ def get_showcase(slug='libreria-ruiz'):
     return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'pilas':unique([p for p in rows if str(p.get('categoria') or '').strip().lower()=='pilas']),'total':len(rows)}
 def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
+
+
+# Dedicated read-only product feed for Alma; intentionally bypasses public page routes.
+ALMA_CATALOG_READONLY_KEY_ENV="ALMA_CATALOG_READONLY_KEY"
+
+@app.route('/api/alma/catalog/libreria-ruiz', methods=['GET'])
+def alma_readonly_libreria_ruiz():
+    """Return public Librería Ruiz fields without rendering pages or recording visits."""
+    expected=os.environ.get(ALMA_CATALOG_READONLY_KEY_ENV,"")
+    if not expected:
+        return jsonify({"error":"unavailable"}),503
+    supplied=request.headers.get("Authorization","")
+    prefix="Bearer "
+    if not supplied.startswith(prefix) or not hmac.compare_digest(supplied[len(prefix):],expected):
+        response=jsonify({"error":"unauthorized"})
+        response.headers["WWW-Authenticate"]="Bearer"
+        return response,401
+    try:
+        with get_db() as db:
+            rows=db.execute(
+                "SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual "
+                "FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre",
+                ("libreria-ruiz",)
+            ).fetchall()
+        products=[]
+        for row in rows:
+            item=dict(row)
+            quantity=max(0,int(item.get("stock_actual") or 0))
+            products.append({
+                "code":item.get("codigo") or "",
+                "name":item.get("nombre") or "",
+                "description":item.get("desc_") or "",
+                "price_ars":item.get("precio"),
+                "currency":"ARS",
+                "category":item.get("categoria") or "",
+                "brand":item.get("marca") or "",
+                "image":item.get("foto") or "",
+                "stock_quantity":quantity,
+                "available":quantity>0,
+            })
+        response=jsonify({"schema_version":1,"catalog":"libreria-ruiz","count":len(products),"products":products})
+        response.headers["Cache-Control"]="no-store"
+        response.headers["X-Robots-Tag"]="noindex, nofollow"
+        response.headers["Vary"]="Authorization"
+        return response
+    except Exception:
+        app.logger.exception("Read-only Alma catalog endpoint failed")
+        return jsonify({"error":"catalog_unavailable"}),503
 
 @app.route('/manifest.json')
 def web_manifest():
