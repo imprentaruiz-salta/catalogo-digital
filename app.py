@@ -690,6 +690,9 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
+    # Keep the catalog data intact while taking the public Vivero page offline.
+    if catalogo and catalogo.get('slug') == 'vivero-los-colibries':
+        return ('Este catálogo ya no está publicado.',410)
     if catalogo and catalogo.get('slug') == 'vivero-los-colibries' and request.path.rstrip('/') == '/c/vivero-los-colibries':
         catalogo=dict(catalogo)
         zone=ZoneInfo('America/Argentina/Salta')
