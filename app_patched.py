@@ -1,0 +1,1149 @@
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+from flask import (Flask, render_template, request, redirect,
+                   url_for, session, jsonify, send_from_directory, send_file, flash, make_response)
+from werkzeug.utils import secure_filename
+from PIL import Image, ImageOps, UnidentifiedImageError
+
+app = Flask(__name__, static_folder=None, template_folder=".")
+app.secret_key = "catalogo_ruiz_2026_secret_x7k"
+app.config['MAX_CONTENT_LENGTH']=52*1024*1024
+BASE_DIR=os.path.dirname(os.path.abspath(__file__))
+# DATA_DIR can be mounted on a persistent disk in production. The application code
+# and the data are deliberately kept separate so deploys never replace user data.
+DATA_DIR=os.environ.get("CATALOGO_DATA_DIR",os.path.join(BASE_DIR,"data"))
+os.makedirs(DATA_DIR,exist_ok=True)
+DB_PATH=os.path.join(DATA_DIR,"catalogo.db")
+UPLOAD_FOLDER=os.path.join(DATA_DIR,"uploads")
+BACKUP_FOLDER=os.path.join(DATA_DIR,"backups")
+os.makedirs(UPLOAD_FOLDER,exist_ok=True); os.makedirs(BACKUP_FOLDER,exist_ok=True)
+
+# Optional durable cloud snapshot. Render Free can restart at any time, so the
+# local SQLite database and optimized images are mirrored to Supabase Storage.
+# The public catalog remains exactly the same; this only changes where data lives.
+SUPABASE_URL=os.environ.get("SUPABASE_URL","").rstrip("/")
+SUPABASE_SERVICE_KEY=os.environ.get("SUPABASE_SERVICE_KEY","")
+SUPABASE_BUCKET=os.environ.get("SUPABASE_BUCKET","product-images")
+SUPABASE_SNAPSHOT="system/catalogo-live.zip"
+SUPABASE_VISIT_COUNTER="system/libreria-ruiz-visitas.zip"
+SUPABASE_VIVERO_VISIT_COUNTER="system/vivero-los-colibries-visitas.zip"
+VISIT_COUNT_LOCK=threading.Lock()
+VISIT_COUNT_CACHE=None
+VISIT_COUNT_CACHE_READY=False
+VIVERO_VISIT_COUNT_LOCK=threading.Lock()
+VIVERO_VISIT_COUNT_CACHE=0
+VIVERO_VISIT_COUNT_CACHE_READY=False
+# Preserve the user-confirmed pre-reset baseline; old storage snapshots may be stale.
+VISIT_COUNT_FLOOR=45
+
+def cloud_enabled():
+    return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
+
+def cloud_endpoint(path):
+    return f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{path.lstrip('/')}"
+
+def cloud_request(path, method="GET", data=None, content_type="application/octet-stream", timeout=30):
+    req=urllib.request.Request(cloud_endpoint(path), data=data, method=method, headers={
+        "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}",
+        "apikey":SUPABASE_SERVICE_KEY,
+        "Content-Type":content_type,
+        "x-upsert":"true"})
+    return urllib.request.urlopen(req, timeout=timeout)
+
+def cloud_sync():
+    """Upload one atomic catalog snapshot after a successful local change."""
+    if not cloud_enabled() or not os.path.exists(DB_PATH): return False
+    # Never replace a valid cloud snapshot with an empty database. This protects
+    # the catalog during Render restarts or a simultaneous worker startup.
+    try:
+        with get_db() as check_db:
+            product_count=check_db.execute('SELECT COUNT(*) FROM productos WHERE activo=1').fetchone()[0]
+        if product_count == 0:
+            app.logger.warning('No se sube una copia vacía a la nube; se conserva el snapshot anterior')
+            return False
+    except Exception:
+        return False
+    mem=io.BytesIO()
+    with zipfile.ZipFile(mem,"w",zipfile.ZIP_DEFLATED) as z:
+        z.write(DB_PATH,"base/catalogo.sqlite3")
+        for root,_,files in os.walk(UPLOAD_FOLDER):
+            for name in files:
+                z.write(os.path.join(root,name),os.path.join("imagenes",name))
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip",timeout=180) as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception("No se pudo guardar la copia persistente")
+        return False
+
+def _db_has_products(path):
+    """Check a snapshot without trusting its contents or replacing live data."""
+    try:
+        check=sqlite3.connect(path)
+        integrity=check.execute('PRAGMA integrity_check').fetchone()[0]
+        tables={r[0] for r in check.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        count=check.execute('SELECT COUNT(*) FROM productos WHERE activo=1').fetchone()[0] if 'productos' in tables else 0
+        check.close()
+        return integrity == 'ok' and count > 0
+    except Exception:
+        return False
+
+def restore_from_cloud():
+    """Restore only a valid, non-empty snapshot before DB initialization."""
+    if not cloud_enabled(): return False
+    # Never replace a usable local database with an older cloud copy.
+    if os.path.exists(DB_PATH) and _db_has_products(DB_PATH): return False
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT,"GET") as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            names=z.namelist()
+            if "base/catalogo.sqlite3" not in names: return False
+            extracted=os.path.join(DATA_DIR,"restore-check.sqlite3")
+            with z.open("base/catalogo.sqlite3") as src, open(extracted,"wb") as dst:
+                shutil.copyfileobj(src,dst)
+            if not _db_has_products(extracted):
+                os.remove(extracted)
+                app.logger.warning("Se descartó una copia persistente vacía o inválida")
+                return False
+            os.replace(extracted,DB_PATH)
+            for name in names:
+                if name.startswith("imagenes/") and not name.endswith("/"):
+                    target=os.path.join(UPLOAD_FOLDER,os.path.basename(name))
+                    with z.open(name) as src, open(target,"wb") as dst: shutil.copyfileobj(src,dst)
+        return True
+    except urllib.error.HTTPError as exc:
+        if exc.code != 404: app.logger.warning("No se pudo restaurar la copia persistente: %s",exc)
+        return False
+    except Exception:
+        app.logger.exception("No se pudo restaurar la copia persistente")
+        return False
+# Migrate a legacy local database once, if this installation had one.
+_OLD_DB=os.path.join(BASE_DIR,"catalogo.db")
+if not os.path.exists(DB_PATH) and os.path.exists(_OLD_DB): shutil.copy2(_OLD_DB,DB_PATH)
+ALLOWED_EXT={"png","jpg","jpeg","webp","gif"}
+MAX_IMAGE_SIDE=1600
+MAX_IMAGE_BYTES=12*1024*1024
+ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
+CAT_ICONS={
+ "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","pegamento":"🧴","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎","encendedores":"🔥","maquillaje":"💄"}
+def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
+def cat_icon(cat): return CAT_ICONS.get(_norm(cat),"📦")
+def product_name(name):
+    """Present product names with one readable units convention in the public catalog."""
+    text=str(name or '').replace('Pañuelitos','Rollo de cocina').replace('pañuelitos','rollo de cocina')
+    text=unicodedata.normalize('NFC',text)
+    text=__import__('re').sub(r'\bx\s*(\d+)', r'x \1', text, flags=__import__('re').I)
+    text=__import__('re').sub(r'\b(\d+)\s*[uU]\b', r'\1 u', text)
+    text=__import__('re').sub(r'\bpack\s+x\s*(\d+)', r'pack x \1', text, flags=__import__('re').I)
+    return text
+app.jinja_env.globals['cat_icon']=cat_icon
+def price_label(product):
+    """Return the correct price basis; never call unrelated stationery items rolls."""
+    code=str(product.get('codigo','')) if hasattr(product,'get') else ''
+    desc=str(product.get('desc_','')) if hasattr(product,'get') else ''
+    ruiz_labels={
+        'GOTITA-2ML-2026':'Precio por unidad',
+        'BIC-CRISTAL-AZ-2026':'Precio por unidad',
+        'BIC-TR-NE-2026':'Precio por unidad',
+        'BIC-TR-RO-2026':'Precio por unidad',
+        'BIC-AZ-2026':'Precio por unidad',
+        'BIC-NEG-2026':'Precio por unidad',
+        'BIC-RO-2026':'Precio por unidad',
+        'PAPERMATE-KM-AZ-2026':'Precio por unidad',
+        'PAPERMATE-KM-NEG-2026':'Precio por unidad',
+        'CAR-A4-40F-1070CP-2026':'Precio por unidad',
+        'CINTA-AUCA-48X50-2026':'Precio por rollo',
+        'COR-FILGO-CINTA-2026':'Precio por unidad',
+        'ENC-BIC-MAXI-2026':'Precio por unidad',
+        'ENC-BIC-MINI-2026':'Precio por unidad',
+        'NOTA-EZCO-FLUO-2026':'Precio por unidad',
+        'NOTA-KATANIA-MULTI-2026':'Precio por unidad',
+        'NOTA-LEEP-PASTEL-400-2026':'Precio por paquete',
+        'NOTA-LEEP-50X50-250-2026':'Precio por paquete',
+        'MAR-IBI-570104-2026':'Precio por unidad',
+        'REG-ESC-2026':'Precio por unidad',
+        'RES-BIC-NAR-2026':'Precio por unidad',
+        'RES-BIC-ROS-2026':'Precio por unidad',
+        'RES-BIC-VER-2026':'Precio por unidad',
+        'RES-INTRA-AM-2026':'Precio por unidad',
+        'RES-INTRA-VE-2026':'Precio por unidad',
+        'RES-PELIKAN-AMA-2026':'Precio por unidad',
+        'RESAL-2026':'Precio por unidad',
+        'RES-FILGO-RO-2026':'Precio por unidad',
+        'NOTA-EZCO-BANDERITA-2026':'Precio por paquete',
+        'PAPEL-GLACE-LUMA-LUSTRE-10H-2026':'Precio por paquete',
+        'PAPEL-GLACE-LUMA-METALIZADO-10H-2026':'Precio por paquete',
+        'PAP-MATELINA-300G-2026':'Precio por paquete',
+        'PAPERG260A4-20':'Precio por paquete',
+        'PILAS-DURACELL-AA-2-2026':'Precio por blíster',
+        'PILAS-DURACELL-AAA-2-2026':'Precio por blíster',
+    }
+    if code in ruiz_labels: return ruiz_labels[code]
+    if code in {'AB-PH-016','AB-PH-017','AB-PH-018','AB-PN-008'}: return 'Precio por fardo'
+    if code == 'AB-PN-001': return 'Pack $2.100 · fardo x10 $20.000'
+    if 'fardo' in desc.lower(): return 'Pack + precio de fardo en detalle'
+    if 'pack' in desc.lower(): return 'Precio por pack'
+    if product.get('catalogo_slug') == 'libreria-ruiz': return 'Precio por unidad'
+    return 'Precio por rollo'
+app.jinja_env.globals['price_label']=price_label
+app.jinja_env.filters['product_name']=product_name
+def storage_status():
+    # Render Free uses an ephemeral filesystem. A mounted DATA_DIR is the only
+    # mode in which live catalog data can survive a deploy/restart.
+    configured=bool(os.environ.get("CATALOGO_DATA_DIR"))
+    writable=os.access(DATA_DIR,os.W_OK)
+    durable=cloud_enabled() or (configured and writable)
+    return {"mode":"persistent" if durable else "ephemeral", "data_dir":DATA_DIR, "database":os.path.exists(DB_PATH), "uploads":os.path.isdir(UPLOAD_FOLDER), "backups":os.path.isdir(BACKUP_FOLDER), "cloud":"supabase" if cloud_enabled() else "local"}
+
+def get_db():
+    db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; return db
+
+def init_db():
+    with get_db() as db:
+        db.execute("""CREATE TABLE IF NOT EXISTS productos (id INTEGER PRIMARY KEY AUTOINCREMENT,codigo TEXT UNIQUE NOT NULL,nombre TEXT NOT NULL,desc_ TEXT DEFAULT '',precio REAL NOT NULL DEFAULT 0,categoria TEXT NOT NULL,marca TEXT NOT NULL,foto TEXT DEFAULT '',activo INTEGER DEFAULT 1,stock INTEGER DEFAULT 1)""")
+        # Migrations are safe on the existing production database.
+        for col,definition in [('catalogo_slug',"TEXT DEFAULT 'libreria-ruiz'"),('stock_actual','INTEGER DEFAULT 0'),('stock_minimo','INTEGER DEFAULT 0'),('costo','REAL DEFAULT 0'),('proveedor',"TEXT DEFAULT ''"),('ultima_reposicion',"TEXT DEFAULT ''"),('nivel_precio',"TEXT DEFAULT 'Estándar'")]:
+            try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
+            except sqlite3.OperationalError: pass
+        db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1,visitas INTEGER NOT NULL DEFAULT 0)")
+        try: db.execute("ALTER TABLE catalogos ADD COLUMN visitas INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError: pass
+        db.execute("CREATE TABLE IF NOT EXISTS cambios (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT DEFAULT CURRENT_TIMESTAMP, tipo TEXT NOT NULL, catalogo_slug TEXT, detalle TEXT DEFAULT '')")
+        db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
+        db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
+        db.execute("UPDATE productos SET catalogo_slug='libreria-ruiz' WHERE catalogo_slug IS NULL OR catalogo_slug=''")
+        db.execute("UPDATE catalogos SET banner=? WHERE slug='limpieza-abigail' AND (banner IS NULL OR banner='')",('https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',))
+        db.execute("""CREATE TABLE IF NOT EXISTS sugerencias (id INTEGER PRIMARY KEY AUTOINCREMENT,catalogo_slug TEXT NOT NULL,producto TEXT NOT NULL,nombre TEXT DEFAULT '',cantidad INTEGER DEFAULT 1,cantidad_necesita INTEGER DEFAULT 1,comentario TEXT DEFAULT '',estado TEXT DEFAULT 'pendiente',creado TEXT DEFAULT CURRENT_TIMESTAMP)""")
+        for col,definition in [('cantidad_necesita','INTEGER DEFAULT 1'),('comentario',"TEXT DEFAULT ''"),('estado',"TEXT DEFAULT 'pendiente'")]:
+            try: db.execute(f"ALTER TABLE sugerencias ADD COLUMN {col} {definition}")
+            except sqlite3.OperationalError: pass
+        # Keep the pre-existing product seed; the admin can replace it.
+        db.commit()
+
+def _read_saved_visit_count():
+    if not cloud_enabled(): return None, True, False
+    try:
+        with cloud_request(SUPABASE_VISIT_COUNTER, timeout=8) as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            payload=json.loads(archive.read('libreria-ruiz-visitas.json').decode('utf-8'))
+        count=max(0,int(payload.get('visitas',0)))
+        return count, True, True
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True, False
+        if exc.code == 400:
+            try: details=exc.read().decode('utf-8','replace').lower()
+            except Exception: details=''
+            # Supabase Storage may report a missing object as HTTP 400 with a
+            # not-found body; treat only that case as an unseeded counter.
+            if 'not found' in details and 'bucket not found' not in details:
+                return None, True, False
+        app.logger.warning('No se pudo leer el contador persistente: HTTP %s',exc.code)
+        return None, False, False
+    except Exception:
+        app.logger.exception('No se pudo leer el contador persistente')
+        return None, False, False
+
+def _legacy_snapshot_visit_count():
+    """Recover an older visits total from the last full catalog snapshot, once."""
+    if not cloud_enabled(): return None, True
+    temp_path=None
+    try:
+        with cloud_request(SUPABASE_SNAPSHOT, timeout=90) as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            db_name='base/catalogo.sqlite3'
+            if db_name not in archive.namelist(): return None, True
+            db_bytes=archive.read(db_name)
+        temp_path=os.path.join(DATA_DIR,'.visitas-recuperacion-'+uuid.uuid4().hex+'.sqlite3')
+        with open(temp_path,'wb') as target: target.write(db_bytes)
+        if not _db_has_products(temp_path): return None, False
+        legacy_db=sqlite3.connect(temp_path)
+        try:
+            row=legacy_db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+            return (max(0,int(row[0] or 0)) if row else None), True
+        finally:
+            legacy_db.close()
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True
+        app.logger.warning('No se pudo revisar el respaldo anterior de visitas: HTTP %s',exc.code)
+        return None, False
+    except Exception:
+        app.logger.exception('No se pudo revisar el respaldo anterior de visitas')
+        return None, False
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try: os.remove(temp_path)
+            except OSError: pass
+
+def _write_saved_visit_count(count):
+    if not cloud_enabled(): return False
+    payload=json.dumps({'slug':'libreria-ruiz','visitas':int(count),
+                        'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
+                       ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    archive_buffer=io.BytesIO()
+    with zipfile.ZipFile(archive_buffer,'w',compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('libreria-ruiz-visitas.json',payload)
+    try:
+        with cloud_request(SUPABASE_VISIT_COUNTER,'POST',archive_buffer.getvalue(),'application/zip',timeout=12) as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception('No se pudo guardar el contador de visitas')
+        return False
+
+def restore_visit_counter():
+    """Merge local, dedicated cloud counter, and legacy snapshot using max only."""
+    global VISIT_COUNT_CACHE,VISIT_COUNT_CACHE_READY
+    with VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        if not cloud_enabled():
+            VISIT_COUNT_CACHE=local; VISIT_COUNT_CACHE_READY=True
+            return local
+        remote,read_ok,counter_exists=_read_saved_visit_count()
+        if not read_ok:
+            safe=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
+            with get_db() as db:
+                db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(safe,))
+                db.commit()
+            VISIT_COUNT_CACHE=safe; VISIT_COUNT_CACHE_READY=False
+            return safe
+        if not counter_exists:
+            legacy,legacy_ok=_legacy_snapshot_visit_count()
+            if not legacy_ok:
+                safe=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
+                with get_db() as db:
+                    db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(safe,))
+                    db.commit()
+                VISIT_COUNT_CACHE=safe; VISIT_COUNT_CACHE_READY=False
+                return safe
+            if legacy is not None: remote=legacy
+        count=max(local,remote or 0,VISIT_COUNT_FLOOR)
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(count,))
+            db.commit()
+        VISIT_COUNT_CACHE=count; VISIT_COUNT_CACHE_READY=True
+        if not counter_exists or remote is None or count>remote:
+            _write_saved_visit_count(count)
+        return count
+
+def record_libreria_visit():
+    """Count a real page view only after the durable monotonic value is saved."""
+    global VISIT_COUNT_CACHE,VISIT_COUNT_CACHE_READY
+    with VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        current=max(local,VISIT_COUNT_CACHE or 0,VISIT_COUNT_FLOOR)
+        if not cloud_enabled():
+            current+=1
+        else:
+            remote,read_ok,counter_exists=_read_saved_visit_count()
+            if not read_ok:
+                app.logger.warning('Visita no sumada: no se pudo confirmar el contador persistente')
+                return current
+            if not counter_exists and not VISIT_COUNT_CACHE_READY:
+                legacy,legacy_ok=_legacy_snapshot_visit_count()
+                if not legacy_ok:
+                    app.logger.warning('Visita no sumada: no se pudo revisar el respaldo anterior')
+                    return current
+                if legacy is not None: remote=legacy
+            base=max(current,remote or 0,VISIT_COUNT_FLOOR)
+            next_count=base+1
+            if not _write_saved_visit_count(next_count):
+                app.logger.warning('Visita no sumada: no se pudo guardar el nuevo total')
+                with get_db() as db:
+                    db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(base,))
+                    db.commit()
+                VISIT_COUNT_CACHE=base; VISIT_COUNT_CACHE_READY=True
+                return base
+            current=next_count
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='libreria-ruiz'",(current,))
+            db.commit()
+        VISIT_COUNT_CACHE=current; VISIT_COUNT_CACHE_READY=True
+        return current
+
+def _read_vivero_visit_count():
+    """Read the Vivero counter from its own durable object, never the library object."""
+    if not cloud_enabled(): return None, True, False
+    try:
+        with cloud_request(SUPABASE_VIVERO_VISIT_COUNTER, timeout=8) as response:
+            raw=response.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            payload=json.loads(archive.read('vivero-los-colibries-visitas.json').decode('utf-8'))
+        return max(0,int(payload.get('visitas',0))), True, True
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404: return None, True, False
+        if exc.code == 400:
+            try: details=exc.read().decode('utf-8','replace').lower()
+            except Exception: details=''
+            if 'not found' in details and 'bucket not found' not in details:
+                return None, True, False
+        app.logger.warning('No se pudo leer el contador persistente del vivero: HTTP %s',exc.code)
+        return None, False, False
+    except Exception:
+        app.logger.exception('No se pudo leer el contador persistente del vivero')
+        return None, False, False
+
+def _write_vivero_visit_count(count):
+    if not cloud_enabled(): return False
+    payload=json.dumps({'slug':'vivero-los-colibries','visitas':int(count),
+                        'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
+                       ensure_ascii=False,separators=(',',':')).encode('utf-8')
+    archive_buffer=io.BytesIO()
+    with zipfile.ZipFile(archive_buffer,'w',compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('vivero-los-colibries-visitas.json',payload)
+    try:
+        with cloud_request(SUPABASE_VIVERO_VISIT_COUNTER,'POST',archive_buffer.getvalue(),'application/zip',timeout=12) as response:
+            response.read()
+        return True
+    except Exception:
+        app.logger.exception('No se pudo guardar el contador persistente del vivero')
+        return False
+
+def restore_vivero_visit_counter():
+    """Restore only this catalog's total; merge with max so restarts cannot roll it back."""
+    global VIVERO_VISIT_COUNT_CACHE,VIVERO_VISIT_COUNT_CACHE_READY
+    with VIVERO_VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        if not cloud_enabled():
+            VIVERO_VISIT_COUNT_CACHE=local
+            VIVERO_VISIT_COUNT_CACHE_READY=bool(os.environ.get('CATALOGO_DATA_DIR'))
+            return local
+        remote,read_ok,counter_exists=_read_vivero_visit_count()
+        if not read_ok:
+            VIVERO_VISIT_COUNT_CACHE=max(local,VIVERO_VISIT_COUNT_CACHE)
+            VIVERO_VISIT_COUNT_CACHE_READY=False
+            return VIVERO_VISIT_COUNT_CACHE
+        count=max(local,remote or 0)
+        if not counter_exists or remote is None or count>remote:
+            if not _write_vivero_visit_count(count):
+                VIVERO_VISIT_COUNT_CACHE=count
+                VIVERO_VISIT_COUNT_CACHE_READY=False
+                return count
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='vivero-los-colibries'",(count,))
+            db.commit()
+        VIVERO_VISIT_COUNT_CACHE=count
+        VIVERO_VISIT_COUNT_CACHE_READY=True
+        return count
+
+def record_vivero_visit():
+    """Add one estimate only after durable storage confirms the new total."""
+    global VIVERO_VISIT_COUNT_CACHE,VIVERO_VISIT_COUNT_CACHE_READY
+    with VIVERO_VISIT_COUNT_LOCK:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        current=max(local,VIVERO_VISIT_COUNT_CACHE)
+        if cloud_enabled():
+            remote,read_ok,counter_exists=_read_vivero_visit_count()
+            if not read_ok:
+                app.logger.warning('Visita del vivero no sumada: no se pudo confirmar el contador persistente')
+                return current,False
+            if not counter_exists and not VIVERO_VISIT_COUNT_CACHE_READY:
+                # Seed a fresh dedicated object from the known local value; no historical backfill.
+                if not _write_vivero_visit_count(current):
+                    return current,False
+            current=max(current,remote or 0)
+            next_count=current+1
+            if not _write_vivero_visit_count(next_count):
+                app.logger.warning('Visita del vivero no sumada: no se pudo guardar el nuevo total')
+                return current,False
+        elif os.environ.get('CATALOGO_DATA_DIR'):
+            next_count=current+1
+        else:
+            app.logger.warning('Visita del vivero no sumada: no hay almacenamiento persistente configurado')
+            return current,False
+        with get_db() as db:
+            db.execute("UPDATE catalogos SET visitas=? WHERE slug='vivero-los-colibries'",(next_count,))
+            db.commit()
+        VIVERO_VISIT_COUNT_CACHE=next_count
+        VIVERO_VISIT_COUNT_CACHE_READY=True
+        return next_count,True
+
+def backup_db(reason="manual"):
+    """Create a timestamped SQLite backup without interrupting the live DB."""
+    if not os.path.exists(DB_PATH): return None
+    stamp=datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    target=os.path.join(BACKUP_FOLDER,f"catalogo-{stamp}-{secure_filename(reason) or 'backup'}.sqlite3")
+    src=sqlite3.connect(DB_PATH); dst=sqlite3.connect(target)
+    try: src.backup(dst)
+    finally: dst.close(); src.close()
+    files=sorted([os.path.join(BACKUP_FOLDER,x) for x in os.listdir(BACKUP_FOLDER) if x.endswith('.sqlite3')])
+    for old in files[:-20]:
+        try: os.remove(old)
+        except OSError: pass
+    return target
+
+def log_change(tipo, slug='', detalle=''):
+    try:
+        with get_db() as db: db.execute('INSERT INTO cambios(tipo,catalogo_slug,detalle) VALUES(?,?,?)',(tipo,slug,detalle)); db.commit()
+    except Exception: pass
+
+def allowed_file(filename): return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXT
+
+def save_optimized_image(file):
+    """Normalize product photos so catalog growth does not fill the disk."""
+    raw=file.read(MAX_IMAGE_BYTES+1)
+    if len(raw)>MAX_IMAGE_BYTES: raise ValueError('La imagen supera el límite de 12 MB')
+    try:
+        with Image.open(io.BytesIO(raw)) as original:
+            image=ImageOps.exif_transpose(original)
+            image.thumbnail((MAX_IMAGE_SIDE,MAX_IMAGE_SIDE),Image.Resampling.LANCZOS)
+            has_alpha='A' in image.getbands() or ('transparency' in image.info)
+            image=image.convert('RGBA' if has_alpha else 'RGB')
+            output=io.BytesIO()
+            image.save(output,format='WEBP',quality=82,method=6)
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ValueError('El archivo no contiene una imagen válida') from exc
+    filename=f'{uuid.uuid4().hex}.webp'
+    with open(os.path.join(UPLOAD_FOLDER,filename),'wb') as destination:
+        destination.write(output.getvalue())
+    return filename
+
+@app.errorhandler(413)
+def too_large(_error):
+    return 'El archivo es demasiado grande. Los videos de portada admiten hasta 50 MB; las imágenes, hasta 12 MB.',400
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args,**kwargs):
+        if not session.get('admin'): return redirect(url_for('admin_login'))
+        return f(*args,**kwargs)
+    return decorated
+def get_catalogo_config(slug):
+    with get_db() as db:
+        row=db.execute('SELECT * FROM catalogos WHERE slug=? AND activo=1',(slug,)).fetchone()
+    return dict(row) if row else None
+def get_catalogo(slug='libreria-ruiz'):
+    with get_db() as db: rows=db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre',(slug,)).fetchall()
+    cats={}
+    for row in rows: cats.setdefault(row['categoria'],{}).setdefault(row['marca'],[]).append(dict(row))
+    prioridad=['Libreria','Librería','Fotos','Fotografía','Papeleria','Papelería','Impresiones']; orden={x:i for i,x in enumerate(prioridad)}     # Abigail: order categories as a simple shopping journey, not alphabetically.     if slug == 'limpieza-abigail':         orden.update({cat:i for i,cat in enumerate([             'jabones en pan','papel higienicos','rollo de cocina','shampoo',             'acondicionador','desodorantes','pastas dentales','cepillos de dientes',             'protectores diarios','máquinas de afeitar','talcos','cremas'         ])})     return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
+    return dict(sorted(cats.items(),key=lambda x:(orden.get(x[0],100),x[0].lower())))
+def get_showcase(slug='libreria-ruiz'):
+    # Curated visual shelves are derived from the catalog until explicit merchandising fields are added.
+    with get_db() as db:
+        rows=[dict(r) for r in db.execute('SELECT * FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY id DESC',(slug,)).fetchall()]
+        requests=db.execute('SELECT lower(producto) AS producto,SUM(cantidad) AS votos FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC',(slug,)).fetchall()
+    def unique(items, limit=8):
+        out=[]; seen=set()
+        for item in items:
+            if item['id'] not in seen:
+                out.append(item); seen.add(item['id'])
+            if len(out)>=limit: break
+        return out
+    featured=unique([p for p in rows if p.get('foto')] + rows)
+    newest=unique(rows)
+    economy=[p for p in rows if (p.get('nivel_precio') or '')=='Económico']
+    offers=unique(sorted(economy,key=lambda p:(float(p.get('precio') or 0),p['nombre'])) + sorted(rows,key=lambda p:(float(p.get('precio') or 0),p['nombre'])))
+    recommendations=[]; seen_categories=set()
+    for p in reversed(rows):
+        if p['categoria'] not in seen_categories:
+            recommendations.append(p); seen_categories.add(p['categoria'])
+    by_name={str(p['nombre']).strip().lower():p for p in rows}
+    requested=[]
+    for r in requests:
+        product=by_name.get(r['producto'].strip().lower())
+        if product: requested.append(product)
+    return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'pilas':unique([p for p in rows if str(p.get('categoria') or '').strip().lower()=='pilas']),'total':len(rows)}
+def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
+def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
+
+
+# Dedicated read-only product feed for Alma; intentionally bypasses public page routes.
+ALMA_CATALOG_READONLY_KEY_ENV="ALMA_CATALOG_READONLY_KEY"
+
+@app.route('/api/alma/catalog/libreria-ruiz', methods=['GET'])
+def alma_readonly_libreria_ruiz():
+    """Return public Librería Ruiz fields without rendering pages or recording visits."""
+    expected=os.environ.get(ALMA_CATALOG_READONLY_KEY_ENV,"")
+    if not expected:
+        return jsonify({"error":"unavailable"}),503
+    supplied=request.headers.get("Authorization","")
+    prefix="Bearer "
+    if not supplied.startswith(prefix) or not hmac.compare_digest(supplied[len(prefix):],expected):
+        response=jsonify({"error":"unauthorized"})
+        response.headers["WWW-Authenticate"]="Bearer"
+        return response,401
+    try:
+        with get_db() as db:
+            rows=db.execute(
+                "SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual "
+                "FROM productos WHERE activo=1 AND catalogo_slug=? ORDER BY nombre",
+                ("libreria-ruiz",)
+            ).fetchall()
+        products=[]
+        for row in rows:
+            item=dict(row)
+            quantity=max(0,int(item.get("stock_actual") or 0))
+            products.append({
+                "code":item.get("codigo") or "",
+                "name":item.get("nombre") or "",
+                "description":item.get("desc_") or "",
+                "price_ars":item.get("precio"),
+                "currency":"ARS",
+                "category":item.get("categoria") or "",
+                "brand":item.get("marca") or "",
+                "image":item.get("foto") or "",
+                "stock_quantity":quantity,
+                "available":quantity>0,
+            })
+        response=jsonify({"schema_version":1,"catalog":"libreria-ruiz","count":len(products),"products":products})
+        response.headers["Cache-Control"]="no-store"
+        response.headers["X-Robots-Tag"]="noindex, nofollow"
+        response.headers["Vary"]="Authorization"
+        return response
+    except Exception:
+        app.logger.exception("Read-only Alma catalog endpoint failed")
+        return jsonify({"error":"catalog_unavailable"}),503
+
+@app.route('/manifest.json')
+def web_manifest():
+    slug=request.args.get('catalogo','libreria-ruiz').strip().lower()
+    cfg=get_catalogo_config(slug)
+    if not cfg:
+        cfg=get_catalogo_config('libreria-ruiz')
+    # Keep the install target tied to the catalog URL that the visitor opened.
+    body=render_template('manifest.json',catalogo=cfg,manifest_slug=slug)
+    return app.response_class(body,mimetype='application/manifest+json')
+
+@app.route('/static/uploads/<path:filename>')
+def uploaded_file(filename):
+    # Product photos live in DATA_DIR, not inside the deployable code folder.
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+@app.route('/static/<path:filename>')
+def static_asset(filename):
+    # Visual assets may live in static/ or at the repository root (kept deployable).
+    static_path=os.path.join(BASE_DIR,'static',filename)
+    if os.path.isfile(static_path):
+        return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
+    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_') or filename.startswith('renata-beauty-'):
+        return send_from_directory(BASE_DIR, filename)
+    return ('',404)
+
+@app.route('/menu')
+def menu_digital():
+    return render_template('menu.html')
+
+@app.route('/fleming')
+@app.route('/fleming/')
+def fleming_brochure():
+    return ('', 404)
+
+@app.route('/fleming/cargar')
+@app.route('/fleming/cargar/')
+def fleming_cargar():
+    return ('', 404)
+
+@app.route('/cargar-fotos')
+@app.route('/cargar-fotos/')
+def cargar_fotos():
+    # Mobile-first client-side tool: images stay on the phone and are packaged as one ZIP.
+    return send_from_directory(BASE_DIR, 'cargar_fotos.html')
+
+@app.route('/cargar-fotos/manifest.webmanifest')
+def cargar_fotos_manifest():
+    body=json.dumps({
+        'name':'Preparador de fotos · Librería Ruiz',
+        'short_name':'Fotos Ruiz',
+        'start_url':'/cargar-fotos/',
+        'scope':'/cargar-fotos/',
+        'display':'standalone',
+        'background_color':'#f7faf9',
+        'theme_color':'#128C7E',
+        'description':'Recortá y prepará fotos de catálogo desde el celular.'
+    },ensure_ascii=False)
+    return app.response_class(body,mimetype='application/manifest+json')
+
+@app.route('/cargar-fotos/sw.js')
+def cargar_fotos_service_worker():
+    return send_from_directory(BASE_DIR, 'cargar_fotos-sw.js', mimetype='application/javascript')
+
+VIVERO_COVER_SETTINGS=os.path.join(UPLOAD_FOLDER,'vivero-los-colibries-cover.json')
+VIVERO_COVER_POSTER='/static/vivero_portada_purocolor_20261001.webp?v=20261001c'
+VIVERO_COVER_VIDEO='/static/vivero_portada_purocolor_20261001.mp4?v=20261001c'
+MAX_VIVERO_VIDEO_BYTES=50*1024*1024
+
+def get_vivero_cover_urls():
+    video_url=VIVERO_COVER_VIDEO
+    try:
+        with open(VIVERO_COVER_SETTINGS,'r',encoding='utf-8') as source:
+            settings=json.load(source)
+        filename=settings.get('video','')
+        if (isinstance(filename,str) and secure_filename(filename)==filename and
+                filename.lower().endswith('.mp4') and os.path.isfile(os.path.join(UPLOAD_FOLDER,filename))):
+            video_url=url_for('uploaded_file',filename=filename)
+    except (OSError,ValueError,TypeError):
+        pass
+    return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
+
+def render_catalog_page(cats,showcase,catalogo):
+    if catalogo and catalogo.get('slug') == 'vivero-los-colibries' and request.path.rstrip('/') == '/c/vivero-los-colibries':
+        catalogo=dict(catalogo)
+        zone=ZoneInfo('America/Argentina/Salta')
+        now=datetime.now(zone)
+        today=now.date().isoformat()
+        user_agent=(request.headers.get('User-Agent') or '').lower()
+        automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome','facebookexternalhit','whatsapp','telegrambot','discordbot','twitterbot','linkedinbot','bytespider','bingpreview')
+        cookie_day=request.cookies.get('vivero_visit_day','')
+        counted=False
+        if request.method == 'GET' and cookie_day != today and not any(token in user_agent for token in automated_agents):
+            visits,counted=record_vivero_visit()
+        else:
+            with get_db() as db:
+                row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+            visits=max(int(row['visitas'] or 0) if row else 0,VIVERO_VISIT_COUNT_CACHE)
+        catalogo['visitas']=visits
+        catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
+        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
+        rendered.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+        rendered.headers['Pragma']='no-cache'
+        if counted:
+            tomorrow=(now+timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
+            max_age=max(1,int((tomorrow-now).total_seconds()))
+            rendered.set_cookie('vivero_visit_day',today,max_age=max_age,httponly=True,secure=request.is_secure,samesite='Lax',path='/')
+        return rendered
+    if catalogo and catalogo.get('slug') == 'libreria-ruiz' and request.path.rstrip('/') == '/c/libreria-ruiz':
+        user_agent=(request.headers.get('User-Agent') or '').lower()
+        automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
+        if not any(token in user_agent for token in automated_agents):
+            visits=record_libreria_visit()
+        else:
+            with get_db() as db:
+                row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+            visits=max(int(row['visitas'] or 0) if row else 0,VISIT_COUNT_FLOOR)
+        catalogo=dict(catalogo)
+        catalogo['visitas']=visits
+        catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
+    return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls())
+
+@app.route('/vivero/portada/subir',methods=['GET','POST'])
+@login_required
+def vivero_portada_upload():
+    if not get_catalogo_config('vivero-los-colibries'):
+        return ('Vivero Los Colibríes no está disponible',404)
+    message=None; error=None
+    if request.method=='POST':
+        uploaded=request.files.get('video')
+        if not uploaded or not uploaded.filename:
+            error='Elegí un video MP4 para continuar.'
+        elif secure_filename(uploaded.filename).lower().rsplit('.',1)[-1]!='mp4':
+            error='El formato admitido es MP4.'
+        else:
+            token=uuid.uuid4().hex
+            temp_path=os.path.join(UPLOAD_FOLDER,'.vivero-cover-'+token+'.upload')
+            final_name='vivero_portada_'+token+'.mp4'
+            final_path=os.path.join(UPLOAD_FOLDER,final_name)
+            temp_settings=VIVERO_COVER_SETTINGS+'.tmp'
+            old_settings=None
+            try:
+                try:
+                    with open(VIVERO_COVER_SETTINGS,'rb') as previous:
+                        old_settings=previous.read()
+                except FileNotFoundError:
+                    pass
+                header=uploaded.stream.read(16)
+                uploaded.stream.seek(0)
+                if len(header)<12 or header[4:8]!=b'ftyp':
+                    raise ValueError('El archivo no parece ser un video MP4 válido.')
+                total=0
+                with open(temp_path,'wb') as destination:
+                    while True:
+                        chunk=uploaded.stream.read(1024*1024)
+                        if not chunk: break
+                        total+=len(chunk)
+                        if total>MAX_VIVERO_VIDEO_BYTES:
+                            raise ValueError('El video supera el límite de 50 MB.')
+                        destination.write(chunk)
+                if total==0:
+                    raise ValueError('El archivo está vacío.')
+                os.replace(temp_path,final_path)
+                with open(temp_settings,'w',encoding='utf-8') as settings_file:
+                    json.dump({'video':final_name,'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},settings_file)
+                os.replace(temp_settings,VIVERO_COVER_SETTINGS)
+                try:
+                    synced=cloud_sync()
+                except Exception:
+                    app.logger.exception('Falló la confirmación de respaldo en la nube del video del vivero')
+                    synced=False
+                if not synced:
+                    if old_settings is None:
+                        try: os.remove(VIVERO_COVER_SETTINGS)
+                        except OSError: pass
+                    else:
+                        with open(VIVERO_COVER_SETTINGS,'wb') as previous:
+                            previous.write(old_settings)
+                    try: os.remove(final_path)
+                    except OSError: pass
+                    error='No se pudo confirmar el respaldo en la nube. La portada anterior quedó sin cambios; probá nuevamente más tarde.'
+                else:
+                    log_change('portada-video-vivero','vivero-los-colibries',final_name)
+                    message='✅ Video actualizado y respaldado en la nube. La portada nueva ya está activa.'
+            except ValueError as exc:
+                error=str(exc)
+                try: os.remove(final_path)
+                except OSError: pass
+            except Exception:
+                app.logger.exception('No se pudo actualizar el video de portada del vivero')
+                error='No se pudo procesar el video. La portada anterior se mantiene.'
+                try:
+                    if old_settings is None:
+                        os.remove(VIVERO_COVER_SETTINGS)
+                    else:
+                        with open(VIVERO_COVER_SETTINGS,'wb') as previous:
+                            previous.write(old_settings)
+                except OSError: pass
+                try: os.remove(final_path)
+                except OSError: pass
+            finally:
+                for leftover in (temp_path,temp_settings):
+                    try: os.remove(leftover)
+                    except OSError: pass
+    urls=get_vivero_cover_urls()
+    return render_template('vivero_portada_upload.html',message=message,error=error,video_url=urls['vivero_cover_video_url'],poster_url=urls['vivero_cover_poster_url'])
+@app.route('/')
+def index():
+    cfg=current_config(); return render_catalog_page(get_catalogo(current_slug()),get_showcase(current_slug()),cfg)
+@app.route('/c/<slug>')
+def catalogo_publico(slug):
+    cfg=get_catalogo_config(slug)
+    if not cfg: return redirect(url_for('index'))
+    return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
+
+@app.route('/admin/cargar-renata')
+@login_required
+def admin_cargar_renata():
+    """Install/update only the confirmed-price beauty products for Rena's Beauty."""
+    slug='renas-beauty'
+    banner='/static/renata-beauty-banner.jpg'
+    products=[
+        ('REN-BEA-001','Máscara de pestañas Pum Pum',4800,'/static/renata-beauty-rimel-pum-pum.webp'),
+        ('REN-BEA-002','Delineador',2000,'/static/renata-beauty-delineador.webp'),
+        ('REN-BEA-003','Sombra de ojos',3500,'/static/renata-beauty-sombra.webp'),
+        ('REN-BEA-004','Iluminador',2800,'/static/renata-beauty-iluminador.webp'),
+        ('REN-BEA-005','Rímel ($4.000)',4000,'/static/renata-beauty-rimel-4000.webp'),
+        ('REN-BEA-006','Crema de manos',1600,'/static/renata-beauty-crema-manos.webp'),
+        ('REN-BEA-007','Rímel ($3.400)',3400,'/static/renata-beauty-rimel-3400.webp'),
+        ('REN-BEA-008','Corrector',3600,'/static/renata-beauty-corrector.webp'),
+        ('REN-BEA-009','Base',3500,'/static/renata-beauty-base.webp'),
+        ('REN-BEA-010','Lipgloss ($4.200)',4200,'/static/renata-beauty-lipgloss-4200.webp'),
+        ('REN-BEA-011','Lipgloss ($3.600)',3600,'/static/renata-beauty-lipgloss-3600.webp'),
+        ('REN-BEA-012','Delineador de labios',2500,'/static/renata-beauty-delineador-labios.webp'),
+        ('REN-BEA-013','Combo delineador + lipgloss matte',5000,'/static/renata-beauty-combo.webp'),
+        ('REN-BEA-014','Lipgloss matte',3800,'/static/renata-beauty-lipgloss-matte.webp'),
+    ]
+    backup_db('antes-carga-renata')
+    with get_db() as db:
+        db.execute("INSERT INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner,activo) VALUES(?,?,?,?,?,?,?,1) ON CONFLICT(slug) DO UPDATE SET nombre=excluded.nombre,subtitulo=excluded.subtitulo,logo=excluded.logo,whatsapp=excluded.whatsapp,banner=excluded.banner,activo=1",(slug,"Rena’s Beauty","Maquillaje y belleza",banner,"5493874832731","",banner))
+        for code,name,price,image in products:
+            desc=''
+            db.execute("INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(codigo) DO UPDATE SET nombre=excluded.nombre,desc_=excluded.desc_,precio=excluded.precio,categoria=excluded.categoria,marca=excluded.marca,foto=excluded.foto,activo=1,catalogo_slug=excluded.catalogo_slug,stock_actual=0,nivel_precio=excluded.nivel_precio",(code,name,desc,price,'Maquillaje','Varios',image,1,1,slug,0,0,0,'','Estándar'))
+        db.commit()
+    cloud_sync()
+    log_change('carga-renata',slug,str(len(products)))
+    session['catalogo_slug']=slug
+    return jsonify(ok=True,catalogo=slug,productos=len(products))
+
+@app.route('/api/pedido-telegram',methods=['POST'])
+def api_pedido_telegram():
+    """Send a catalog order directly to the owner's Telegram bot chat."""
+    data=request.get_json(silent=True) or {}
+    token=os.environ.get('TELEGRAM_BOT_TOKEN','').strip()
+    chat_id=os.environ.get('TELEGRAM_CHAT_ID','8899404755').strip()
+    if not token:
+        return jsonify(ok=False,error='Telegram todavía no está conectado'),503
+    text=str(data.get('text','')).strip()
+    if not text or len(text)>3900:
+        return jsonify(ok=False,error='Pedido inválido'),400
+    payload=json.dumps({'chat_id':chat_id,'text':text}).encode('utf-8')
+    try:
+        req=urllib.request.Request('https://api.telegram.org/bot'+token+'/sendMessage',data=payload,method='POST',headers={'Content-Type':'application/json'})
+        with urllib.request.urlopen(req,timeout=15) as response:
+            result=json.loads(response.read().decode('utf-8'))
+        if not result.get('ok'):
+            return jsonify(ok=False,error='Telegram no aceptó el pedido'),502
+        return jsonify(ok=True)
+    except Exception:
+        app.logger.exception('No se pudo enviar el pedido por Telegram')
+        return jsonify(ok=False,error='No se pudo enviar el pedido por Telegram'),502
+
+@app.route('/api/sugerencia',methods=['POST'])
+def api_sugerencia():
+    data=request.get_json(silent=True) or request.form
+    producto=(data.get('producto') or '').strip()[:120]; nombre=(data.get('nombre') or '').strip()[:80]; comentario=(data.get('comentario') or '').strip()[:200]; slug=(data.get('catalogo_slug') or 'libreria-ruiz').strip()
+    try: cantidad=max(1,min(999,int(data.get('cantidad') or 1)))
+    except (TypeError,ValueError): cantidad=1
+    if not producto: return jsonify(ok=False,error='Escribí un producto')
+    with get_db() as db:
+        row=db.execute('SELECT id FROM sugerencias WHERE catalogo_slug=? AND lower(producto)=lower(?)',(slug,producto)).fetchone()
+        if row: db.execute('UPDATE sugerencias SET cantidad=cantidad+1,cantidad_necesita=cantidad_necesita+?,nombre=?,comentario=? WHERE id=?',(cantidad,nombre,comentario,row['id']))
+        else: db.execute('INSERT INTO sugerencias(catalogo_slug,producto,nombre,cantidad_necesita,comentario) VALUES(?,?,?,?,?)',(slug,producto,nombre,cantidad,comentario))
+        db.commit()
+    cloud_sync()
+    return jsonify(ok=True)
+
+@app.route('/admin/login',methods=['GET','POST'])
+def admin_login():
+    error=None
+    if request.method=='POST':
+        if request.form.get('user')==ADMIN_USER and request.form.get('pass')==ADMIN_PASS: session['admin']=True; return redirect(url_for('admin_index'))
+        error='Usuario o contrasena incorrectos'
+    return render_template('login.html',error=error)
+@app.route('/admin/logout')
+def admin_logout(): session.clear(); return redirect(url_for('admin_login'))
+@app.route('/admin')
+@app.route('/admin/')
+@login_required
+def admin_index():
+    slug=current_slug()
+    with get_db() as db:
+        productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute('SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre').fetchall()
+        sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
+    return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias])
+@app.route('/admin/catalogo/seleccionar',methods=['POST'])
+@login_required
+def seleccionar_catalogo():
+    slug=request.form.get('slug','libreria-ruiz')
+    if get_catalogo_config(slug): session['catalogo_slug']=slug
+    return redirect(url_for('admin_index'))
+@app.route('/admin/catalogo/editar',methods=['POST'])
+@login_required
+def editar_catalogo():
+    backup_db('antes-editar-catalogo')
+    slug=request.form.get('slug','')
+    with get_db() as db:
+        db.execute('UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=? WHERE slug=?',(request.form.get('nombre','').strip(),request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp',''),request.form.get('telegram','').lstrip('@'),request.form.get('banner',''),slug)); db.commit()
+    cloud_sync()
+    log_change('edicion-catalogo',slug,'configuración actualizada')
+    session['catalogo_slug']=slug
+    return redirect(url_for('admin_index'))
+@app.route('/admin/catalogo/nuevo',methods=['POST'])
+@login_required
+def nuevo_catalogo():
+    backup_db('antes-nuevo-catalogo')
+    slug=secure_filename(request.form.get('slug','')).lower().replace('_','-'); nombre=request.form.get('nombre','').strip()
+    if slug and nombre:
+        with get_db() as db: db.execute('INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)',(slug,nombre,request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp','5493872101274'),request.form.get('telegram',''),request.form.get('banner',''))); db.commit()
+        cloud_sync()
+        session['catalogo_slug']=slug
+    return redirect(url_for('admin_index'))
+def get_categorias():
+    with get_db() as db: rows=db.execute('SELECT DISTINCT categoria FROM productos WHERE catalogo_slug=? ORDER BY categoria',(current_slug(),)).fetchall()
+    return sorted(set([r['categoria'] for r in rows]+list(CAT_ICONS)))
+@app.route('/admin/producto/nuevo',methods=['GET','POST'])
+@login_required
+def admin_nuevo():
+    if request.method=='POST': return _guardar_producto(None)
+    return render_template('producto_form.html',producto=None,categorias=get_categorias(),catalogo=current_config())
+@app.route('/admin/producto/<int:pid>/editar',methods=['GET','POST'])
+@login_required
+def admin_editar(pid):
+    with get_db() as db: prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone()
+    if not prod: return redirect(url_for('admin_index'))
+    if request.method=='POST': return _guardar_producto(pid)
+    return render_template('producto_form.html',producto=dict(prod),categorias=get_categorias(),catalogo=current_config())
+def _guardar_producto(pid):
+    backup_db('antes-producto')
+    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip(); precio=float(f.get('precio',0) or 0); marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
+    try: stock_actual=max(0,int(f.get('stock_actual',0) or 0)); stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
+    except ValueError: stock_actual=stock_minimo=0; costo=0
+    proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
+    if not codigo or not nombre or not cat or not marca:
+        return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Completá código, nombre, categoría y marca.')
+    if file and file.filename:
+        if not allowed_file(file.filename): return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Formato de imagen no permitido.')
+    with get_db() as db:
+        duplicate=db.execute('SELECT id FROM productos WHERE codigo=? AND id!=?',(codigo,pid or 0)).fetchone()
+        if duplicate:
+            prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
+            return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=f'El código {codigo} ya existe. Elegí otro para no pisar productos.')
+        if file and file.filename:
+            try: foto_name=save_optimized_image(file)
+            except ValueError as exc:
+                prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
+                return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=str(exc))
+        if pid:
+            existing=db.execute('SELECT foto FROM productos WHERE id=?',(pid,)).fetchone(); foto_name=foto_name or (existing['foto'] if existing else '')
+            db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
+        else: db.execute('INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
+        db.commit()
+    cloud_sync()
+    log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
+    return redirect(url_for('admin_index'))
+@app.route('/admin/productos/disponibles',methods=['POST'])
+@login_required
+def admin_marcar_disponibles():
+    """Mark every product in the selected catalog as available without inventing quantities."""
+    slug=current_slug()
+    with get_db() as db:
+        db.execute('UPDATE productos SET stock=1 WHERE catalogo_slug=?',(slug,))
+        db.commit()
+    cloud_sync()
+    log_change('disponibilidad',slug,'todos los productos disponibles')
+    flash('✅ Todos los productos quedaron disponibles')
+    return redirect(url_for('admin_index'))
+
+@app.route('/admin/producto/<int:pid>/eliminar',methods=['POST'])
+@login_required
+def admin_eliminar(pid):
+    backup_db('antes-eliminar-producto')
+    with get_db() as db: db.execute('UPDATE productos SET activo=0 WHERE id=?',(pid,)); db.commit()
+    cloud_sync()
+    log_change('ocultar-producto',current_slug(),str(pid))
+    return redirect(url_for('admin_index'))
+@app.route('/admin/estado-datos')
+@login_required
+def admin_estado_datos():
+    status=storage_status()
+    with get_db() as db:
+        status["catalogos"]=db.execute('SELECT COUNT(*) FROM catalogos').fetchone()[0]
+        status["productos"]=db.execute('SELECT COUNT(*) FROM productos').fetchone()[0]
+        status["fotos"]=db.execute("SELECT COUNT(*) FROM productos WHERE foto IS NOT NULL AND foto!=''").fetchone()[0]
+    return jsonify(status)
+
+@app.route('/admin/backup')
+@login_required
+def admin_backup():
+    path=backup_db('desde-panel')
+    if not path: return 'No hay datos para respaldar', 404
+    return send_file(path,as_attachment=True,download_name=os.path.basename(path))
+
+@app.route('/admin/exportar')
+@login_required
+def admin_exportar():
+    """Export all catalog data and product images into one portable ZIP."""
+    path=backup_db('exportacion')
+    mem=io.BytesIO()
+    with zipfile.ZipFile(mem,'w',zipfile.ZIP_DEFLATED) as z:
+        if path: z.write(path,'base/catalogo.sqlite3')
+        for root,_,files in os.walk(UPLOAD_FOLDER):
+            for name in files: z.write(os.path.join(root,name),os.path.join('imagenes',name))
+        manifest={"version":1,"created_utc":datetime.utcnow().isoformat()+"Z","database":"base/catalogo.sqlite3","images":[]}
+        for info in z.infolist():
+            if info.filename.startswith('imagenes/') and not info.is_dir():
+                data=z.read(info.filename); manifest["images"].append({"file":info.filename,"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data)})
+        z.writestr('README.txt','Exportación del catálogo. La base SQLite contiene catálogos, productos, sugerencias y configuraciones.\n')
+        z.writestr('manifest.json',json.dumps(manifest,ensure_ascii=False,indent=2))
+    mem.seek(0)
+    return send_file(mem,as_attachment=True,download_name='exportacion-catalogos.zip',mimetype='application/zip')
+
+@app.route('/admin/importar',methods=['POST'])
+@login_required
+def admin_importar():
+    """Restore a previously exported ZIP atomically, preserving the old DB as backup."""
+    uploaded=request.files.get('archivo')
+    if not uploaded or not uploaded.filename.lower().endswith('.zip'): return 'Elegí una exportación ZIP válida',400
+    backup_db('antes-importacion')
+    with tempfile.TemporaryDirectory() as td:
+        uploaded.save(os.path.join(td,'import.zip'))
+        with zipfile.ZipFile(os.path.join(td,'import.zip')) as z:
+            names=z.namelist()
+            if any(n.startswith('/') or '..' in n.split('/') for n in names): return 'El ZIP contiene rutas inseguras',400
+            if 'base/catalogo.sqlite3' not in names: return 'El ZIP no contiene una base válida',400
+            if 'manifest.json' in names:
+                try: json.loads(z.read('manifest.json').decode('utf-8'))
+                except Exception: return 'La copia tiene un manifiesto inválido',400
+            z.extract('base/catalogo.sqlite3',td)
+            imported=os.path.join(td,'base','catalogo.sqlite3')
+            test=sqlite3.connect(imported)
+            integrity=test.execute('PRAGMA integrity_check').fetchone()[0]
+            tables={r[0] for r in test.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            test.close()
+            if integrity != 'ok' or not {'productos','catalogos'}.issubset(tables): return 'El ZIP no contiene una base de catálogo válida',400
+            os.replace(imported,DB_PATH)
+            os.makedirs(UPLOAD_FOLDER,exist_ok=True)
+            for n in names:
+                if n.startswith('imagenes/') and not n.endswith('/'):
+                    target=os.path.join(UPLOAD_FOLDER,os.path.basename(n))
+                    with z.open(n) as src, open(target,'wb') as dst: shutil.copyfileobj(src,dst)
+    init_db(); cloud_sync(); log_change('importacion','*',uploaded.filename)
+    return redirect(url_for('admin_index'))
+
+@app.route('/admin/cargar-abigail',methods=['GET','POST'])
+@login_required
+def admin_cargar_abigail():
+    slug='limpieza-abigail'
+    manifest_path=os.path.join(BASE_DIR,'products.json')
+    seed_zip=os.path.join(BASE_DIR,'abigail_seed.zip')
+    if not os.path.exists(manifest_path) and not os.path.exists(seed_zip): return jsonify(ok=False,error='No está la planilla de Abigail'),500
+    seed_archive=zipfile.ZipFile(seed_zip) if os.path.exists(seed_zip) else None
+    if seed_archive:
+        items=json.loads(seed_archive.read('products.json').decode('utf-8'))
+    else:
+        with open(manifest_path,encoding='utf-8') as fh: items=json.load(fh)
+    backup_db('antes-carga-abigail')
+    with get_db() as db:
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",(slug,'Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j'))
+        db.execute("UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=?,activo=1 WHERE slug=?",('Artículos de limpieza Abigail','Limpieza del hogar','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493874572787','LibreriaRuizSaltaBot','https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',slug))
+        count=0
+        for item in items:
+            src=os.path.join(BASE_DIR,item['image'])
+            fname='abigail-'+item['code'].lower()+'.webp'; target=os.path.join(UPLOAD_FOLDER,fname)
+            if not os.path.exists(src) and not seed_archive: continue
+            if not os.path.exists(target):
+                raw=seed_archive.read(item['image']) if seed_archive else None
+                source=io.BytesIO(raw) if raw else src
+                with Image.open(source) as im:
+                    im=ImageOps.exif_transpose(im); im.thumbnail((1600,1600))
+                    if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
+                    im.save(target,'WEBP',quality=82,method=6)
+            cat='papel higienicos' if item['code'].startswith('AB-PH') else 'rollo de cocina'
+            db.execute("INSERT OR IGNORE INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(item['code'],item['name'],item['description'],item['price'],cat,item['brand'],fname,1,1,slug,0,0,0,'','Estándar'))
+            db.execute("UPDATE productos SET nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=1,catalogo_slug=? WHERE codigo=?",(item['name'],item['description'],item['price'],cat,item['brand'],fname,slug,item['code']))
+            count+=1
+        db.commit()
+    if seed_archive: seed_archive.close()
+    cloud_sync(); log_change('carga-abigail',slug,str(count)); session['catalogo_slug']=slug
+    return jsonify(ok=True,catalogo=slug,productos=count)
+
+@app.route('/admin/prueba-foto',methods=['GET','POST'])
+@login_required
+def admin_prueba_foto():
+    """Temporary controlled image-persistence test; creates a small WebP in DATA_DIR."""
+    path=os.path.join(UPLOAD_FOLDER,'prueba-persistencia.webp')
+    im=Image.new('RGB',(900,700),'#25D366')
+    from PIL import ImageDraw
+    draw=ImageDraw.Draw(im)
+    draw.rounded_rectangle((60,60,840,640),radius=36,fill='white',outline='#128C7E',width=10)
+    draw.text((210,260),'PRUEBA FOTO',fill='#128C7E')
+    draw.text((210,350),'PERSISTENCIA OK',fill='#555')
+    im.save(path,'WEBP',quality=82,method=6)
+    with get_db() as db:
+        row=db.execute('SELECT id FROM productos WHERE catalogo_slug=? ORDER BY id LIMIT 1',(current_slug(),)).fetchone()
+        if not row: return jsonify(ok=False,error='No hay producto de prueba'),400
+        db.execute('UPDATE productos SET foto=? WHERE id=?',('prueba-persistencia.webp',row['id'])); db.commit()
+    cloud_sync(); log_change('foto-prueba',current_slug(),'prueba-persistencia.webp')
+    return jsonify(ok=True,foto='prueba-persistencia.webp')
+
+@app.route('/admin/producto/<int:pid>/foto',methods=['POST'])
+@login_required
+def admin_foto_rapida(pid):
+    backup_db('antes-foto')
+    file=request.files.get('foto')
+    if not file or not file.filename: return jsonify(ok=False,error='No se recibio archivo')
+    if not allowed_file(file.filename): return jsonify(ok=False,error='Formato no permitido')
+    try: fname=save_optimized_image(file)
+    except ValueError as exc: return jsonify(ok=False,error=str(exc)),400
+    with get_db() as db: db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
+    cloud_sync()
+    log_change('foto',current_slug(),str(pid))
+    return jsonify(ok=True,foto=fname)
+# Restore the cloud snapshot at startup, but never upload at startup.
+# Uploading here could overwrite a valid catalog while Render is starting.
+restore_from_cloud()
+init_db()
+restore_visit_counter()
+restore_vivero_visit_counter()
+if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=False)
