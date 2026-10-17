@@ -530,7 +530,7 @@ def restore_rena_visit_counter():
             RENA_VISIT_COUNT_CACHE_READY=False
             return RENA_VISIT_COUNT_CACHE
         count=max(local,remote or 0)
-        if not counter_exists or remote is None or count>remote:
+        if counter_exists and remote is not None and count>remote:
             if not _write_rena_visit_count(count):
                 RENA_VISIT_COUNT_CACHE=count
                 RENA_VISIT_COUNT_CACHE_READY=False
@@ -539,7 +539,7 @@ def restore_rena_visit_counter():
             db.execute("UPDATE catalogos SET visitas=? WHERE slug='renas-beauty'",(count,))
             db.commit()
         RENA_VISIT_COUNT_CACHE=count
-        RENA_VISIT_COUNT_CACHE_READY=True
+        RENA_VISIT_COUNT_CACHE_READY=counter_exists
         return count
 
 def record_rena_visit():
@@ -800,34 +800,19 @@ def render_catalog_page(cats,showcase,catalogo):
         return ('Este catálogo ya no está publicado.',410)
     if catalogo and catalogo.get('slug') == 'renas-beauty' and request.path.rstrip('/') == '/c/renas-beauty':
         catalogo=dict(catalogo)
-        zone=ZoneInfo('America/Argentina/Salta')
-        now=datetime.now(zone)
-        today=now.date().isoformat()
         user_agent=(request.headers.get('User-Agent') or '').lower()
         automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome','playwright','zapia','facebookexternalhit','whatsapp','telegrambot','discordbot','twitterbot','linkedinbot','bytespider','bingpreview','lighthouse','uptime')
-        cookie_day=request.cookies.get('renas_beauty_visit_day','')
-        counted=False
-        if request.method=='GET' and cookie_day!=today and not any(token in user_agent for token in automated_agents):
-            visits,counted=record_rena_visit()
+        if request.method=='GET' and not any(token in user_agent for token in automated_agents):
+            visits,_counted=record_rena_visit()
         else:
             with get_db() as db:
                 row=db.execute("SELECT visitas FROM catalogos WHERE slug='renas-beauty'").fetchone()
             visits=max(int(row['visitas'] or 0) if row else 0,RENA_VISIT_COUNT_CACHE)
-            # A worker may have started while Supabase was briefly unavailable. For
-            # excluded requests or a browser already counted today, refresh the
-            # displayed value from the durable object without recording a visit.
-            remote,read_ok,_=_read_rena_visit_count()
-            if read_ok and remote is not None:
-                visits=max(visits,remote)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits,',').replace(',','.')
         rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
         rendered.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         rendered.headers['Pragma']='no-cache'
-        if counted:
-            tomorrow=(now+timedelta(days=1)).replace(hour=0,minute=0,second=0,microsecond=0)
-            max_age=max(1,int((tomorrow-now).total_seconds()))
-            rendered.set_cookie('renas_beauty_visit_day',today,max_age=max_age,httponly=True,secure=request.is_secure,samesite='Lax',path='/')
         return rendered
     if catalogo and catalogo.get('slug') == 'vivero-los-colibries' and request.path.rstrip('/') == '/c/vivero-los-colibries':
         catalogo=dict(catalogo)
