@@ -418,6 +418,15 @@ body.has-ruiz .ruiz-order-qty{flex:none;display:flex;flex-direction:column;align
 body.has-ruiz .ruiz-order-qty input{width:64px;height:38px;border:1px solid #93c5fd;border-radius:9px;text-align:center;font-size:16px;font-weight:800;color:#1e3a8a}
 body.has-ruiz .ruiz-contact-label{display:block;font-size:11px;font-weight:800;color:#334155;margin:7px 0 4px}
 @media(max-width:599px){body.has-ruiz .ruiz-order-picker-list{max-height:22vh}body.has-ruiz .ruiz-order-details strong{font-size:11px}}
+
+/* Saludo flotante del Día de la Madre — solo Librería Ruiz */
+body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .65s ease,transform .65s ease,visibility .65s ease;pointer-events:none}
+body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+body.catalog-libreria-ruiz .ruiz-mothers-banner img{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 12px 38px rgba(16,42,67,.28)}
+body.catalog-libreria-ruiz .ruiz-mothers-banner-close{position:absolute;z-index:2;top:7px;right:7px;width:34px;height:34px;border:1px solid rgba(255,255,255,.85);border-radius:50%;background:rgba(16,42,67,.78);color:#fff;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+body.catalog-libreria-ruiz .ruiz-mothers-banner-close:hover{background:rgba(16,42,67,.96)}
+@media(max-width:480px){body.catalog-libreria-ruiz .ruiz-mothers-banner{right:12px;bottom:calc(94px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}}
+@media(prefers-reduced-motion:reduce){body.catalog-libreria-ruiz .ruiz-mothers-banner,body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{transition:none;transform:none}}
 </style>
 <style id="vivero-cover-styles">
 body.vivero-accordion .vivero-hero-cover{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(320px,33vw,430px);margin:14px auto 12px;width:calc(100% - 24px);max-width:1320px;overflow:hidden;border-radius:24px;background:#2f6f55;box-shadow:0 14px 34px rgba(31,70,47,.16)}
@@ -1020,6 +1029,12 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
 
 {% endif %}
 {% if catalogo.slug != 'renas-beauty' %}
+{% if catalogo.slug == 'libreria-ruiz' %}
+<aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="true" aria-label="Saludo de Librería Ruiz por el Día de la Madre">
+  <button class="ruiz-mothers-banner-close" id="ruizMothersBannerClose" type="button" aria-label="Cerrar saludo">×</button>
+  <img src="/static/libreria_ruiz_dia_madre_2026.jpg" alt="¡Feliz Día de la Madre! Librería Ruiz les desea a todas las mamás un día lleno de amor y alegría." loading="eager">
+</aside>
+{% endif %}
 <!-- FLOAT CART -->
 <button class="float-cart" id="floatCart" onclick="toggleCart()">
  🛒 Mi pedido{% if catalogo.slug != 'libreria-ruiz' %} · {% endif %}<span id="floatTotal">$0</span>
@@ -1969,5 +1984,27 @@ function submitRenataWhatsappOrder(event){
 document.addEventListener('keydown',function(event){if(event.key==='Escape')closeRenataWhatsappForm()});
 </script>
 {% if catalogo.slug == 'renas-beauty' %}<button type="button" id="renataBackToTop" class="renata-back-to-top" aria-label="Volver arriba" aria-hidden="true" tabindex="-1" title="Volver arriba"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 14 7-7 7 7"/><path d="M12 7v12"/></svg><span>Volver arriba</span></button><script>(function(){var button=document.getElementById('renataBackToTop');if(!button)return;function update(){var visible=window.scrollY>420;button.classList.toggle('is-visible',visible);button.setAttribute('aria-hidden',visible?'false':'true');button.tabIndex=visible?0:-1;}window.addEventListener('scroll',update,{passive:true});window.addEventListener('load',update);button.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});update();})();</script>{% endif %}
+{% if catalogo.slug == 'libreria-ruiz' %}
+<script>
+(function(){
+  var banner=document.getElementById('ruizMothersBanner');
+  var closeButton=document.getElementById('ruizMothersBannerClose');
+  if(!banner||!closeButton)return;
+  var now=Date.now();
+  var start=Date.parse('2026-10-17T00:00:00-03:00');
+  var end=Date.parse('2026-10-20T00:00:00-03:00');
+  if(now<start||now>=end)return;
+  var dismissedKey='ruiz-mothers-day-banner-2026-dismissed';
+  try{if(sessionStorage.getItem(dismissedKey)==='1')return;}catch(e){}
+  var show=function(){banner.classList.add('is-visible');banner.setAttribute('aria-hidden','false');window.setTimeout(function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');},4300);};
+  var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced){show();closeButton.addEventListener('click',function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');try{sessionStorage.setItem(dismissedKey,'1');}catch(e){}});return;}
+  var first=window.setTimeout(show,1100);
+  var repeat=window.setInterval(show,30000);
+  closeButton.addEventListener('click',function(){window.clearTimeout(first);window.clearInterval(repeat);banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');try{sessionStorage.setItem(dismissedKey,'1');}catch(e){}});
+})();
+</script>
+{% endif %}
+
 </body>
 </html>
