@@ -420,13 +420,14 @@ body.has-ruiz .ruiz-contact-label{display:block;font-size:11px;font-weight:800;c
 @media(max-width:599px){body.has-ruiz .ruiz-order-picker-list{max-height:22vh}body.has-ruiz .ruiz-order-details strong{font-size:11px}}
 
 /* Saludo flotante del Día de la Madre — solo Librería Ruiz */
-body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .65s ease,transform .65s ease,visibility .65s ease;pointer-events:none}
-body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+@keyframes ruizMothersDayCycle{0%,2%{opacity:0;visibility:hidden;transform:translateY(14px) scale(.98)}4%,29%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}32%,100%{opacity:0;visibility:hidden;transform:translateY(14px) scale(.98)}}
+body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);pointer-events:none;animation:ruizMothersDayCycle 30s ease-in-out infinite}
+body.catalog-libreria-ruiz .ruiz-mothers-banner.is-dismissed,body.catalog-libreria-ruiz .ruiz-mothers-banner.is-expired{display:none!important;animation:none!important}
 body.catalog-libreria-ruiz .ruiz-mothers-banner img{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 12px 38px rgba(16,42,67,.28)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner-close{position:absolute;z-index:2;top:7px;right:7px;width:34px;height:34px;border:1px solid rgba(255,255,255,.85);border-radius:50%;background:rgba(16,42,67,.78);color:#fff;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner-close:hover{background:rgba(16,42,67,.96)}
 @media(max-width:480px){body.catalog-libreria-ruiz .ruiz-mothers-banner{right:12px;bottom:calc(154px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}}
-@media(prefers-reduced-motion:reduce){body.catalog-libreria-ruiz .ruiz-mothers-banner,body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{transition:none;transform:none}}
+@media(prefers-reduced-motion:reduce){body.catalog-libreria-ruiz .ruiz-mothers-banner{animation:none;opacity:1;visibility:visible;transform:none}}
 </style>
 <style id="vivero-cover-styles">
 body.vivero-accordion .vivero-hero-cover{position:relative;isolation:isolate;display:flex;align-items:center;min-height:clamp(320px,33vw,430px);margin:14px auto 12px;width:calc(100% - 24px);max-width:1320px;overflow:hidden;border-radius:24px;background:#2f6f55;box-shadow:0 14px 34px rgba(31,70,47,.16)}
@@ -1030,7 +1031,7 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
 {% endif %}
 {% if catalogo.slug != 'renas-beauty' %}
 {% if catalogo.slug == 'libreria-ruiz' %}
-<aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="true" aria-label="Saludo de Librería Ruiz por el Día de la Madre">
+<aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="false" aria-label="Saludo de Librería Ruiz por el Día de la Madre">
   <button class="ruiz-mothers-banner-close" id="ruizMothersBannerClose" type="button" aria-label="Cerrar saludo">×</button>
   <img src="/static/libreria_ruiz_dia_madre_2026.jpg" alt="¡Feliz Día de la Madre! Librería Ruiz les desea a todas las mamás un día lleno de amor y alegría." loading="eager">
 </aside>
@@ -1989,24 +1990,12 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 (function(){
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
-  if(!banner||!closeButton)return;
+  if(!banner)return;
   var start=Date.parse('2026-10-17T00:00:00-03:00');
   var end=Date.parse('2026-10-20T00:00:00-03:00');
-  if(Date.now()<start||Date.now()>=end)return;
-  var closed=false,hideTimer=0,first=0,repeat=0,expiryTimer=0;
-  var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var hide=function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');};
-  var show=function(){
-    if(closed)return;
-    if(Date.now()>=end){closed=true;window.clearInterval(repeat);window.clearTimeout(hideTimer);hide();return;}
-    banner.classList.add('is-visible');banner.setAttribute('aria-hidden','false');
-    window.clearTimeout(hideTimer);
-    if(!reduced)hideTimer=window.setTimeout(hide,7000);
-  };
-  var close=function(){closed=true;window.clearTimeout(first);window.clearTimeout(hideTimer);window.clearInterval(repeat);window.clearTimeout(expiryTimer);hide();};
-  closeButton.addEventListener('click',close);
-  expiryTimer=window.setTimeout(function(){closed=true;window.clearInterval(repeat);window.clearTimeout(hideTimer);hide();},end-Date.now());
-  if(reduced){show();}else{first=window.setTimeout(show,500);repeat=window.setInterval(show,30000);}
+  if(Date.now()<start||Date.now()>=end){banner.classList.add('is-expired');return;}
+  if(closeButton)closeButton.addEventListener('click',function(){banner.classList.add('is-dismissed');});
+  window.setTimeout(function(){banner.classList.add('is-expired');},end-Date.now());
 })();
 </script>
 {% endif %}
