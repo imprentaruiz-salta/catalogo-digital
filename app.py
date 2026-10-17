@@ -813,6 +813,12 @@ def render_catalog_page(cats,showcase,catalogo):
             with get_db() as db:
                 row=db.execute("SELECT visitas FROM catalogos WHERE slug='renas-beauty'").fetchone()
             visits=max(int(row['visitas'] or 0) if row else 0,RENA_VISIT_COUNT_CACHE)
+            # A worker may have started while Supabase was briefly unavailable. For
+            # excluded requests or a browser already counted today, refresh the
+            # displayed value from the durable object without recording a visit.
+            remote,read_ok,_=_read_rena_visit_count()
+            if read_ok and remote is not None:
+                visits=max(visits,remote)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits,',').replace(',','.')
         rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
