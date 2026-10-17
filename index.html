@@ -2007,7 +2007,7 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   if(!dateEl)return;
   function updateRuizDate(){
     var formatted=new Intl.DateTimeFormat('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Argentina/Salta'}).format(new Date());
-    dateEl.textContent=formatted.replace(/,\s*/,' ');
+    dateEl.textContent='📍 Provincia de Salta, Argentina · '+formatted.replace(/,\s*/,' ');
   }
   updateRuizDate();
   window.setInterval(updateRuizDate,60000);
