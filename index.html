@@ -2006,8 +2006,11 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var dateEl=document.getElementById('ruizVisitDate');
   if(!dateEl)return;
   function updateRuizDate(){
-    var formatted=new Intl.DateTimeFormat('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Argentina/Salta'}).format(new Date());
-    dateEl.textContent='📍 Provincia de Salta, Argentina · '+formatted.replace(/,\s*/,' ');
+    var formatted=new Intl.DateTimeFormat('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Argentina/Salta'}).format(new Date()).replace(/,\s*/,' ');
+    var parts=formatted.split(' ');
+    parts[0]=parts[0].charAt(0).toUpperCase()+parts[0].slice(1);
+    parts[3]=parts[3].charAt(0).toUpperCase()+parts[3].slice(1);
+    dateEl.textContent='📍 Provincia de Salta, Argentina · '+parts.join(' ');
   }
   updateRuizDate();
   window.setInterval(updateRuizDate,60000);
