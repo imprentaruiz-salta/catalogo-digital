@@ -420,12 +420,12 @@ body.has-ruiz .ruiz-contact-label{display:block;font-size:11px;font-weight:800;c
 @media(max-width:599px){body.has-ruiz .ruiz-order-picker-list{max-height:22vh}body.has-ruiz .ruiz-order-details strong{font-size:11px}}
 
 /* Saludo flotante del Día de la Madre — solo Librería Ruiz */
-body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .65s ease,transform .65s ease,visibility .65s ease;pointer-events:none}
+body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .65s ease,transform .65s ease,visibility .65s ease;pointer-events:none}
 body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner img{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 12px 38px rgba(16,42,67,.28)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner-close{position:absolute;z-index:2;top:7px;right:7px;width:34px;height:34px;border:1px solid rgba(255,255,255,.85);border-radius:50%;background:rgba(16,42,67,.78);color:#fff;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner-close:hover{background:rgba(16,42,67,.96)}
-@media(max-width:480px){body.catalog-libreria-ruiz .ruiz-mothers-banner{right:12px;bottom:calc(94px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}}
+@media(max-width:480px){body.catalog-libreria-ruiz .ruiz-mothers-banner{right:12px;bottom:calc(154px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}}
 @media(prefers-reduced-motion:reduce){body.catalog-libreria-ruiz .ruiz-mothers-banner,body.catalog-libreria-ruiz .ruiz-mothers-banner.is-visible{transition:none;transform:none}}
 </style>
 <style id="vivero-cover-styles">
@@ -1990,18 +1990,23 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner||!closeButton)return;
-  var now=Date.now();
   var start=Date.parse('2026-10-17T00:00:00-03:00');
   var end=Date.parse('2026-10-20T00:00:00-03:00');
-  if(now<start||now>=end)return;
-  var dismissedKey='ruiz-mothers-day-banner-2026-dismissed';
-  try{if(sessionStorage.getItem(dismissedKey)==='1')return;}catch(e){}
-  var show=function(){banner.classList.add('is-visible');banner.setAttribute('aria-hidden','false');window.setTimeout(function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');},4300);};
+  if(Date.now()<start||Date.now()>=end)return;
+  var closed=false,hideTimer=0,first=0,repeat=0,expiryTimer=0;
   var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduced){show();closeButton.addEventListener('click',function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');try{sessionStorage.setItem(dismissedKey,'1');}catch(e){}});return;}
-  var first=window.setTimeout(show,1100);
-  var repeat=window.setInterval(show,30000);
-  closeButton.addEventListener('click',function(){window.clearTimeout(first);window.clearInterval(repeat);banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');try{sessionStorage.setItem(dismissedKey,'1');}catch(e){}});
+  var hide=function(){banner.classList.remove('is-visible');banner.setAttribute('aria-hidden','true');};
+  var show=function(){
+    if(closed)return;
+    if(Date.now()>=end){closed=true;window.clearInterval(repeat);window.clearTimeout(hideTimer);hide();return;}
+    banner.classList.add('is-visible');banner.setAttribute('aria-hidden','false');
+    window.clearTimeout(hideTimer);
+    if(!reduced)hideTimer=window.setTimeout(hide,7000);
+  };
+  var close=function(){closed=true;window.clearTimeout(first);window.clearTimeout(hideTimer);window.clearInterval(repeat);window.clearTimeout(expiryTimer);hide();};
+  closeButton.addEventListener('click',close);
+  expiryTimer=window.setTimeout(function(){closed=true;window.clearInterval(repeat);window.clearTimeout(hideTimer);hide();},end-Date.now());
+  if(reduced){show();}else{first=window.setTimeout(show,500);repeat=window.setInterval(show,30000);}
 })();
 </script>
 {% endif %}
