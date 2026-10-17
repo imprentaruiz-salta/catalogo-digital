@@ -546,6 +546,11 @@ body.has-renata .renata-poster-actions .renata-image-whatsapp{position:relative!
 @media(max-width:480px){body.has-renata .renata-poster-actions{right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;gap:8px!important}body.has-renata .renata-poster-actions .cart-btn.renata-image-cart,body.has-renata .renata-poster-actions .renata-image-whatsapp{flex-basis:50px!important;width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important}body.has-renata .renata-poster-actions .renata-poster-cart{min-width:170px!important;max-width:195px!important;min-height:43px!important;padding:9px 12px!important;font-size:12px!important}}
 body.has-renata main>.renata-visit-counter{display:block!important;box-sizing:border-box;width:max-content;max-width:calc(100% - 24px);margin:8px auto 10px;padding:7px 14px;border:1px solid #edc4dc;border-radius:999px;background:linear-gradient(135deg,#fff8fc,#f5e6f8);color:#795b79;text-align:center;font-size:12px;font-weight:750;box-shadow:0 3px 11px rgba(101,37,104,.08)}
 body.has-renata .renata-visit-counter strong{color:#d73793;font-size:14px;font-weight:950}
+body.has-renata .renata-back-to-top{position:fixed!important;left:14px!important;right:auto!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;z-index:340!important;display:flex!important;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 14px;border:1.5px solid #d94399;border-radius:999px;background:linear-gradient(135deg,#fff,#fff1f8);color:#9f2e78;font:inherit;font-size:13px;font-weight:850;box-shadow:0 5px 16px rgba(72,24,73,.2);cursor:pointer;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(9px);transition:opacity .2s ease,transform .2s ease,visibility .2s}
+body.has-renata .renata-back-to-top.is-visible{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+body.has-renata .renata-back-to-top svg{width:18px;height:18px;flex:none;stroke:currentColor}
+body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outline-offset:3px}
+@media(max-width:480px){body.has-renata .renata-back-to-top{left:10px!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;min-height:43px;padding:0 12px;font-size:12px}}
 </style>
 
 </head>
@@ -1963,5 +1968,6 @@ function submitRenataWhatsappOrder(event){
 }
 document.addEventListener('keydown',function(event){if(event.key==='Escape')closeRenataWhatsappForm()});
 </script>
+{% if catalogo.slug == 'renas-beauty' %}<button type="button" id="renataBackToTop" class="renata-back-to-top" aria-label="Volver arriba" aria-hidden="true" tabindex="-1" title="Volver arriba"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 14 7-7 7 7"/><path d="M12 7v12"/></svg><span>Volver arriba</span></button><script>(function(){var button=document.getElementById('renataBackToTop');if(!button)return;function update(){var visible=window.scrollY>420;button.classList.toggle('is-visible',visible);button.setAttribute('aria-hidden',visible?'false':'true');button.tabIndex=visible?0:-1;}window.addEventListener('scroll',update,{passive:true});window.addEventListener('load',update);button.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});update();})();</script>{% endif %}
 </body>
 </html>
