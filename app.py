@@ -808,6 +808,10 @@ def render_catalog_page(cats,showcase,catalogo):
             with get_db() as db:
                 row=db.execute("SELECT visitas FROM catalogos WHERE slug='renas-beauty'").fetchone()
             visits=max(int(row['visitas'] or 0) if row else 0,RENA_VISIT_COUNT_CACHE)
+            # Refresh the displayed total from durable storage without counting automated hits.
+            remote,read_ok,_=_read_rena_visit_count()
+            if read_ok and remote is not None:
+                visits=max(visits,remote)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits,',').replace(',','.')
         rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
