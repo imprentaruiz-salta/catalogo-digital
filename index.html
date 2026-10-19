@@ -429,14 +429,13 @@ body.catalog-libreria-ruiz .ruiz-mothers-banner-close:hover{background:rgba(16,4
 @media(max-width:480px){body.catalog-libreria-ruiz .ruiz-mothers-banner{right:12px;bottom:calc(154px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}}
 @media(prefers-reduced-motion:reduce){body.catalog-libreria-ruiz .ruiz-mothers-banner{animation:none;opacity:1;visibility:visible;transform:none}}
 
-/* Redes sociales de Librería Ruiz — presentación visual, enlaces pendientes */
+/* Redes sociales de Librería Ruiz — enlace a Instagram */
 body.catalog-libreria-ruiz .ruiz-social-follow{display:flex;align-items:center;justify-content:center;gap:9px;padding:7px 12px;margin:0 auto 8px;max-width:980px;box-sizing:border-box;background:#fff;color:#164e7a}
 body.catalog-libreria-ruiz .ruiz-social-label{font-size:11px;font-weight:800;color:#475569;margin-right:2px}
-body.catalog-libreria-ruiz .ruiz-social-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 5px;border:1px solid #dbeafe;border-radius:999px;background:#fff;color:#164e7a;font-size:11px;line-height:1;font-weight:750;white-space:nowrap}
+body.catalog-libreria-ruiz .ruiz-social-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 5px;border:1px solid #dbeafe;border-radius:999px;background:#fff;color:#164e7a;font-size:11px;line-height:1;font-weight:750;white-space:nowrap;text-decoration:none}
 body.catalog-libreria-ruiz .ruiz-social-icon{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;color:#fff;flex:none}
 body.catalog-libreria-ruiz .ruiz-social-icon svg{display:block;width:15px;height:15px}
 body.catalog-libreria-ruiz .ruiz-social-instagram .ruiz-social-icon{background:linear-gradient(135deg,#f9ce34 0%,#ee2a7b 52%,#6228d7 100%)}
-body.catalog-libreria-ruiz .ruiz-social-tiktok .ruiz-social-icon{background:#111827}
 @media(max-width:480px){body.catalog-libreria-ruiz .ruiz-social-follow{gap:6px;padding:6px 8px;margin-bottom:7px;flex-wrap:wrap}body.catalog-libreria-ruiz .ruiz-social-label{font-size:10px}body.catalog-libreria-ruiz .ruiz-social-pill{font-size:10px;padding-right:8px}}
 </style>
 <style id="vivero-cover-styles">
@@ -665,8 +664,7 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
 {% if catalogo.slug == 'libreria-ruiz' %}
 <div class="ruiz-social-follow" aria-label="Redes sociales de Librería Ruiz">
   <span class="ruiz-social-label">Seguinos</span>
-  <span class="ruiz-social-pill ruiz-social-instagram" aria-label="Instagram; perfil pendiente de enlace"><span class="ruiz-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.6" cy="6.6" r=".8" fill="currentColor" stroke="none"/></svg></span><span>Instagram</span></span>
-  <span class="ruiz-social-pill ruiz-social-tiktok" aria-label="TikTok; perfil pendiente de enlace"><span class="ruiz-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.2 7.3a7.6 7.6 0 0 1-4.5-1.5v8.1a5.6 5.6 0 1 1-4.4-5.5v3.2a2.5 2.5 0 1 0 1.3 2.2V2.5h3.1c.2 2 1.5 3.7 3.4 4.3.4.2.8.3 1.2.3z"/></svg></span><span>TikTok</span></span>
+  <a class="ruiz-social-pill ruiz-social-instagram" href="https://www.instagram.com/libreria.ruiz/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Librería Ruiz"><span class="ruiz-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.6" cy="6.6" r=".8" fill="currentColor" stroke="none"/></svg></span><span>Instagram</span></a>
 </div>
 {% endif %}
 {% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
