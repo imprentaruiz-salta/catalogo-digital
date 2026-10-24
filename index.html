@@ -921,7 +921,7 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
  </div>
 
  {% for marca, productos in marcas.items() %}
- {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','paper mate','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global','ibi','genérica','leep','luma','duracell','la gotita'] %}
+ {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['bic','paper mate','intra','filgo','ezco','katania','pelikan','auca','maped','art-jet','global','ibi','genérica','leep','luma','duracell','la gotita','unipox'] %}
  <div class="brand-block{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} brand-open{% endif %}">
  <button class="brand-header{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} open{% endif %}" onclick="toggleBrand(this)">
  <div class="brand-left">
