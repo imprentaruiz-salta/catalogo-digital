@@ -672,7 +672,7 @@ body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
   <a class="ruiz-social-pill ruiz-social-instagram" href="https://www.instagram.com/libreria.ruiz/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Librería Ruiz"><span class="ruiz-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.6" cy="6.6" r=".8" fill="currentColor" stroke="none"/></svg></span><span>Instagram</span></a>
 </div>
 {% endif %}
-{% set whatsapp_contacto = '5493874425245' if catalogo.slug == 'vivero-los-colibries' else ('5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp) %}
+{% set whatsapp_contacto = '5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp %}
 {% if catalogo.slug == 'vivero-los-colibries' %}
 <section class="vivero-hero-cover" aria-label="Portada de Vivero Los Colibríes">
  <img class="vivero-cover-photo" src="/static/vivero_portada_20261025.png?v=20261025a" alt="Plantas y macetas de Vivero Los Colibríes" fetchpriority="high" decoding="async">
