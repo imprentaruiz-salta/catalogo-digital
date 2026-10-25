@@ -572,6 +572,18 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
 @media(max-width:480px){body.has-renata .renata-back-to-top{left:10px!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;min-height:43px;padding:0 12px;font-size:12px}}
 </style>
 
+<style>
+/* Librería Ruiz: filtros rápidos y consulta directa por producto */
+body.has-ruiz .ruiz-quick-filters{display:flex;flex-wrap:wrap;align-items:end;justify-content:center;gap:10px;margin:8px auto 4px;padding:0 8px;max-width:980px}
+body.has-ruiz .ruiz-filter-group{display:flex;flex-direction:column;gap:4px;min-width:min(42vw,190px);color:#173b64;font-size:11px;font-weight:800;text-align:left}
+body.has-ruiz .ruiz-filter-group select{height:40px;padding:0 12px;border:1px solid #b9d2eb;border-radius:11px;background:#fff;color:#243b53;font-size:13px;font-weight:650;min-width:150px;box-shadow:0 2px 8px rgba(18,59,98,.06)}
+body.has-ruiz .ruiz-filter-reset{height:40px;border:1px solid #b9d2eb;border-radius:11px;background:#f1f7fc;color:#164e7a;padding:0 13px;font-size:12px;font-weight:800;cursor:pointer}
+body.has-ruiz .ruiz-filter-hint{width:100%;text-align:center;color:#60758a;font-size:11px;margin-top:-2px}
+body.has-ruiz .ruiz-product-wa{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:7px 9px;border:1px solid #b8e7c9;border-radius:999px;background:#f0fff5;color:#087447;text-decoration:none;font-size:10px;font-weight:850;line-height:1.15;white-space:normal;text-align:center}
+body.has-ruiz .ruiz-product-wa:hover{background:#dcfce7;border-color:#25a55a}
+body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:599px){body.has-ruiz .ruiz-quick-filters{gap:7px}.ruiz-filter-group{min-width:calc(50% - 5px)!important;flex:1}.ruiz-filter-group select{width:100%;min-width:0!important;font-size:12px!important}.ruiz-filter-reset{flex:0 0 100%}.ruiz-product-wa{font-size:9px;padding:6px 7px;min-height:34px}}
+</style>
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% elif catalogo.slug == 'renas-beauty' %} has-renata{% endif %}">
 {% macro cat_visual(cat, size='nav') -%}
@@ -802,6 +814,12 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
     <button type="button" class="search-submit" aria-label="Buscar" onclick="ejecutarBusquedaTradicional()">Buscar</button>
   </div>
   <div class="ruiz-search-status" id="searchStatus" aria-live="polite">Buscá por nombre o marca</div>
+  <div id="ruizQuickFilters" class="ruiz-quick-filters" aria-label="Filtros rápidos de productos">
+    <label class="ruiz-filter-group">🏷️ Marca<select id="ruizFilterBrand" aria-label="Filtrar por marca"><option value="">Todas las marcas</option></select></label>
+    <label class="ruiz-filter-group">🎨 Color o acabado<select id="ruizFilterColor" aria-label="Filtrar por color o acabado"><option value="">Todos los colores</option><option value="azul">Azul</option><option value="negro">Negro</option><option value="rojo">Rojo</option><option value="verde">Verde</option><option value="rosa">Rosa</option><option value="amarillo">Amarillo</option><option value="naranja">Naranja</option><option value="fluo">Flúo</option><option value="lustre">Lustre</option><option value="metalizado">Metalizado</option><option value="pastel">Pastel</option><option value="multicolor">Multicolor / surtidos</option></select></label>
+    <button type="button" id="ruizFilterReset" class="ruiz-filter-reset">Limpiar filtros</button>
+    <span class="ruiz-filter-hint">Los filtros se combinan con la búsqueda por nombre o marca.</span>
+  </div>
 </div>
 {% endif %}
  {% macro showcase_card(p, tag='') -%}
@@ -1490,16 +1508,22 @@ function actualizarEstadoBusqueda(visible,total,filtered,level){
 function buscar(q) {
  var query = normalizarBusqueda(q);
  var terms = query ? query.split(/\s+/).filter(Boolean) : [];
+ var quickBrand=document.body.classList.contains('has-ruiz')?(document.getElementById('ruizFilterBrand')||{}).value||'':'';
+ var quickColor=document.body.classList.contains('has-ruiz')?(document.getElementById('ruizFilterColor')||{}).value||'':'';
  var priceFilter=document.getElementById('priceFilter');
  var level = priceFilter ? priceFilter.value : '';
  var cards = document.querySelectorAll('.product-card');
- var filtered = terms.length || level;
+ var filtered = terms.length || level || quickBrand || quickColor;
+ var colorTerms={azul:['azul'],negro:['negro','negra'],rojo:['rojo','roja'],verde:['verde'],rosa:['rosa','rosado','rosada'],amarillo:['amarillo','amarilla'],naranja:['naranja'],fluo:['fluo','fluorescente'],lustre:['lustre'],metalizado:['metalizado'],pastel:['pastel'],multicolor:['multicolor','surtidos','surtidas']};
  var visible = 0;
  cards.forEach(function(c){
   var searchable = normalizarBusqueda(c.dataset.name || '');
   var matchText = !terms.length || terms.every(function(term){ return searchable.indexOf(term) !== -1; });
+  var matchBrand = !quickBrand || (c.dataset.brand||'').toLowerCase()===quickBrand.toLowerCase();
+  var wantedColors=colorTerms[quickColor]||[];
+  var matchColor = !quickColor || wantedColors.some(function(term){return searchable.indexOf(normalizarBusqueda(term))!==-1});
   var matchLevel = !level || c.dataset.level === level;
-  var match = matchText && matchLevel;
+  var match = matchText && matchBrand && matchColor && matchLevel;
   c.dataset.hidden = match ? 'false' : 'true';
   if (match) visible++;
   var bp = c.closest('.brand-block');
@@ -2033,6 +2057,46 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 })();
 </script>
 {% endif %}
+
+
+<script>
+(function(){
+ function initRuizCatalogEnhancements(){
+  if(!document.body.classList.contains('has-ruiz')) return;
+  var cards=Array.prototype.slice.call(document.querySelectorAll('.product-card[data-code]'));
+  var brandSelect=document.getElementById('ruizFilterBrand');
+  var colorSelect=document.getElementById('ruizFilterColor');
+  var searchInput=document.getElementById('searchInput');
+  var brands={};
+  cards.forEach(function(card){
+   var brand=(card.getAttribute('data-brand')||'').trim().toLowerCase();
+   if(brand) brands[brand]=true;
+   var actions=card.querySelector('.prod-actions');
+   if(actions&&!actions.querySelector('.ruiz-product-wa')){
+    var nameEl=card.querySelector('.prod-name');
+    var name=nameEl?nameEl.textContent.trim():'producto del catálogo';
+    var code=card.getAttribute('data-code')||'';
+    var msg='Hola, quiero consultar por '+name+' (código '+code+') del catálogo de Librería Ruiz. ¿Me confirmás el precio y la disponibilidad?';
+    var link=document.createElement('a');
+    link.className='ruiz-product-wa';
+    link.href='https://wa.me/5493872101274?text='+encodeURIComponent(msg);
+    link.target='_blank';link.rel='noopener noreferrer';
+    link.setAttribute('aria-label','Consultar por WhatsApp por '+name);
+    link.textContent='💬 Consultar';
+    actions.appendChild(link);
+   }
+  });
+  if(brandSelect){
+   Object.keys(brands).sort().forEach(function(brand){var o=document.createElement('option');o.value=brand;o.textContent=brand.toUpperCase();brandSelect.appendChild(o)});
+   brandSelect.addEventListener('change',function(){if(typeof buscar==='function')buscar(searchInput?searchInput.value:'')});
+  }
+  if(colorSelect) colorSelect.addEventListener('change',function(){if(typeof buscar==='function')buscar(searchInput?searchInput.value:'')});
+  var reset=document.getElementById('ruizFilterReset');
+  if(reset) reset.addEventListener('click',function(){if(brandSelect)brandSelect.value='';if(colorSelect)colorSelect.value='';if(searchInput)searchInput.value='';if(typeof buscar==='function')buscar('');if(typeof actualizarLimpiarBusqueda==='function')actualizarLimpiarBusqueda()});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRuizCatalogEnhancements,{once:true});else initRuizCatalogEnhancements();
+})();
+</script>
 
 </body>
 </html>
