@@ -1047,9 +1047,9 @@ body.has-renata .renata-back-to-top:focus-visible{outline:3px solid #fde68a;outl
 {% endif %}
 {% if catalogo.slug != 'renas-beauty' %}
 {% if catalogo.slug == 'libreria-ruiz' %}
-<aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="false" aria-label="Ideas para tus trabajos y proyectos. Placa promocional de Librería Ruiz.">
+<aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="false" aria-label="Dejá lista la semana que viene. Placa promocional de Librería Ruiz.">
   <button class="ruiz-mothers-banner-close" id="ruizMothersBannerClose" type="button" aria-label="Cerrar placa">×</button>
-  <img src="/static/libreria_ruiz_sabado_2026-10-24.jpg" alt="Ideas para tus trabajos y proyectos. Librería Ruiz." loading="eager">
+  <img src="/static/libreria_ruiz_domingo_2026-10-25.jpg" alt="Dejá lista la semana que viene. Librería Ruiz." loading="eager">
 </aside>
 {% endif %}
 <!-- FLOAT CART -->
@@ -2007,8 +2007,8 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner)return;
-  var start=Date.parse('2026-10-24T00:00:00-03:00');
-  var end=Date.parse('2026-10-25T00:00:00-03:00');
+  var start=Date.parse('2026-10-25T00:00:00-03:00');
+  var end=Date.parse('2026-10-26T00:00:00-03:00');
   if(Date.now()<start||Date.now()>=end){banner.classList.add('is-expired');return;}
   if(closeButton)closeButton.addEventListener('click',function(){banner.classList.add('is-dismissed');});
   window.setTimeout(function(){banner.classList.add('is-expired');},end-Date.now());
