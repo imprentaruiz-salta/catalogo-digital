@@ -729,7 +729,7 @@ body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
 <nav class="cat-nav" id="catNav" aria-label="Categorías del catálogo">
  <div class="category-track" style="{% if catalogo.slug == 'vivero-los-colibries' %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% else %}display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:max-content!important;{% endif %}">
  {% if catalogo.slug == 'libreria-ruiz' %}
- <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small id="ruizAllProductsCount">Productos</small></a>
+ <a href="#sec-todos" class="ruiz-category-menu active" aria-label="Ver todos los productos" title="Ver todos los productos" onclick="filtrarCategoriaMenu(event,'todos')"><span class="ruiz-category-icon">📚</span><span>Todos</span><small id="ruizAllProductsCount">Calculando productos…</small></a>
  {% for cat, marcas in cats.items() %}{% if cat|lower == 'pegamento' %}<a href="#sec-{{ loop.index }}" class="ruiz-category-menu" data-category="pegamento" aria-label="Ver pegamento" title="Ver pegamento" onclick="filtrarCategoriaMenu(event,'pegamento')"><span class="ruiz-category-icon">🧴</span><span>Pegamento</span><small>1 producto</small></a>{% endif %}{% endfor %}
  {% for cat, marcas in cats.items() %}{% if cat|lower == 'pilas' %}<a href="#sec-{{ loop.index }}" class="ruiz-category-menu" data-category="pilas" aria-label="Ver pilas AA y AAA" title="Ver pilas AA y AAA" onclick="filtrarCategoriaMenu(event,'pilas')"><span class="ruiz-category-icon">🔋</span><span>Pilas</span><small>AA y AAA</small></a>{% endif %}{% endfor %}
  <a href="#sec-biromes" class="ruiz-category-menu" aria-label="Ver biromes BIC" title="Ver biromes BIC" onclick="filtrarCategoriaMenu(event,'biromes')"><span class="ruiz-category-icon">🖊️</span><span>Biromes BIC</span><small>3 colores</small></a>
@@ -2064,8 +2064,11 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
  function initRuizCatalogEnhancements(){
   if(!document.body.classList.contains('has-ruiz')) return;
   var cards=Array.prototype.slice.call(document.querySelectorAll('.product-card[data-code]'));
+  var uniqueCodes={};cards.forEach(function(card){var code=card.getAttribute('data-code');if(code)uniqueCodes[code]=true});
+  var productCount=Object.keys(uniqueCodes).length;
   var allCount=document.getElementById('ruizAllProductsCount');
-  if(allCount){var uniqueCodes={};cards.forEach(function(card){var code=card.getAttribute('data-code');if(code)uniqueCodes[code]=true});var count=Object.keys(uniqueCodes).length;allCount.textContent=count+' productos';var allMenu=document.querySelector('.ruiz-category-menu[onclick*="todos"]');if(allMenu){allMenu.setAttribute('aria-label','Ver todos los productos: '+count);allMenu.title='Ver todos los productos: '+count;}}
+  if(allCount)allCount.textContent=productCount+' productos';
+  document.querySelectorAll('#ruizCategoryCarousel a[href="#sec-todos"]').forEach(function(link){var small=link.querySelector('small');if(small)small.textContent=productCount+' productos';link.setAttribute('aria-label','Ver todos los productos: '+productCount);link.title='Ver todos los productos: '+productCount;});
   var brandSelect=document.getElementById('ruizFilterBrand');
   var colorSelect=document.getElementById('ruizFilterColor');
   var searchInput=document.getElementById('searchInput');
