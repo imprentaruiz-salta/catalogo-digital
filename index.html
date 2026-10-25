@@ -20,7 +20,7 @@
 <meta property="og:url" content="{{ request.url }}">
 {% if share_image %}<meta property="og:image" content="{{ share_image_url }}">
 <meta property="og:image:secure_url" content="{{ share_image_url }}">
-<meta property="og:image:type" content="{{ 'image/jpeg' if share_image_url.lower().endswith('.jpg') or share_image_url.lower().endswith('.jpeg') else 'image/png' }}">
+<meta property="og:image:type" content="{{ 'image/jpeg' if catalogo.slug == 'vivero-los-colibries' or share_image_url.lower().endswith('.jpg') or share_image_url.lower().endswith('.jpeg') else 'image/png' }}">
 <meta property="og:image:width" content="{% if catalogo.slug == 'vivero-los-colibries' %}1024{% elif catalogo.slug == 'renas-beauty' %}683{% else %}1024{% endif %}">
 {% if catalogo.slug == 'libreria-ruiz' %}<meta property="og:image:height" content="341">{% elif catalogo.slug == 'vivero-los-colibries' %}<meta property="og:image:height" content="455">{% elif catalogo.slug == 'renas-beauty' %}<meta property="og:image:height" content="1105">{% else %}<meta property="og:image:height" content="455">{% endif %}
 <meta property="og:image:alt" content="{{ catalogo.nombre }}">{% endif %}
