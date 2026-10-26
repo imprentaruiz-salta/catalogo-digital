@@ -7,8 +7,25 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
-app.secret_key = "catalogo_ruiz_2026_secret_x7k"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH']=52*1024*1024
+
+# Isolated Alma preview: every deployment except the known production service is fail-closed.
+# This branch never enables catalog writes or visit-counter updates in preview instances.
+PRODUCTION_RENDER_SERVICE_ID="srv-d9ka2dugekts73clfp40"
+ALMA_PRIVATE_PREVIEW=os.environ.get("RENDER_SERVICE_ID","") != PRODUCTION_RENDER_SERVICE_ID
+ALMA_PRIVATE_CHAT_PATH="/v1/almachat/chat/completions"
+
+@app.before_request
+def _alma_preview_lockdown():
+    if ALMA_PRIVATE_PREVIEW and request.path not in (ALMA_PRIVATE_CHAT_PATH,"/alma/health"):
+        return jsonify({"error":"not found"}),404
+
+@app.after_request
+def _alma_preview_noindex(response):
+    if ALMA_PRIVATE_PREVIEW:
+        response.headers["X-Robots-Tag"]="noindex, nofollow"
+    return response
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -48,6 +65,8 @@ def cloud_endpoint(path):
     return f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{path.lstrip('/')}"
 
 def cloud_request(path, method="GET", data=None, content_type="application/octet-stream", timeout=30):
+    if ALMA_PRIVATE_PREVIEW and method.upper() not in ("GET","HEAD"):
+        raise PermissionError("Preview mode forbids remote writes")
     req=urllib.request.Request(cloud_endpoint(path), data=data, method=method, headers={
         "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}",
         "apikey":SUPABASE_SERVICE_KEY,
@@ -56,6 +75,7 @@ def cloud_request(path, method="GET", data=None, content_type="application/octet
     return urllib.request.urlopen(req, timeout=timeout)
 
 def cloud_sync():
+    if ALMA_PRIVATE_PREVIEW: return False
     """Upload one atomic catalog snapshot after a successful local change."""
     if not cloud_enabled() or not os.path.exists(DB_PATH): return False
     # Never replace a valid cloud snapshot with an empty database. This protects
@@ -285,6 +305,7 @@ def _legacy_snapshot_visit_count():
             except OSError: pass
 
 def _write_saved_visit_count(count):
+    if ALMA_PRIVATE_PREVIEW: return False
     if not cloud_enabled(): return False
     payload=json.dumps({'slug':'libreria-ruiz','visitas':int(count),
                         'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
@@ -303,6 +324,12 @@ def _write_saved_visit_count(count):
 def restore_visit_counter():
     """Merge local, dedicated cloud counter, and legacy snapshot using max only."""
     global VISIT_COUNT_CACHE,VISIT_COUNT_CACHE_READY
+    if ALMA_PRIVATE_PREVIEW:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        remote,read_ok,_=_read_saved_visit_count() if cloud_enabled() else (None,True,False)
+        return max(local,remote or 0,VISIT_COUNT_FLOOR) if read_ok else max(local,VISIT_COUNT_FLOOR)
     with VISIT_COUNT_LOCK:
         with get_db() as db:
             row=db.execute("SELECT visitas FROM catalogos WHERE slug='libreria-ruiz'").fetchone()
@@ -397,6 +424,7 @@ def _read_vivero_visit_count():
         return None, False, False
 
 def _write_vivero_visit_count(count):
+    if ALMA_PRIVATE_PREVIEW: return False
     if not cloud_enabled(): return False
     payload=json.dumps({'slug':'vivero-los-colibries','visitas':int(count),
                         'updated_at':datetime.utcnow().isoformat(timespec='seconds')+'Z'},
@@ -415,6 +443,12 @@ def _write_vivero_visit_count(count):
 def restore_vivero_visit_counter():
     """Restore only this catalog's total; merge with max so restarts cannot roll it back."""
     global VIVERO_VISIT_COUNT_CACHE,VIVERO_VISIT_COUNT_CACHE_READY
+    if ALMA_PRIVATE_PREVIEW:
+        with get_db() as db:
+            row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
+        local=max(0,int(row['visitas'] or 0)) if row else 0
+        remote,read_ok,_=_read_vivero_visit_count() if cloud_enabled() else (None,True,False)
+        return max(local,remote or 0) if read_ok else local
     with VIVERO_VISIT_COUNT_LOCK:
         with get_db() as db:
             row=db.execute("SELECT visitas FROM catalogos WHERE slug='vivero-los-colibries'").fetchone()
@@ -929,6 +963,145 @@ def vivero_portada_upload():
                     except OSError: pass
     urls=get_vivero_cover_urls()
     return render_template('vivero_portada_upload.html',message=message,error=error,video_url=urls['vivero_cover_video_url'],poster_url=urls['vivero_cover_poster_url'])
+def _alma_authorized():
+    import hmac
+    expected=os.environ.get("ALMA_PRIVATE_API_KEY","")
+    supplied=request.headers.get("Authorization","")
+    return bool(expected and hmac.compare_digest(supplied,"Bearer "+expected))
+
+def _alma_tokens(value):
+    import re
+    text=_norm(value)
+    words=set(re.findall(r"[a-z0-9]+",text))
+    stop={"el","la","los","las","un","una","unos","unas","de","del","por","para","con","y","o","que","me","se","lo","cuanto","cuantos","cuesta","sale","precio","precios","tienen","hay","quiero","necesito","busco","dame","decime","favor","hola","buenas","tenes","tiene","gustaria","quisiera"}
+    aliases={"boligrafo":"birome","boligrafos":"birome","biromes":"birome","lapicera":"birome","lapiceras":"birome","lapices":"lapiz","marcador":"resaltador","marcadores":"resaltador","fluorescente":"resaltador","fluorescentes":"resaltador","negro":"negra","rojo":"roja","azules":"azul","rojos":"roja","negras":"negra","verdes":"verde","amarillos":"amarillo"}
+    return {aliases.get(w,w) for w in words if w not in stop}
+
+def _alma_catalog_products():
+    key=os.environ.get("ALMA_CATALOG_READONLY_KEY","").strip()
+    if not key:
+        raise RuntimeError("Read-only catalog key is not configured")
+    api_url="https://catalogo-app-zm3w.onrender.com/api/alma/catalog/libreria-ruiz"
+    req=urllib.request.Request(api_url,headers={"Authorization":f"Bearer {key}","Accept":"application/json"},method="GET")
+    with urllib.request.urlopen(req,timeout=20) as response:
+        payload=json.loads(response.read().decode("utf-8"))
+    items=payload.get("products") if isinstance(payload,dict) else None
+    if not isinstance(items,list):
+        raise RuntimeError("Invalid read-only catalog response")
+    products=[]
+    for item in items:
+        if not isinstance(item,dict):
+            continue
+        products.append({
+            "codigo":str(item.get("code") or ""),
+            "nombre":str(item.get("name") or "Producto"),
+            "desc_":str(item.get("description") or ""),
+            "precio":item.get("price_ars"),
+            "marca":str(item.get("brand") or ""),
+            "categoria":str(item.get("category") or ""),
+            "catalogo_slug":"libreria-ruiz",
+            "available":bool(item.get("available")),
+            "stock":1 if item.get("available") else 0,
+            "stock_quantity":item.get("stock_quantity"),
+            "image":item.get("image"),
+        })
+    return products
+
+def _alma_find(query,products):
+    terms=_alma_tokens(query)
+    if not terms: return []
+    scored=[]
+    for product in products:
+        fields=" ".join(str(product.get(k) or "") for k in ("nombre","marca","categoria","desc_","codigo"))
+        pterms=_alma_tokens(fields)
+        score=sum(1 for term in terms if term in pterms)
+        if "birome" in terms and any(t in pterms for t in ("round","stic","cristal","birome")): score+=1
+        if "resaltador" in terms and any(t in pterms for t in ("resaltador","marker","marking")): score+=1
+        if score: scored.append((score,product))
+    scored.sort(key=lambda pair:(-pair[0],str(pair[1].get("nombre") or "")))
+    return scored
+
+def _alma_quantity(text,previous_question=False):
+    import re
+    text=str(text or "").strip().lower()
+    if previous_question and re.fullmatch(r"\d{1,5}",text): return max(1,int(text))
+    match=re.search(r"(?:x|por|llevo|quiero|necesito|serian|serían|dame)\s*(\d{1,5})\b",text)
+    if not match: match=re.search(r"\b(\d{1,5})\s*(?:u|unidades|unidad|packs|pack|paquetes|paquete|blister|blíster|rollos|rollo)\b",text)
+    return max(1,int(match.group(1))) if match else None
+
+def _alma_money(value):
+    return "$"+format(float(value),",.2f").replace(",","X").replace(".",",").replace("X",".")
+
+def _alma_answer(messages,products):
+    users=[str(m.get("content") or "").strip() for m in messages if isinstance(m,dict) and m.get("role")=="user" and isinstance(m.get("content"),str)]
+    assistants=[str(m.get("content") or "") for m in messages if isinstance(m,dict) and m.get("role")=="assistant" and isinstance(m.get("content"),str)]
+    if not users: return "Hola, ¿qué producto de Librería Ruiz estás buscando?"
+    latest=users[-1]
+    asked_quantity=bool(assistants and any(q in _norm(assistants[-1]) for q in ("cuantas unidades","cantidad queres","cantidad necesitas","cuantos queres")))
+    query=users[-2] if asked_quantity and len(users)>1 and _alma_quantity(latest,True) else latest
+    matches=_alma_find(query,products)
+    if not matches:
+        return "No encuentro una coincidencia clara en el catálogo vigente. ¿Qué tipo de producto, marca o color buscás?"
+    best=matches[0][0]
+    candidates=[p for score,p in matches if score==best]
+    if len(candidates)>1:
+        names=[str(p.get("nombre") or "") for p in candidates[:4]]
+        return "Encontré varias opciones: "+"; ".join(names)+". ¿Qué marca o color buscás?"
+    product=candidates[0]
+    amount=_alma_quantity(latest,asked_quantity)
+    name=product_name(product.get("nombre") or "Producto")
+    unit=price_label(product)
+    raw_price=product.get("precio")
+    availability="El catálogo lo marca como disponible." if bool(product.get("available")) else "El catálogo no lo marca como disponible; conviene confirmar existencia."
+    if raw_price is None or float(raw_price)<=0:
+        return f"{name}: no tengo un precio vigente confirmado en el catálogo. {availability} ¿Querés que consulte por otra marca o presentación?"
+    price=float(raw_price)
+    if amount is None:
+        return f"{name}: {_alma_money(price)} ARS, {unit.lower()}. {availability} ¿Cuántas unidades querés?"
+    subtotal=price*amount
+    return f"{amount} × {name} a {_alma_money(price)} ARS ({unit.lower()}) = {_alma_money(subtotal)} ARS. {availability} ¿Querés agregar otro producto?"
+
+def _alma_chat_response(content,model,stream=False):
+    import time
+    response_id="chatcmpl-alma-"+uuid.uuid4().hex
+    created=int(time.time())
+    if stream:
+        def generate():
+            yield "data: "+json.dumps({"id":response_id,"object":"chat.completion.chunk","created":created,"model":model,"choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":None}],"usage":None},ensure_ascii=False)+"\n\n"
+            yield "data: "+json.dumps({"id":response_id,"object":"chat.completion.chunk","created":created,"model":model,"choices":[{"index":0,"delta":{"content":content},"finish_reason":None}],"usage":None},ensure_ascii=False)+"\n\n"
+            yield "data: "+json.dumps({"id":response_id,"object":"chat.completion.chunk","created":created,"model":model,"choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":None},ensure_ascii=False)+"\n\n"
+            yield "data: [DONE]\n\n"
+        return app.response_class(generate(),mimetype="text/event-stream",headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
+    return jsonify({"id":response_id,"object":"chat.completion","created":created,"model":model,"choices":[{"index":0,"message":{"role":"assistant","content":content},"finish_reason":"stop"}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}})
+
+@app.route(ALMA_PRIVATE_CHAT_PATH,methods=["POST"])
+def alma_private_chat_completions():
+    if not ALMA_PRIVATE_PREVIEW: return jsonify({"error":"not found"}),404
+    if not _alma_authorized(): return jsonify({"error":"unauthorized"}),401
+    body=request.get_json(silent=True)
+    if not isinstance(body,dict): return jsonify({"error":"invalid JSON request"}),400
+    messages=body.get("messages")
+    if not isinstance(messages,list) or len(messages)>100: return jsonify({"error":"invalid messages"}),400
+    try:
+        products=_alma_catalog_products()
+    except Exception:
+        app.logger.warning("Alma read-only catalog source unavailable")
+        return jsonify({"error":"catalog source unavailable"}),503
+    reply=_alma_answer(messages,products)
+    model=str(body.get("model") or "alma-libreria-ruiz-readonly")[:100]
+    return _alma_chat_response(reply,model,bool(body.get("stream")))
+
+@app.route("/alma/health",methods=["GET"])
+def alma_private_health():
+    if not ALMA_PRIVATE_PREVIEW: return jsonify({"error":"not found"}),404
+    if not _alma_authorized(): return jsonify({"error":"unauthorized"}),401
+    try:
+        count=len(_alma_catalog_products())
+    except Exception:
+        app.logger.warning("Alma read-only catalog health check failed")
+        return jsonify({"ok":False,"mode":"private-read-only","error":"catalog source unavailable","public_catalog_enabled":False,"writes_enabled":False}),503
+    return jsonify({"ok":True,"mode":"private-read-only","catalog_products":count,"public_catalog_enabled":False,"writes_enabled":False})
+
 @app.route('/')
 def index():
     cfg=current_config(); return render_catalog_page(get_catalogo(current_slug()),get_showcase(current_slug()),cfg)
