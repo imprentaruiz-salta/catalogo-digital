@@ -934,8 +934,6 @@ def index():
     cfg=current_config(); return render_catalog_page(get_catalogo(current_slug()),get_showcase(current_slug()),cfg)
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
-    if slug == 'renas-beauty':
-        return ('',410)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
     return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
