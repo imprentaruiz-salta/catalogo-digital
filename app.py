@@ -938,6 +938,56 @@ def catalogo_publico(slug):
     if not cfg: return redirect(url_for('index'))
     return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
 
+@app.route('/consulta-qr')
+def consulta_qr_libreria():
+    """Mobile lookup screen for Bluetooth HID barcode/QR readers."""
+    return render_template('consulta_qr.html')
+
+@app.route('/api/consulta-qr/<path:raw_code>')
+def api_consulta_qr_libreria(raw_code):
+    """Resolve either a product SKU or a direct /p/<SKU> URL to live catalog data."""
+    from urllib.parse import unquote, urlparse
+    value=unquote(str(raw_code or '').strip()).strip().strip('\"\'<>')
+    if len(value)>500:
+        return jsonify({'error':'Código demasiado largo'}),400
+    if '://' in value:
+        parsed=urlparse(value)
+        match=__import__('re').search(r'(?:^|/)p/([^/?#]+)',parsed.path)
+        if match:
+            value=unquote(match.group(1))
+        elif parsed.path.rstrip('/').endswith('/consulta-qr'):
+            query=__import__('urllib.parse',fromlist=['parse_qs']).parse_qs(parsed.query)
+            value=(query.get('codigo') or query.get('code') or [''])[0]
+        else:
+            value=''
+    value=value.split('?',1)[0].split('#',1)[0].rstrip('/')
+    value=value.rsplit('/',1)[-1].strip()
+    if not value or len(value)>120:
+        return jsonify({'error':'No reconocí un código de producto'}),400
+    with get_db() as db:
+        row=db.execute(
+            'SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual '
+            'FROM productos WHERE activo=1 AND catalogo_slug=? AND codigo=? LIMIT 1',
+            ('libreria-ruiz',value)
+        ).fetchone()
+    if not row:
+        response=jsonify({'error':'No encontré ese producto. Revisá que el QR corresponda a Librería Ruiz.'})
+        response.headers['Cache-Control']='no-store'
+        return response,404
+    item=dict(row)
+    photo=str(item.get('foto') or '').strip()
+    if item['codigo']=='SANDISK-CRUZER-BLADE-16GB-2026':
+        photo='https://raw.githubusercontent.com/imprentaruiz-salta/catalogo-digital/main/sandisk_cruzer_blade_16gb.webp'
+    elif photo and not photo.startswith(('http://','https://','/')):
+        photo='/static/uploads/'+photo
+    item['image']=photo
+    item['price_display']='ARS '+format(int(round(float(item.get('precio') or 0))),',').replace(',','.')
+    item['stock_display']=('Disponible en catálogo' if int(item.get('stock_actual') or 0)>0 else 'Consultá disponibilidad')
+    response=jsonify(item)
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['X-Robots-Tag']='noindex, nofollow'
+    return response
+
 @app.route('/p/<path:code>')
 def producto_por_qr(code):
     """Ficha individual por QR: siempre consulta el precio y datos vigentes."""
