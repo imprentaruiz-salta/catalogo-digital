@@ -940,8 +940,23 @@ def catalogo_publico(slug):
 
 @app.route('/consulta-qr')
 def consulta_qr_libreria():
-    """Mobile lookup screen for Bluetooth HID barcode/QR readers."""
-    return render_template('consulta_qr.html')
+    """Installable QR price lookup for Librería Ruiz phones."""
+    response=make_response(render_template('consulta_qr.html'))
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+    return response
+
+@app.route('/lector-qr.webmanifest')
+def consulta_qr_manifest():
+    response=make_response(send_from_directory(BASE_DIR,'lector-qr.webmanifest',mimetype='application/manifest+json'))
+    response.headers['Cache-Control']='public, max-age=3600'
+    return response
+
+@app.route('/lector-qr-sw.js')
+def consulta_qr_service_worker():
+    response=make_response(send_from_directory(BASE_DIR,'lector-qr-sw.js',mimetype='application/javascript'))
+    response.headers['Service-Worker-Allowed']='/'
+    response.headers['Cache-Control']='no-cache'
+    return response
 
 @app.route('/api/consulta-qr/<path:raw_code>')
 def api_consulta_qr_libreria(raw_code):
