@@ -938,6 +938,35 @@ def catalogo_publico(slug):
     if not cfg: return redirect(url_for('index'))
     return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
 
+@app.route('/p/<path:code>')
+def producto_por_qr(code):
+    """Ficha individual por QR: siempre consulta el precio y datos vigentes."""
+    if not code or len(code)>120:
+        return ('Producto no encontrado',404)
+    with get_db() as db:
+        row=db.execute(
+            'SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual '
+            'FROM productos WHERE activo=1 AND catalogo_slug=? AND codigo=? LIMIT 1',
+            ('libreria-ruiz',code)
+        ).fetchone()
+    if not row:
+        return ('Producto no encontrado',404)
+    producto=dict(row)
+    if producto['codigo']=='SANDISK-CRUZER-BLADE-16GB-2026':
+        foto='https://raw.githubusercontent.com/imprentaruiz-salta/catalogo-digital/main/sandisk_cruzer_blade_16gb.webp'
+    else:
+        foto=str(producto.get('foto') or '').strip()
+        if foto and not (foto.startswith('http://') or foto.startswith('https://') or foto.startswith('/')):
+            foto='/static/uploads/'+foto
+    producto['foto_qr']=foto
+    producto['precio_display']=format(int(round(float(producto.get('precio') or 0))),',').replace(',','.')
+    producto['stock_display']='Disponible en catálogo' if int(producto.get('stock_actual') or 0)>0 else 'Consultá disponibilidad'
+    producto['description_display']=producto.get('desc_') or 'Consultá características con Librería Ruiz.'
+    response=make_response(render_template('qr_producto.html',producto=producto))
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['X-Robots-Tag']='noindex, nofollow'
+    return response
+
 @app.route('/admin/cargar-renata')
 @login_required
 def admin_cargar_renata():
