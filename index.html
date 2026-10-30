@@ -953,7 +953,7 @@ body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
  {% if p.desc_ or p.codigo == 'SANDISK-CRUZER-BLADE-16GB-2026' %}<div class="prod-desc">{% if p.codigo == 'SANDISK-CRUZER-BLADE-16GB-2026' %}Memoria USB 2.0 SanDisk Cruzer Blade de 16 GB. Diseño compacto en negro y rojo, portátil y práctica para transferir archivos mediante arrastrar y soltar.{% else %}{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|product_name }}{% endif %}</div><button class="showcase-detail-btn" type="button" onclick='openProduct({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.marca|tojson }},{{ p.categoria|tojson }},{{ p.precio }},{{ ((p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')|replace('Disponibilidad a confirmar.','')|replace('disponibilidad a confirmar.','')|trim) if catalogo.slug == 'libreria-ruiz' and (p.stock_actual|default(0)|int) > 0 else (p.desc_|default('')|replace('Consultar','A confirmar')|replace('consultar','a confirmar')))|tojson }},{{ ((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson }},{{ cat_icon(p.categoria)|tojson }},{{ p.stock_actual|default(0)|int }})'>Ver características</button>{% endif %}
  <div class="prod-footer">
  <div class="prod-price">{% if p.precio|float > 0 %}{{ 'ARS $' if catalogo.slug in ['vivero-los-colibries','renas-beauty'] else ('ARS ' if catalogo.slug == 'libreria-ruiz' else '$') }}{{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>c/u</small>{% else %}A confirmar<small>precio</small>{% endif %}</div>
- <div class="prod-actions">{% if p.precio|float > 0 %}<button class="add-btn" title="Agregar al pedido" aria-label="Agregar {{ display_name }} al pedido" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }},{{ (((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson) }},{{ p.stock_actual|default(0)|int }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}</div>
+ <div class="prod-actions">{% if p.precio|float > 0 %}<button class="add-btn" title="Agregar al pedido" aria-label="Agregar {{ display_name }} al pedido" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }},{{ (((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson) }},{{ p.stock_actual|default(0)|int }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}{% if catalogo.slug == 'libreria-ruiz' %}<button class="ruiz-qr-btn" type="button" aria-label="Ver QR de {{ display_name }}" title="Mostrar QR del producto" onclick='mostrarQRProducto({{ p.codigo|tojson }},{{ display_name|tojson }})'><span aria-hidden="true">▦</span> QR</button>{% endif %}</div>
  </div>
  </div>
  </div>
@@ -2077,6 +2077,27 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initRuizCatalogEnhancements,{once:true});else initRuizCatalogEnhancements();
 })();
 </script>
+
+
+{% if catalogo.slug == 'libreria-ruiz' %}<style>
+.ruiz-qr-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:49px;height:38px;padding:0 9px;border:1px solid #bdd2e5;border-radius:10px;background:#f0f7fd;color:#164e7a;font-size:12px;font-weight:800;cursor:pointer}
+.ruiz-qr-btn span{font-size:18px;line-height:1}.ruiz-qr-btn:hover{background:#dceeff;border-color:#83afd4}
+.ruiz-qr-overlay{position:fixed;inset:0;z-index:15000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(7,25,43,.72)}
+.ruiz-qr-overlay.open{display:flex}.ruiz-qr-dialog{position:relative;width:min(100%,370px);padding:24px 20px 20px;background:#fff;border-radius:22px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.3)}
+.ruiz-qr-close{position:absolute;right:12px;top:10px;width:38px;height:38px;border:0;border-radius:50%;background:#eef3f7;color:#20354b;font-size:25px;cursor:pointer}
+.ruiz-qr-kicker{margin:0 40px 6px;color:#2477b8;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.ruiz-qr-title{margin:0 30px 14px;color:#103b67;font-size:19px;line-height:1.25}
+.ruiz-qr-img{display:block;width:250px;height:250px;max-width:78vw;max-height:78vw;margin:0 auto 13px;padding:8px;border:1px solid #e0e8ef;border-radius:14px;background:#fff;image-rendering:pixelated}
+.ruiz-qr-help{margin:0 0 14px;color:#52657a;font-size:13px;line-height:1.4}
+.ruiz-qr-open{display:block;padding:13px;border-radius:12px;background:#087447;color:#fff;text-decoration:none;font-size:15px;font-weight:800}
+.ruiz-qr-url{display:block;margin-top:10px;color:#61758a;font-size:11px;overflow-wrap:anywhere}
+</style>
+<div id="ruizQrOverlay" class="ruiz-qr-overlay" role="dialog" aria-modal="true" aria-labelledby="ruizQrTitle" onclick="if(event.target===this)cerrarQRProducto()"><section class="ruiz-qr-dialog"><button type="button" class="ruiz-qr-close" aria-label="Cerrar QR" onclick="cerrarQRProducto()">×</button><p class="ruiz-qr-kicker">QR del producto</p><h2 id="ruizQrTitle" class="ruiz-qr-title"></h2><img id="ruizQrImage" class="ruiz-qr-img" alt="Código QR para abrir la ficha actualizada del producto"><p class="ruiz-qr-help">Escanealo con otro celular para ver la ficha y el precio vigente.</p><a id="ruizQrOpen" class="ruiz-qr-open" target="_blank" rel="noopener">Abrir ficha del producto</a><span id="ruizQrUrl" class="ruiz-qr-url"></span></section></div>
+<script>
+function mostrarQRProducto(code,name){var path='/p/'+encodeURIComponent(code);var target=window.location.origin+path;var qr='https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=16&format=png&data='+encodeURIComponent(target);var modal=document.getElementById('ruizQrOverlay');document.getElementById('ruizQrTitle').textContent=name;var img=document.getElementById('ruizQrImage');img.src=qr;document.getElementById('ruizQrOpen').href=target;document.getElementById('ruizQrUrl').textContent=target;modal.classList.add('open');document.body.style.overflow='hidden'}
+function cerrarQRProducto(){var modal=document.getElementById('ruizQrOverlay');if(modal)modal.classList.remove('open');document.body.style.overflow=''}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarQRProducto()});
+</script>{% endif %}
 
 </body>
 </html>
