@@ -2071,6 +2071,7 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
    Object.keys(brands).sort().forEach(function(brand){var o=document.createElement('option');o.value=brand;o.textContent=brand.toUpperCase();brandSelect.appendChild(o)});
    brandSelect.addEventListener('change',function(){if(typeof buscar==='function')buscar(searchInput?searchInput.value:'')});
   }
+  initRuizSavedList(cards);
   if(colorSelect) colorSelect.addEventListener('change',function(){if(typeof buscar==='function')buscar(searchInput?searchInput.value:'')});
   var reset=document.getElementById('ruizFilterReset');
   if(reset) reset.addEventListener('click',function(){if(brandSelect)brandSelect.value='';if(colorSelect)colorSelect.value='';if(searchInput)searchInput.value='';if(typeof buscar==='function')buscar('');if(typeof actualizarLimpiarBusqueda==='function')actualizarLimpiarBusqueda()});
@@ -2099,6 +2100,42 @@ function mostrarQRProducto(code,name){var path='/p/'+encodeURIComponent(code);va
 function cerrarQRProducto(){var modal=document.getElementById('ruizQrOverlay');if(modal)modal.classList.remove('open');document.body.style.overflow=''}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarQRProducto()});
 </script>{% endif %}
+
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+body.has-ruiz .ruiz-save-item{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:0 9px;border:1px solid #bfd4e8;border-radius:10px;background:#fff;color:#164e7a;font-size:12px;font-weight:800;cursor:pointer}
+body.has-ruiz .ruiz-save-item.is-saved{background:#eff6ff;border-color:#60a5fa;color:#1d4ed8}
+body.has-ruiz .ruiz-saved-fab{position:fixed;right:82px;bottom:22px;z-index:370;display:flex;align-items:center;gap:6px;padding:11px 14px;border:0;border-radius:999px;background:#1d4ed8;color:#fff;font-size:12px;font-weight:850;box-shadow:0 5px 18px rgba(29,78,216,.32);cursor:pointer}
+body.has-ruiz .ruiz-saved-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:50%;background:#fff;color:#1d4ed8;font-size:11px}
+body.has-ruiz .ruiz-saved-overlay{position:fixed;inset:0;z-index:15010;display:none;align-items:flex-end;justify-content:center;padding:14px;background:rgba(7,25,43,.58)}
+body.has-ruiz .ruiz-saved-overlay.open{display:flex}
+body.has-ruiz .ruiz-saved-dialog{width:min(100%,520px);max-height:min(78vh,720px);overflow:auto;padding:18px;background:#fff;border:1px solid #dbeafe;border-radius:20px;box-shadow:0 18px 60px rgba(0,0,0,.25);color:#17324d}
+body.has-ruiz .ruiz-saved-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+body.has-ruiz .ruiz-saved-head h2{font-size:19px;color:#164e7a}
+body.has-ruiz .ruiz-saved-close{width:36px;height:36px;border:0;border-radius:50%;background:#eff6ff;color:#164e7a;font-size:23px;cursor:pointer}
+body.has-ruiz .ruiz-saved-help{margin:0 0 12px;color:#64748b;font-size:12px;line-height:1.45}
+body.has-ruiz .ruiz-saved-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid #e5edf5}
+body.has-ruiz .ruiz-saved-row a{color:#164e7a;font-weight:750;text-decoration:none}
+body.has-ruiz .ruiz-saved-remove{border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#475569;padding:6px 9px;font-weight:700;cursor:pointer}
+body.has-ruiz .ruiz-saved-empty{padding:18px 8px;text-align:center;color:#64748b}
+body.has-ruiz .ruiz-saved-share{width:100%;margin-top:14px;padding:13px;border:0;border-radius:12px;background:#25d366;color:#fff;font-size:14px;font-weight:850;cursor:pointer}
+@media(max-width:599px){body.has-ruiz .ruiz-saved-fab{right:68px;bottom:72px;padding:10px 12px;font-size:11px}body.has-ruiz .ruiz-saved-overlay{padding:9px}body.has-ruiz .ruiz-saved-dialog{max-height:82vh}}
+</style>
+<button type="button" id="ruizSavedFab" class="ruiz-saved-fab" aria-haspopup="dialog" aria-controls="ruizSavedOverlay">⭐ Guardados <span class="ruiz-saved-count" id="ruizSavedCount">0</span></button>
+<div id="ruizSavedOverlay" class="ruiz-saved-overlay" role="dialog" aria-modal="true" aria-labelledby="ruizSavedTitle" onclick="if(event.target===this)closeRuizSavedList()"><section class="ruiz-saved-dialog"><div class="ruiz-saved-head"><h2 id="ruizSavedTitle">⭐ Guardar para después</h2><button type="button" class="ruiz-saved-close" aria-label="Cerrar" onclick="closeRuizSavedList()">×</button></div><p class="ruiz-saved-help">Tu lista queda guardada solo en este teléfono. Al compartirla por WhatsApp, te confirmamos precio y disponibilidad.</p><div id="ruizSavedItems"></div><button type="button" id="ruizSavedShare" class="ruiz-saved-share">💬 Enviar mi lista por WhatsApp</button></section></div>
+<script>
+var RUIZ_SAVED_KEY='libreriaRuizSavedProductsV1';
+function getRuizSaved(){try{var x=JSON.parse(localStorage.getItem(RUIZ_SAVED_KEY)||'[]');return Array.isArray(x)?x.filter(function(p){return p&&typeof p.code==='string'&&typeof p.name==='string'}):[]}catch(e){return []}}
+function setRuizSaved(list){try{localStorage.setItem(RUIZ_SAVED_KEY,JSON.stringify(list))}catch(e){showToast('No se pudo guardar en este teléfono');return}renderRuizSavedList()}
+function renderRuizSavedList(){var list=getRuizSaved(),count=document.getElementById('ruizSavedCount'),items=document.getElementById('ruizSavedItems'),share=document.getElementById('ruizSavedShare');if(count)count.textContent=String(list.length);document.querySelectorAll('.ruiz-save-item').forEach(function(btn){var saved=list.some(function(p){return p.code===btn.dataset.code});btn.classList.toggle('is-saved',saved);btn.textContent=saved?'★ Guardado':'☆ Guardar';btn.setAttribute('aria-pressed',saved?'true':'false')});if(items){items.textContent='';if(!list.length){var empty=document.createElement('div');empty.className='ruiz-saved-empty';empty.textContent='Todavía no guardaste productos.';items.appendChild(empty)}else{list.forEach(function(p){var row=document.createElement('div');row.className='ruiz-saved-row';var a=document.createElement('a');a.href='/p/'+encodeURIComponent(p.code);a.textContent=p.name;var rm=document.createElement('button');rm.type='button';rm.className='ruiz-saved-remove';rm.textContent='Quitar';rm.onclick=function(){setRuizSaved(getRuizSaved().filter(function(x){return x.code!==p.code}))};row.appendChild(a);row.appendChild(rm);items.appendChild(row)}}}if(share)share.disabled=!list.length}
+function toggleRuizSaved(code,name){var list=getRuizSaved(),i=list.findIndex(function(p){return p.code===code});if(i>=0){list.splice(i,1)}else{list.push({code:code,name:name})}setRuizSaved(list)}
+function openRuizSavedList(){var d=document.getElementById('ruizSavedOverlay');if(!d)return;renderRuizSavedList();d.classList.add('open');document.body.style.overflow='hidden'}
+function closeRuizSavedList(){var d=document.getElementById('ruizSavedOverlay');if(d)d.classList.remove('open');document.body.style.overflow=''}
+function shareRuizSavedList(){var list=getRuizSaved();if(!list.length)return;var lines=list.map(function(p){return '• '+p.name+' — https://catalogo-app-zm3w.onrender.com/p/'+encodeURIComponent(p.code)});var msg='Hola, Librería Ruiz. Te comparto mi lista de productos guardados para consultar precio y disponibilidad:\n\n'+lines.join('\n')+'\n\n¿Me confirmás cuáles tienen disponibles?';window.open('https://wa.me/5493872101274?text='+encodeURIComponent(msg),'_blank','noopener');}
+function initRuizSavedList(cards){var fab=document.getElementById('ruizSavedFab'),share=document.getElementById('ruizSavedShare');if(!fab)return;fab.addEventListener('click',openRuizSavedList);if(share)share.addEventListener('click',shareRuizSavedList);cards.forEach(function(card){var actions=card.querySelector('.prod-actions');if(!actions||actions.querySelector('.ruiz-save-item'))return;var code=card.getAttribute('data-code')||'',nameEl=card.querySelector('.prod-name'),name=nameEl?nameEl.textContent.trim():'';if(!code||!name)return;var btn=document.createElement('button');btn.type='button';btn.className='ruiz-save-item';btn.dataset.code=code;btn.setAttribute('aria-label','Guardar '+name+' para después');btn.onclick=function(){toggleRuizSaved(code,name)};actions.appendChild(btn)});renderRuizSavedList()}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeRuizSavedList()});
+</script>
+{% endif %}
 
 </body>
 </html>
