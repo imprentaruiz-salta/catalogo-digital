@@ -20,7 +20,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:17px 8px}.cod
 <body><header>📚 Librería Ruiz</header><main><article class="card">
 {% if producto.foto_qr %}<div class="photo"><img src="{{ producto.foto_qr }}" alt="{{ producto.nombre }}" onerror="this.parentElement.style.display='none'"></div>{% endif %}
 <div class="body"><span class="pill">{{ producto.categoria }}{% if producto.marca %} · {{ producto.marca }}{% endif %}</span>
-<h1>{{ producto.nombre }}</h1><p class="price">ARS {{ producto.precio_display }} <span class="unit">c/u</span></p>
+<h1>{{ producto.nombre }}</h1><p class="price">ARS {{ producto.precio_display }} <span class="unit">{{ 'por paquete' if producto.codigo == 'SEN-PIZZINI-5X25-12X45-2026' else 'c/u' }}</span></p>
 <div class="stock">{{ producto.stock_display }}</div><div class="desc">{{ producto.description_display }}</div>
 <div class="details">Código: <span class="code">{{ producto.codigo }}</span></div>
 <a class="btn" href="https://wa.me/5493872101274?text=Hola%2C%20quiero%20consultar%20por%20{{ producto.nombre|urlencode }}%20(c%C3%B3digo%20{{ producto.codigo|urlencode }}).%20%C2%BFMe%20confirm%C3%A1s%20el%20precio%20y%20la%20disponibilidad%3F">Consultar por WhatsApp</a>
