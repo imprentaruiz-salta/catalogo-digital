@@ -225,6 +225,8 @@ def init_db():
         for col,definition in [('cantidad_necesita','INTEGER DEFAULT 1'),('comentario',"TEXT DEFAULT ''"),('estado',"TEXT DEFAULT 'pendiente'")]:
             try: db.execute(f"ALTER TABLE sugerencias ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
+        db.execute("""CREATE TABLE IF NOT EXISTS producto_interes (id INTEGER PRIMARY KEY AUTOINCREMENT, catalogo_slug TEXT NOT NULL, product_key TEXT NOT NULL, producto TEXT NOT NULL, detalle TEXT NOT NULL DEFAULT '', unidades INTEGER NOT NULL DEFAULT 0, solicitudes INTEGER NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente', actualizado TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(catalogo_slug,product_key))""")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_producto_interes_slug ON producto_interes(catalogo_slug,unidades DESC)")
         # Keep the pre-existing product seed; the admin can replace it.
         db.commit()
 
@@ -1089,6 +1091,33 @@ def api_pedido_telegram():
         app.logger.exception('No se pudo enviar el pedido por Telegram')
         return jsonify(ok=False,error='No se pudo enviar el pedido por Telegram'),502
 
+@app.route('/api/libreria/producto-faltante',methods=['POST'])
+def api_libreria_producto_faltante():
+    """Anonymous demand counter for exact missing products, Librería Ruiz only."""
+    data=request.get_json(silent=True) or {}
+    producto=' '.join(str(data.get('producto') or '').split())[:120]
+    detalle=' '.join(str(data.get('detalle') or '').split())[:120]
+    try:
+        unidades=int(data.get('unidades',1))
+    except (TypeError,ValueError):
+        return jsonify(ok=False,error='Cantidad inválida.'),400
+    if not producto:
+        return jsonify(ok=False,error='Escribí el producto que buscás.'),400
+    if unidades<1 or unidades>25:
+        return jsonify(ok=False,error='La cantidad debe ser de 1 a 25 unidades.'),400
+    def norm_key(value):
+        value=unicodedata.normalize('NFKD',value.casefold())
+        return ' '.join(''.join(ch for ch in value if not unicodedata.combining(ch)).split())
+    product_key=norm_key(producto)+'|'+norm_key(detalle)
+    with get_db() as db:
+        db.execute("""INSERT INTO producto_interes(catalogo_slug,product_key,producto,detalle,unidades,solicitudes,estado,actualizado)
+          VALUES('libreria-ruiz',?,?,?,?,1,'pendiente',CURRENT_TIMESTAMP)
+          ON CONFLICT(catalogo_slug,product_key) DO UPDATE SET unidades=producto_interes.unidades+excluded.unidades, solicitudes=producto_interes.solicitudes+1, actualizado=CURRENT_TIMESTAMP""",(product_key,producto,detalle,unidades))
+        row=db.execute("SELECT unidades,solicitudes FROM producto_interes WHERE catalogo_slug='libreria-ruiz' AND product_key=?",(product_key,)).fetchone()
+        db.commit()
+    persisted=cloud_sync()
+    return jsonify(ok=True,persistido=bool(persisted),unidades=int(row['unidades']),solicitudes=int(row['solicitudes']),umbral=5,alerta=int(row['unidades'])>=5),201
+
 @app.route('/api/sugerencia',methods=['POST'])
 def api_sugerencia():
     data=request.get_json(silent=True) or request.form
@@ -1121,7 +1150,8 @@ def admin_index():
     with get_db() as db:
         productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute('SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre').fetchall()
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
-    return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias])
+        intereses_faltantes=db.execute('SELECT producto,detalle,unidades,solicitudes,estado,actualizado FROM producto_interes WHERE catalogo_slug=? ORDER BY unidades DESC,solicitudes DESC,producto',(slug,)).fetchall() if slug=='libreria-ruiz' else []
+    return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias],intereses_faltantes=[dict(s) for s in intereses_faltantes])
 @app.route('/admin/catalogo/seleccionar',methods=['POST'])
 @login_required
 def seleccionar_catalogo():
