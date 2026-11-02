@@ -1,14 +1,15 @@
 import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from flask import (Flask, render_template, request, redirect,
+from flask import (Flask, render_template, render_template_string, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash, make_response)
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__, static_folder=None, template_folder=".")
-app.secret_key = "catalogo_ruiz_2026_secret_x7k"
+app.secret_key = os.environ.get("CATALOGO_SESSION_SECRET") or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH']=52*1024*1024
+app.config.update(SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SECURE=True,SESSION_COOKIE_SAMESITE="Lax")
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -38,6 +39,15 @@ RENA_VISIT_COUNT_LOCK=threading.Lock()
 RENA_VISIT_COUNT_CACHE=0
 RENA_VISIT_COUNT_CACHE_READY=False
 SUPABASE_RENA_VISIT_COUNTER="system/renas-beauty-visitas.zip"
+# Private orders are stored only in this private Supabase bucket, never in the
+# public catalog snapshot or public product-images bucket.
+RUÍZ_ORDERS_BUCKET="libreria-ruiz-pedidos-privados"
+RUÍZ_ORDERS_PREFIX="orders"
+RUÍZ_ORDER_ADMIN_PASSWORD=os.environ.get("CATALOGO_ORDERS_ADMIN_PASSWORD","")
+RUÍZ_ORDER_MAX_PHOTO=12*1024*1024
+RUÍZ_ORDER_MAX_AUDIO=20*1024*1024
+RUÍZ_ORDER_RATE_LIMIT={}
+
 # Preserve the user-confirmed pre-reset baseline; old storage snapshots may be stale.
 VISIT_COUNT_FLOOR=45
 
@@ -1132,6 +1142,148 @@ def api_sugerencia():
         db.commit()
     cloud_sync()
     return jsonify(ok=True)
+
+def _ruiz_private_storage_request(path, method="GET", data=None, content_type="application/json"):
+    if not cloud_enabled():
+        raise RuntimeError("El almacenamiento privado todavía no está configurado")
+    safe_path=urllib.parse.quote(path.lstrip("/"),safe="/")
+    endpoint=f"{SUPABASE_URL}/storage/v1/object/{RUÍZ_ORDERS_BUCKET}/{safe_path}"
+    req=urllib.request.Request(endpoint,data=data,method=method,headers={
+        "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}","apikey":SUPABASE_SERVICE_KEY,
+        "Content-Type":content_type,"x-upsert":"true"})
+    return urllib.request.urlopen(req,timeout=25)
+
+def _ruiz_private_list(prefix, limit=100):
+    endpoint=f"{SUPABASE_URL}/storage/v1/object/list/{RUÍZ_ORDERS_BUCKET}"
+    payload=json.dumps({"prefix":prefix,"limit":limit,"sortBy":{"column":"name","order":"desc"}}).encode()
+    req=urllib.request.Request(endpoint,data=payload,method="POST",headers={
+        "Authorization":f"Bearer {SUPABASE_SERVICE_KEY}","apikey":SUPABASE_SERVICE_KEY,
+        "Content-Type":"application/json"})
+    with urllib.request.urlopen(req,timeout=20) as response:
+        return json.loads(response.read().decode())
+
+def _ruiz_private_get_json(path):
+    with _ruiz_private_storage_request(path) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+def _ruiz_orders_authenticated():
+    if not RUÍZ_ORDER_ADMIN_PASSWORD:
+        return False
+    token=session.get("ruiz_orders_admin")
+    return isinstance(token,str) and hmac.compare_digest(token,"ok")
+
+@app.route('/api/libreria/pedido-completo',methods=['POST'])
+def api_libreria_pedido_completo():
+    # Privately persist a Librería Ruiz order and its optional media, then alert Telegram.
+    if request.content_length and request.content_length>36*1024*1024:
+        return jsonify(ok=False,error="El pedido supera el tamaño permitido."),413
+    now=datetime.now(ZoneInfo("America/Argentina/Salta"))
+    peer=request.remote_addr or "unknown"
+    recent=[x for x in RUÍZ_ORDER_RATE_LIMIT.get(peer,[]) if (now-x).total_seconds()<600]
+    if len(recent)>=8:
+        return jsonify(ok=False,error="Esperá unos minutos antes de volver a enviar."),429
+    text="\n".join(line.strip() for line in (request.form.get("text") or "").splitlines() if line.strip())[:5000]
+    try:
+        items=json.loads(request.form.get("items") or "[]")
+        if not isinstance(items,list): items=[]
+        items=[{"name":str(x.get("name") or "")[:180],"code":str(x.get("code") or "")[:80],"qty":max(1,min(999,int(x.get("qty") or 1)))} for x in items[:80] if isinstance(x,dict)]
+    except Exception: items=[]
+    photo=request.files.get("photo"); audio=request.files.get("audio")
+    files=[]
+    for file,kind,allowed,max_size in [
+        (photo,"photo",{"image/jpeg":"jpg","image/png":"png","image/webp":"webp"},RUÍZ_ORDER_MAX_PHOTO),
+        (audio,"audio",{"audio/webm":"webm","audio/mpeg":"mp3","audio/mp4":"m4a","audio/x-m4a":"m4a","audio/ogg":"ogg","audio/wav":"wav","audio/x-wav":"wav","audio/aac":"aac"},RUÍZ_ORDER_MAX_AUDIO)]:
+        if file and file.filename:
+            mime=(file.mimetype or "").lower().split(";")[0].strip()
+            if mime not in allowed: return jsonify(ok=False,error="Ese formato de archivo no está admitido."),400
+            raw=file.read(max_size+1)
+            if len(raw)>max_size: return jsonify(ok=False,error=("La foto supera 12 MB." if kind=="photo" else "El audio supera 20 MB.")),413
+            files.append((kind,allowed[mime],mime,raw))
+    if not text and not items and not files:
+        return jsonify(ok=False,error="Agregá texto, productos, foto o audio."),400
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY or not RUÍZ_ORDER_ADMIN_PASSWORD:
+        return jsonify(ok=False,error="El buzón privado todavía no está configurado."),503
+    RUÍZ_ORDER_RATE_LIMIT[peer]=recent+[now]
+    order_id=now.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:10]
+    obj={"id":order_id,"created_at":now.isoformat(timespec="seconds"),"text":text,"items":items,"files":[],"status":"nuevo"}
+    uploaded=[]
+    try:
+        for kind,ext,mime,raw in files:
+            path=f"orders/{order_id}/{kind}.{ext}"
+            with _ruiz_private_storage_request(path,"POST",raw,mime) as response: response.read()
+            uploaded.append(path); obj["files"].append({"kind":kind,"path":path,"filename":kind+"."+ext,"mime":mime,"size":len(raw)})
+        with _ruiz_private_storage_request(f"orders/{order_id}/order.json","POST",json.dumps(obj,ensure_ascii=False).encode(),"application/json") as response: response.read()
+    except Exception:
+        app.logger.exception("Private order storage failed")
+        for path in uploaded:
+            try:
+                req=urllib.request.Request(f"{SUPABASE_URL}/storage/v1/object/{RUÍZ_ORDERS_BUCKET}/{urllib.parse.quote(path,safe='/')}",method="DELETE",headers={"Authorization":f"Bearer {SUPABASE_SERVICE_KEY}","apikey":SUPABASE_SERVICE_KEY})
+                urllib.request.urlopen(req,timeout=10).read()
+            except Exception: pass
+        return jsonify(ok=False,error="No se pudo guardar el pedido privado. No se envió; probá de nuevo."),503
+    notice="📥 Nuevo pedido privado de Librería Ruiz\nN° "+order_id+"\n"+str(len(items))+" productos · "+str(len(files))+" adjuntos\nTexto: "+(text[:180] or "sin texto")+"\nAbrí el panel privado: https://catalogo-app-zm3w.onrender.com/admin/pedidos"
+    telegram_sent=False
+    token=os.environ.get("TELEGRAM_BOT_TOKEN","").strip();chat_id=os.environ.get("TELEGRAM_CHAT_ID","8899404755").strip()
+    if token and chat_id:
+        try:
+            payload=json.dumps({"chat_id":chat_id,"text":notice}).encode()
+            req=urllib.request.Request("https://api.telegram.org/bot"+token+"/sendMessage",data=payload,method="POST",headers={"Content-Type":"application/json"})
+            with urllib.request.urlopen(req,timeout=15) as response: telegram_sent=bool(json.loads(response.read().decode()).get("ok"))
+        except Exception: app.logger.exception("Telegram order notification failed")
+    return jsonify(ok=True,id=order_id,notification_sent=telegram_sent),201
+
+@app.route('/admin/pedidos/login',methods=['GET','POST'])
+def ruiz_orders_login():
+    if request.method=="POST":
+        if RUÍZ_ORDER_ADMIN_PASSWORD and hmac.compare_digest(request.form.get("password", ""),RUÍZ_ORDER_ADMIN_PASSWORD):
+            session["ruiz_orders_admin"]="ok";return redirect(url_for("ruiz_orders_inbox"))
+        return render_template_string(_RUIZ_ORDER_LOGIN,error="La contraseña no es correcta."),401
+    return render_template_string(_RUIZ_ORDER_LOGIN,error="")
+
+_RUIZ_ORDER_LOGIN='''<!doctype html><html lang="es"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bandeja privada · Librería Ruiz</title><body style="font:16px system-ui;background:#edf3f8;padding:24px"><main style="max-width:440px;margin:12vh auto;background:white;padding:24px;border-radius:16px;box-shadow:0 6px 24px #1232"><h1>Bandeja privada de pedidos</h1><p>Ingresá la contraseña de administración.</p>{% if error %}<p style="color:#a11">{{error}}</p>{% endif %}<form method="post"><label for="password">Contraseña</label><input id="password" name="password" type="password" required autocomplete="current-password" style="display:block;width:100%;padding:12px;margin:10px 0 16px;box-sizing:border-box"><button style="padding:12px 18px">Entrar</button></form></main></body></html>'''
+
+@app.route('/admin/pedidos/logout',methods=['POST'])
+def ruiz_orders_logout():
+    session.pop("ruiz_orders_admin",None);return redirect(url_for("ruiz_orders_login"))
+
+@app.route('/admin/pedidos')
+def ruiz_orders_inbox():
+    if not _ruiz_orders_authenticated(): return redirect(url_for("ruiz_orders_login"))
+    orders=[];error=""
+    try:
+        entries=_ruiz_private_list("orders/",1000)
+        order_ids=set()
+        for entry in entries:
+            name=str(entry.get("name","")).strip("/")
+            if not name: continue
+            parts=name.split("/")
+            candidate=parts[0] if len(parts)>1 else name
+            if __import__('re').fullmatch(r"\d{8}-\d{6}-[a-f0-9]{10}",candidate): order_ids.add(candidate)
+        for order_id in order_ids:
+            try: orders.append(_ruiz_private_get_json(f"orders/{order_id}/order.json"))
+            except Exception: continue
+        orders.sort(key=lambda x:x.get("created_at", ""),reverse=True)
+    except Exception:
+        app.logger.exception("Could not read private orders")
+        error="No se pudo cargar la bandeja privada. Revisá la conexión de almacenamiento."
+    return render_template_string(_RUIZ_ORDERS_PAGE,orders=orders,error=error)
+
+@app.route('/admin/pedidos/archivo/<order_id>/<kind>')
+def ruiz_orders_file(order_id,kind):
+    if not _ruiz_orders_authenticated(): return redirect(url_for("ruiz_orders_login"))
+    if not __import__('re').fullmatch(r"\d{8}-\d{6}-[a-f0-9]{10}",order_id) or kind not in ("photo","audio"):
+        return "No encontrado",404
+    try:
+        order=_ruiz_private_get_json(f"orders/{order_id}/order.json")
+        file=next((x for x in order.get("files",[]) if x.get("kind")==kind),None)
+        if not file: return "No encontrado",404
+        with _ruiz_private_storage_request(file["path"]) as response: raw=response.read()
+        return send_file(io.BytesIO(raw),mimetype=file.get("mime","application/octet-stream"),as_attachment=(kind=="audio"),download_name=file.get("filename",kind))
+    except Exception:
+        app.logger.exception("Private order attachment download failed")
+        return "No se pudo abrir el adjunto",503
+
+_RUIZ_ORDERS_PAGE='''<!doctype html><html lang="es"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Pedidos privados · Librería Ruiz</title><body style="font:15px system-ui;background:#edf3f8;margin:0;color:#193750"><header style="background:#dceafa;padding:18px max(18px,calc((100% - 860px)/2));display:flex;justify-content:space-between;align-items:center"><h1 style="font-size:22px;margin:0">📥 Pedidos de Librería Ruiz</h1><form action="/admin/pedidos/logout" method="post"><button>Salir</button></form></header><main style="max-width:860px;margin:20px auto;padding:0 14px">{% if error %}<p>{{error}}</p>{% elif not orders %}<p style="background:white;padding:20px;border-radius:12px">Todavía no hay pedidos.</p>{% endif %}{% for o in orders %}<article style="background:white;padding:18px;margin:12px 0;border-radius:14px;box-shadow:0 2px 8px #1231"><h2 style="font-size:17px">Pedido {{o.id}}</h2><p>{{o.created_at}}</p>{% if o['items'] %}<h3>Productos</h3><ul>{% for i in o['items'] %}<li>{{i.qty}} × {{i.name}} ({{i.code}})</li>{% endfor %}</ul>{% endif %}{% if o.text %}<h3>Texto del cliente</h3><pre style="white-space:pre-wrap;font:inherit;background:#f5f8fb;padding:12px;border-radius:8px">{{o.text}}</pre>{% endif %}{% for f in o['files'] %}<p>{% if f['kind']=='photo' %}<strong>Foto:</strong>{% else %}<strong>Audio:</strong>{% endif %} <a href="/admin/pedidos/archivo/{{o.id}}/{{f['kind']}}">Abrir adjunto ({{(f['size']/1024)|round|int}} KB)</a></p>{% endfor %}</article>{% endfor %}</main></body></html>'''
 
 @app.route('/admin/login',methods=['GET','POST'])
 def admin_login():
