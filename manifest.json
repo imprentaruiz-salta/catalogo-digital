@@ -4,7 +4,7 @@
   "name": "Librería Ruiz — Catálogo digital",
   "short_name": "Librería Ruiz",
   "start_url": "/c/libreria-ruiz",
-  "scope": "/",
+  "scope": "/c/libreria-ruiz",
   "display": "standalone",
   "background_color": "#f3f6fb",
   "theme_color": "#102a43",
