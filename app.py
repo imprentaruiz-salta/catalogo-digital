@@ -1009,7 +1009,7 @@ def api_consulta_qr_libreria(raw_code):
         photo='/static/uploads/'+photo
     item['image']=photo
     item['price_display']='ARS '+format(int(round(float(item.get('precio') or 0))),',').replace(',','.')
-    item['stock_display']=('Disponible en catálogo' if int(item.get('stock_actual') or 0)>0 else 'Consultá disponibilidad')
+    stock_count=max(0,int(item.get('stock_actual') or 0)); item['stock_display']=(f'{stock_count} disponible' if stock_count==1 else f'{stock_count} disponibles') if stock_count>0 else 'Consultá disponibilidad'
     response=jsonify(item)
     response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
     response.headers['X-Robots-Tag']='noindex, nofollow'
@@ -1037,7 +1037,7 @@ def producto_por_qr(code):
             foto='/static/uploads/'+foto
     producto['foto_qr']=foto
     producto['precio_display']=format(int(round(float(producto.get('precio') or 0))),',').replace(',','.')
-    producto['stock_display']='Disponible en catálogo' if int(producto.get('stock_actual') or 0)>0 else 'Consultá disponibilidad'
+    stock_count=max(0,int(producto.get('stock_actual') or 0)); producto['stock_display']=(f'{stock_count} disponible' if stock_count==1 else f'{stock_count} disponibles') if stock_count>0 else 'Consultá disponibilidad'
     producto['description_display']=producto.get('desc_') or 'Consultá características con Librería Ruiz.'
     response=make_response(render_template('qr_producto.html',producto=producto))
     response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
