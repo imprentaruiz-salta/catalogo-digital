@@ -58,7 +58,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
       </div>
       <div class="form-group">
         <label>Precio ($) *</label>
-        <input type="number" name="precio" value="{{ producto['precio'] if producto else '' }}" required min="0" step="1" placeholder="1500">
+        <input type="number" name="precio" value="{{ (producto['precio']|float|round(0)|int) if producto and catalogo.slug == 'libreria-ruiz' and (producto['precio']|float) == (producto['precio']|int) else (producto['precio'] if producto else '') }}" required min="0" step="{% if catalogo.slug == 'libreria-ruiz' %}any{% else %}1{% endif %}" placeholder="1500">
       </div>
       <div class="form-group">
         <label>Nivel de precio</label>
