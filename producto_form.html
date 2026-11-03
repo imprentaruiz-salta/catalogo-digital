@@ -98,7 +98,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
     </div>
 
     <div class="row2">
-      <div class="form-group"><label>Stock actual</label><input type="number" name="stock_actual" min="0" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}"></div>
+      <div class="form-group"><label for="stockActual">Stock actual</label><input id="stockActual" type="number" name="stock_actual" min="0" step="1" inputmode="numeric" {% if catalogo.slug == 'libreria-ruiz' %}aria-describedby="stockHelp" required{% endif %} value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}">{% if catalogo.slug == 'libreria-ruiz' %}<small id="stockHelp" style="display:block;margin-top:5px;color:#475569;font-size:12px;line-height:1.4">Al tocar el campo se selecciona el número completo para reemplazarlo. Revisá el stock antes de guardar.</small>{% endif %}</div>
       <div class="form-group"><label>Stock mínimo</label><input type="number" name="stock_minimo" min="0" value="{{ producto['stock_minimo'] if producto and producto['stock_minimo'] is defined else 0 }}"></div>
     </div>
     <div class="row2">
@@ -123,6 +123,29 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
 </form>
 
 <script>
+{% if catalogo.slug == 'libreria-ruiz' %}
+(function(){
+  var input=document.getElementById('stockActual'), form=input && input.form;
+  if(!input || !form)return;
+  var selecting=false;
+  function selectAll(){input.select();}
+  input.addEventListener('focus',selectAll);
+  input.addEventListener('mouseup',function(e){if(selecting){e.preventDefault();selectAll();selecting=false;}});
+  input.addEventListener('mousedown',function(){selecting=document.activeElement!==input;});
+  input.addEventListener('touchend',function(){if(selecting){selectAll();selecting=false;}});
+  input.addEventListener('touchstart',function(){selecting=document.activeElement!==input;},{passive:true});
+  form.addEventListener('submit',function(e){
+    var value=input.value.trim();
+    if(!/^[0-9]+$/.test(value) || !Number.isSafeInteger(Number(value))){
+      e.preventDefault();input.setCustomValidity('Ingresá un stock entero igual o mayor a cero.');input.reportValidity();return;
+    }
+    input.setCustomValidity('');
+    var initial=input.defaultValue;
+    if(Number(value)!==Number(initial) && !window.confirm('Revisá el stock actual: '+initial+' → '+value+' unidades. ¿Guardar este cambio?'))e.preventDefault();
+  });
+  input.addEventListener('input',function(){input.setCustomValidity('');});
+})();
+{% endif %}
 function previewFoto(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
