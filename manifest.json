@@ -1,3 +1,20 @@
+{% if catalogo.slug == 'libreria-ruiz' %}
+{
+  "id": "/c/libreria-ruiz",
+  "name": "Librería Ruiz — Catálogo digital",
+  "short_name": "Librería Ruiz",
+  "start_url": "/c/libreria-ruiz",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6fb",
+  "theme_color": "#102a43",
+  "description": "Catálogo digital de Librería Ruiz en Salta. Consultá productos, precios y disponibilidad.",
+  "icons": [
+    {"src":"/static/icons/libreria-ruiz-192.png?v=20261103","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/static/icons/libreria-ruiz-512.png?v=20261103","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
+{% else %}
 {
   "name": "{{ catalogo.nombre }} — Catálogo digital",
   "short_name": "{{ catalogo.nombre }}",
@@ -11,3 +28,5 @@
     {"src":"/static/banner_abigail.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any maskable"}
   ]
 }
+
+{% endif %}
