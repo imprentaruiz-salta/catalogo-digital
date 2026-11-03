@@ -5,7 +5,7 @@
   "description": "Escaneá los QR de Librería Ruiz y consultá precios vigentes.",
   "lang": "es-AR",
   "start_url": "/consulta-qr?instalada=1",
-  "scope": "/",
+  "scope": "/consulta-qr",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f2f6fa",
