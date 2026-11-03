@@ -2260,7 +2260,7 @@ window.addEventListener('pagehide',function(){if(worker){worker.terminate();work
  function hasNet(){return navigator.onLine&&!cachedDocument}
  function draw(){var online=hasNet(),stamp=lastSaved();if(saved)saved.textContent=stamp?'Última copia guardada en este dispositivo: '+fmt(stamp):'Todavía no se confirmó una copia guardada para este dispositivo.';if(notice){if(online){notice.hidden=true;notice.textContent=''}else{notice.hidden=false;notice.textContent=stamp?'Sin conexión. Mostrando la copia guardada el '+fmt(stamp)+'. Los precios y el stock pueden haber cambiado; no se envían pedidos hasta reconectarte.':'Sin conexión y todavía no hay una copia guardada. Conectate para cargar el catálogo.'}}}
 
- window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();promptEvent=e;if(installButton)installButton.textContent='📲 Instalar app de Librería Ruiz'});
+ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();promptEvent=e;});
  window.addEventListener('appinstalled',function(){promptEvent=null;if(installButton)installButton.textContent='✅ Catálogo instalado';});
  if(installButton)installButton.addEventListener('click',async function(){if(promptEvent){promptEvent.prompt();try{await promptEvent.userChoice}catch(e){}promptEvent=null;return}var standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(standalone){showToast('El catálogo ya está instalado en este teléfono.');return}showToast(/iphone|ipad|ipod/i.test(navigator.userAgent)?'En Safari: Compartir → Añadir a pantalla de inicio.':'En Chrome: menú ⋮ → Instalar aplicación o Añadir a pantalla de inicio.');});
 
