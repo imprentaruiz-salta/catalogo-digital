@@ -852,7 +852,7 @@ def render_catalog_page(cats,showcase,catalogo):
     if catalogo and catalogo.get('slug') == 'libreria-ruiz' and request.path.rstrip('/') == '/c/libreria-ruiz':
         user_agent=(request.headers.get('User-Agent') or '').lower()
         automated_agents=('bot','crawl','spider','slurp','preview','curl/','python-requests','headlesschrome')
-        if not any(token in user_agent for token in automated_agents):
+        if request.headers.get('X-Ruiz-Cache-Refresh') != '1' and not any(token in user_agent for token in automated_agents):
             visits=record_libreria_visit()
         else:
             with get_db() as db:
