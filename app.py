@@ -735,6 +735,12 @@ def web_manifest():
     body=render_template('manifest.json',catalogo=cfg,manifest_slug=slug)
     return app.response_class(body,mimetype='application/manifest+json')
 
+@app.route('/libreria-ruiz-sw.js')
+def libreria_ruiz_service_worker():
+    response=make_response(send_from_directory(BASE_DIR,'libreria-ruiz-sw.js',mimetype='application/javascript'))
+    response.headers['Service-Worker-Allowed']='/'; response.headers['Cache-Control']='no-cache'
+    return response
+
 @app.route('/static/uploads/<path:filename>')
 def uploaded_file(filename):
     # Product photos live in DATA_DIR, not inside the deployable code folder.
