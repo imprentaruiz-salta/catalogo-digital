@@ -961,6 +961,7 @@ body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
  <div class="prod-price">{% if p.precio|float > 0 %}{{ 'ARS $' if catalogo.slug in ['vivero-los-colibries','renas-beauty'] else ('ARS ' if catalogo.slug == 'libreria-ruiz' else '$') }}{{ "{:,.0f}".format(p.precio).replace(",",".") }}<small>{{ 'por paquete' if catalogo.slug == 'libreria-ruiz' and p.codigo == 'SEN-PIZZINI-5X25-12X45-2026' else 'c/u' }}</small>{% else %}A confirmar<small>precio</small>{% endif %}</div>
  <div class="prod-actions">{% if catalogo.slug == 'libreria-ruiz' and p.stock_actual|default(0)|int <= 0 %}<button class="buy-now-btn consult-btn" aria-label="Consultar disponibilidad de {{ display_name }}" onclick='openConsultationByCode({{ p.codigo|tojson }})'>Consultar disponibilidad</button>{% elif p.precio|float > 0 %}<button class="add-btn" title="Agregar al pedido" aria-label="Agregar {{ display_name }} al pedido" onclick='addToCart({{ p.codigo|tojson }},{{ display_name|tojson }},{{ p.precio }},{{ cat_icon(p.categoria)|tojson }},{{ (((product_photo if (product_photo.startswith('http') or product_photo.startswith('/static/')) else '/static/uploads/' ~ product_photo) if product_photo else '')|tojson) }},{{ p.stock_actual|default(0)|int }})'>+</button>{% else %}<button class="buy-now-btn consult-btn" onclick='openConsultationByCode({{ p.codigo|tojson }})'>{% if catalogo.slug == 'libreria-ruiz' %}Consultar precio{% else %}Consultar{% endif %}</button>{% endif %}{% if catalogo.slug == 'libreria-ruiz' %}<button class="ruiz-qr-btn" type="button" aria-label="Ver QR de {{ display_name }}" title="Mostrar QR del producto" onclick='mostrarQRProducto({{ p.codigo|tojson }},{{ display_name|tojson }})'><span aria-hidden="true">▦</span> QR</button>{% endif %}</div>
  </div>
+ {% if catalogo.slug == 'libreria-ruiz' %}<button class="ruiz-share-product" type="button" aria-label="Compartir ficha de {{ display_name }}" onclick='shareRuizProduct({{ p.codigo|tojson }},{{ display_name|tojson }})'>↗ Compartir ficha</button>{% endif %}
  </div>
  </div>
  {% endif %}
@@ -1151,7 +1152,7 @@ body.has-ruiz .prod-actions{flex-wrap:wrap;justify-content:flex-end}
  <div class="modal-product-brand" id="modalProductBrand"></div>
  <div class="modal-product-desc" id="modalProductDesc"></div>
  <div class="modal-product-price" id="modalProductPrice"></div>
- <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>{% if catalogo.slug == 'renas-beauty' %}<button class="renata-modal-close-bottom" type="button" onclick="closeProduct()">Cerrar</button>{% endif %}
+ <div class="modal-product-actions"><button class="modal-buy" id="modalBuyBtn">Comprar ahora</button><button class="modal-add" id="modalAddBtn">🛒 Agregar al pedido</button></div>{% if catalogo.slug == 'libreria-ruiz' %}<button class="ruiz-share-product ruiz-share-modal" type="button" onclick="if(currentProduct)shareRuizProduct(currentProduct.code,currentProduct.name)">↗ Compartir ficha</button>{% endif %}{% if catalogo.slug == 'renas-beauty' %}<button class="renata-modal-close-bottom" type="button" onclick="closeProduct()">Cerrar</button>{% endif %}
  </article>
 </div>
 
@@ -2102,6 +2103,23 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 })();
 </script>
 
+
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+body.catalog-libreria-ruiz .ruiz-share-product{display:block;width:100%;min-height:42px;margin-top:9px;padding:9px 10px;border:1px solid #aacbe2;border-radius:10px;background:#f1f8fd;color:#164e7a;font-size:12px;font-weight:800;cursor:pointer;text-align:center}
+body.catalog-libreria-ruiz .ruiz-share-product:hover{background:#dfedf8}body.catalog-libreria-ruiz .ruiz-share-product:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.ruiz-share-overlay[hidden]{display:none!important}.ruiz-share-overlay{position:fixed;inset:0;z-index:25000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(7,25,43,.7)}
+.ruiz-share-dialog{width:min(100%,410px);padding:20px;background:#fff;border-radius:18px;color:#17324d;box-shadow:0 20px 70px rgba(0,0,0,.3)}.ruiz-share-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ruiz-share-head h3{font-size:18px;color:#164e7a}.ruiz-share-close{width:38px;height:38px;border:0;border-radius:50%;background:#eef3f7;font-size:24px;color:#17324d;cursor:pointer}.ruiz-share-dialog p{margin:10px 0;color:#52657a;line-height:1.4;font-size:13px}.ruiz-share-dialog label{display:block;margin-top:10px;font-size:12px;font-weight:700}.ruiz-share-dialog input{width:100%;padding:10px;margin:5px 0 8px;border:1px solid #b9cddd;border-radius:9px;font-size:12px;color:#17324d}.ruiz-share-actions{display:flex;flex-wrap:wrap;gap:8px}.ruiz-share-actions button,.ruiz-share-actions a{flex:1;min-height:44px;min-width:130px;border:0;border-radius:10px;padding:11px;text-align:center;text-decoration:none;background:#164e7a;color:#fff;font-size:13px;font-weight:800;cursor:pointer}.ruiz-share-actions a{background:#16834e}.ruiz-share-status{min-height:18px;font-size:12px!important;color:#164e7a!important}
+</style>
+<div class="ruiz-share-overlay" id="ruizShareOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="ruizShareTitle" onclick="if(event.target===this)closeRuizShare()"><section class="ruiz-share-dialog"><div class="ruiz-share-head"><h3 id="ruizShareTitle">Compartir ficha</h3><button type="button" class="ruiz-share-close" aria-label="Cerrar" onclick="closeRuizShare()">×</button></div><p id="ruizShareName"></p><p>Compartí el enlace de este producto. El precio y la disponibilidad se muestran al abrir la ficha.</p><label for="ruizShareLink">Enlace de la ficha</label><input id="ruizShareLink" type="text" readonly onclick="this.select()"><div class="ruiz-share-actions"><button type="button" onclick="copyRuizShareLink()">Copiar enlace</button><a id="ruizShareWhatsApp" target="_blank" rel="noopener noreferrer">Compartir por WhatsApp</a></div><p class="ruiz-share-status" id="ruizShareStatus" role="status"></p></section></div>
+<script>
+function closeRuizShare(){var d=document.getElementById('ruizShareOverlay');if(d)d.hidden=true}
+function ruizShareFallback(code,name,url){var d=document.getElementById('ruizShareOverlay'),link=document.getElementById('ruizShareLink'),wa=document.getElementById('ruizShareWhatsApp');document.getElementById('ruizShareName').textContent=name;link.value=url;wa.href='https://wa.me/?text='+encodeURIComponent('Mirá este producto de Librería Ruiz: '+name+'\n'+url);document.getElementById('ruizShareStatus').textContent='';d.hidden=false;document.querySelector('.ruiz-share-close').focus()}
+async function shareRuizProduct(code,name){if(!code)return;var url=window.location.origin+'/p/'+encodeURIComponent(code);if(navigator.share){try{await navigator.share({title:name+' · Librería Ruiz',text:'Mirá este producto de Librería Ruiz: '+name,url:url});return}catch(e){if(e&&e.name==='AbortError')return}}ruizShareFallback(code,name,url)}
+async function copyRuizShareLink(){var input=document.getElementById('ruizShareLink'),status=document.getElementById('ruizShareStatus');try{if(!navigator.clipboard||!navigator.clipboard.writeText)throw new Error('clipboard unavailable');await navigator.clipboard.writeText(input.value);status.textContent='Enlace copiado.'}catch(e){input.focus();input.select();status.textContent='Mantené presionado el enlace seleccionado y elegí Copiar.'}}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeRuizShare()});
+</script>
+{% endif %}
 
 {% if catalogo.slug == 'libreria-ruiz' %}<style>
 .ruiz-qr-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:49px;height:38px;padding:0 9px;border:1px solid #bdd2e5;border-radius:10px;background:#f0f7fd;color:#164e7a;font-size:12px;font-weight:800;cursor:pointer}
