@@ -1,4 +1,4 @@
-const CACHE='ruiz-catalog-offline-v3';
+const CACHE='ruiz-catalog-offline-v4';
 const APP='/c/libreria-ruiz';
 const ICONS=['/static/icons/libreria-ruiz-192.png?v=20261103','/static/icons/libreria-ruiz-512.png?v=20261103'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(async cache=>{for(const url of ICONS){try{const r=await fetch(url,{cache:'reload'});if(r.ok)await cache.put(url,r)}catch(e){}}}))});
