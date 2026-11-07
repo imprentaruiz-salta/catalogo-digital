@@ -73,6 +73,12 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
     </div>
 
     <div class="form-group">
+      <label>EAN / código de barras del envase</label>
+      <input type="text" name="codigo_barras" value="{{ producto['codigo_barras'] if producto and producto['codigo_barras'] is defined else '' }}" inputmode="numeric" autocomplete="off" placeholder="Escaneá el código o escribí los números">
+      <small style="display:block;margin-top:5px;color:#64748b">Opcional. Asociá el número impreso en el envase con este producto; no uses el SKU interno.</small>
+    </div>
+
+    <div class="form-group">
       <label>Nombre del producto *</label>
       <input type="text" name="nombre" value="{{ producto['nombre'] if producto else '' }}" required placeholder="Coca-Cola 2.25L">
     </div>

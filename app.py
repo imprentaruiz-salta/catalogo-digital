@@ -222,6 +222,9 @@ def init_db():
         for col,definition in [('catalogo_slug',"TEXT DEFAULT 'libreria-ruiz'"),('stock_actual','INTEGER DEFAULT 0'),('stock_minimo','INTEGER DEFAULT 0'),('costo','REAL DEFAULT 0'),('proveedor',"TEXT DEFAULT ''"),('ultima_reposicion',"TEXT DEFAULT ''"),('nivel_precio',"TEXT DEFAULT 'Estándar'")]:
             try: db.execute(f"ALTER TABLE productos ADD COLUMN {col} {definition}")
             except sqlite3.OperationalError: pass
+        try: db.execute("ALTER TABLE productos ADD COLUMN codigo_barras TEXT DEFAULT ''")
+        except sqlite3.OperationalError: pass
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_productos_codigo_barras_unique ON productos(codigo_barras) WHERE codigo_barras IS NOT NULL AND codigo_barras != ''")
         db.execute("CREATE TABLE IF NOT EXISTS catalogos (slug TEXT PRIMARY KEY,nombre TEXT NOT NULL,subtitulo TEXT DEFAULT 'Útiles · Fotos · Impresiones',logo TEXT DEFAULT '',whatsapp TEXT DEFAULT '5493872101274',telegram TEXT DEFAULT '',banner TEXT DEFAULT '',activo INTEGER DEFAULT 1,visitas INTEGER NOT NULL DEFAULT 0)")
         try: db.execute("ALTER TABLE catalogos ADD COLUMN visitas INTEGER NOT NULL DEFAULT 0")
         except sqlite3.OperationalError: pass
@@ -1354,7 +1357,7 @@ def admin_editar(pid):
     return render_template('producto_form.html',producto=dict(prod),categorias=get_categorias(),catalogo=current_config())
 def _guardar_producto(pid):
     backup_db('antes-producto')
-    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip(); precio=float(f.get('precio',0) or 0); marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
+    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); codigo_barras=''.join(ch for ch in f.get('codigo_barras','').strip() if ch.isalnum()); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip(); precio=float(f.get('precio',0) or 0); marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
     try: stock_actual=max(0,int(f.get('stock_actual',0) or 0)); stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
     except ValueError: stock_actual=stock_minimo=0; costo=0
     proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
@@ -1367,6 +1370,10 @@ def _guardar_producto(pid):
         if duplicate:
             prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
             return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=f'El código {codigo} ya existe. Elegí otro para no pisar productos.')
+        barcode_duplicate=db.execute("SELECT codigo FROM productos WHERE codigo_barras=? AND id!=? AND codigo_barras!=''",(codigo_barras,pid or 0)).fetchone() if codigo_barras else None
+        if barcode_duplicate:
+            prod=db.execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() if pid else None
+            return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error='Ese código de barras ya está asociado a '+barcode_duplicate['codigo']+'. Revisalo antes de guardar.')
         if file and file.filename:
             try: foto_name=save_optimized_image(file)
             except ValueError as exc:
@@ -1374,8 +1381,8 @@ def _guardar_producto(pid):
                 return render_template('producto_form.html',producto=dict(prod) if prod else None,categorias=get_categorias(),catalogo=current_config(),error=str(exc))
         if pid:
             existing=db.execute('SELECT foto FROM productos WHERE id=?',(pid,)).fetchone(); foto_name=foto_name or (existing['foto'] if existing else '')
-            db.execute('UPDATE productos SET codigo=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
-        else: db.execute('INSERT INTO productos(codigo,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
+            db.execute('UPDATE productos SET codigo=?,codigo_barras=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
+        else: db.execute('INSERT INTO productos(codigo,codigo_barras,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
         db.commit()
     cloud_sync()
     log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
