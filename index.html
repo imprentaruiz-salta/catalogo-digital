@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/libreria-ruiz-192.png?v=20261103">
 {% else %}<meta name="apple-mobile-web-app-title" content="{{ catalogo.nombre }}">{% endif %}
 <link rel="manifest" href="/manifest.json?catalogo={{ catalogo.slug }}">
-{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/og_libreria_ruiz_20261027.jpg' if catalogo.slug == 'libreria-ruiz' else ('/static/banner_vivero_los_colibries_nuevo.jpg?v=20261025-original' if catalogo.slug == 'vivero-los-colibries' else ('/static/renata-beauty-banner-menu-v2.jpg' if catalogo.slug == 'renas-beauty' else catalogo.banner))) %}
+{% set share_image = '/static/social_preview_abigail_v2.jpg' if catalogo.slug == 'limpieza-abigail' else ('/static/og_libreria_ruiz_20261107.jpg' if catalogo.slug == 'libreria-ruiz' else ('/static/banner_vivero_los_colibries_nuevo.jpg?v=20261025-original' if catalogo.slug == 'vivero-los-colibries' else ('/static/renata-beauty-banner-menu-v2.jpg' if catalogo.slug == 'renas-beauty' else catalogo.banner))) %}
 {% set share_image_url = (share_image if share_image.startswith('http') else request.url_root.rstrip('/') ~ share_image) if share_image else '' %}
 {% set share_description = 'Catálogo online de Librería Ruiz — útiles escolares, librería y oficina. Mirá los productos y hacé tu pedido.' if catalogo.slug == 'libreria-ruiz' else (catalogo.subtitulo ~ ' — Mirá los productos y hacé tu pedido fácilmente.') %}
 <meta name="description" content="{{ share_description }}">
