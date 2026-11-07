@@ -2306,5 +2306,60 @@ window.addEventListener('pagehide',function(){if(worker){worker.terminate();work
 @media(max-width:599px){body.catalog-libreria-ruiz #ruizSavedFab{left:12px!important;right:auto!important;bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;z-index:372!important;min-height:48px;display:flex!important;align-items:center;justify-content:center;box-sizing:border-box}body.catalog-libreria-ruiz #ruizVoiceFab{left:12px!important;right:auto!important;bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;width:auto!important;max-width:calc(100vw - 24px)!important;min-height:42px!important;padding:8px 12px!important;font-size:11px!important;z-index:371!important;justify-content:flex-start!important;gap:6px!important;white-space:nowrap!important}body.catalog-libreria-ruiz .victoria-ruiz-fab{left:auto!important;right:12px!important;bottom:calc(190px + env(safe-area-inset-bottom,0px))!important;z-index:371!important;min-height:46px;min-width:0;padding:10px 13px!important;font-size:11px!important;justify-content:center;white-space:nowrap;box-shadow:0 5px 17px rgba(15,45,53,.3)}body.catalog-libreria-ruiz .victoria-ruiz-panel{left:8px!important;right:8px!important;top:calc(8px + env(safe-area-inset-top,0px))!important;bottom:auto!important;width:auto!important;height:calc(100dvh - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;max-height:none!important;z-index:20001!important;border-radius:16px!important}body.catalog-libreria-ruiz .victoria-ruiz-panel .victoria-ruiz-frame{width:100%!important;max-width:100%!important;min-height:0!important;flex:1 1 auto!important}body.catalog-libreria-ruiz .victoria-ruiz-panel .victoria-ruiz-head{flex:0 0 auto}body.catalog-libreria-ruiz .victoria-ruiz-panel .victoria-ruiz-foot{display:block!important;flex:0 0 auto}body.catalog-libreria-ruiz .victoria-ruiz-fab[aria-expanded="true"]{z-index:20002!important}body.catalog-libreria-ruiz .float-telegram.ruiz-telegram{right:12px!important;bottom:calc(132px + env(safe-area-inset-bottom,0px))!important;z-index:370!important}body.catalog-libreria-ruiz .float-cart{bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;left:160px!important;right:12px!important;width:auto!important;max-width:none!important;min-height:48px!important;z-index:373!important}body.catalog-libreria-ruiz .float-cart.visible{display:flex!important}body.catalog-libreria-ruiz .ruiz-order-open #ruizVoiceFab{bottom:calc(14px + env(safe-area-inset-bottom,0px))!important;left:12px!important;width:min(94px,25vw)!important;right:auto!important;z-index:20002!important}body.catalog-libreria-ruiz .ruiz-order-open .float-cart{display:none!important}}
 </style>{% endif %}
 
+
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+.ruiz-code-tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.ruiz-code-tools button{min-height:38px;border:1px solid #bdd2e5;border-radius:10px;background:#f0f7fd;color:#164e7a;font-size:12px;font-weight:800;cursor:pointer;padding:5px 7px}
+.ruiz-code-tools button:hover{background:#dceeff;border-color:#83afd4}
+.ruiz-barcode-overlay{position:fixed;inset:0;z-index:15010;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(7,25,43,.72)}
+.ruiz-barcode-overlay.open{display:flex}
+.ruiz-barcode-dialog{position:relative;width:min(100%,430px);max-height:92vh;overflow:auto;padding:24px 18px 20px;background:#fff;border-radius:22px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.3)}
+.ruiz-barcode-close{position:absolute;right:12px;top:10px;width:38px;height:38px;border:0;border-radius:50%;background:#eef3f7;color:#20354b;font-size:25px;cursor:pointer}
+.ruiz-barcode-dialog h2{margin:6px 35px 10px;color:#103b67;font-size:19px;line-height:1.25}
+.ruiz-barcode-kicker{margin:0;color:#2477b8;font-size:12px;font-weight:800;text-transform:uppercase}
+.ruiz-barcode-img{display:block;width:100%;height:auto;max-height:170px;object-fit:contain;margin:8px auto;background:white}
+.ruiz-barcode-code{font-family:monospace;font-size:13px;letter-spacing:.3px;overflow-wrap:anywhere;color:#20354b}
+.ruiz-barcode-help{font-size:12px;line-height:1.45;color:#61758a;margin:10px 0 14px}
+.ruiz-barcode-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ruiz-barcode-actions a,.ruiz-barcode-actions button{display:flex;align-items:center;justify-content:center;min-height:42px;border:0;border-radius:10px;background:#164e7a;color:#fff;text-decoration:none;font-size:13px;font-weight:800;cursor:pointer;padding:7px}
+.ruiz-barcode-actions .ruiz-barcode-link{grid-column:1/-1;background:#087447}
+@media print{body>*:not(#ruizBarcodeOverlay){display:none!important}.ruiz-barcode-overlay{position:static;display:block!important;padding:0;background:#fff}.ruiz-barcode-dialog{width:100%;max-height:none;overflow:visible;box-shadow:none;border:0}.ruiz-barcode-close,.ruiz-barcode-help,.ruiz-barcode-actions{display:none!important}.ruiz-barcode-img{max-height:95px}}
+</style>
+<div id="ruizBarcodeOverlay" class="ruiz-barcode-overlay" role="dialog" aria-modal="true" aria-labelledby="ruizBarcodeTitle" onclick="if(event.target===this)cerrarCodigoBarrasRuiz()"><section class="ruiz-barcode-dialog"><button type="button" class="ruiz-barcode-close" aria-label="Cerrar código de barras" onclick="cerrarCodigoBarrasRuiz()">×</button><p class="ruiz-barcode-kicker">Código de barras · Code 128</p><h2 id="ruizBarcodeTitle"></h2><img id="ruizBarcodeImage" class="ruiz-barcode-img" alt="Código de barras individual del producto"><div id="ruizBarcodeValue" class="ruiz-barcode-code"></div><p class="ruiz-barcode-help">Este código identifica el producto en el lector de Librería Ruiz y permite abrir su ficha vigente.</p><div class="ruiz-barcode-actions"><button type="button" onclick="window.print()">Imprimir etiqueta</button><a id="ruizBarcodeOpenImage" target="_blank" rel="noopener">Abrir imagen</a><a id="ruizBarcodeProductLink" class="ruiz-barcode-link" target="_blank" rel="noopener">Abrir ficha del producto</a></div></section></div>
+<script>
+(function(){
+ if(!document.body.classList.contains('catalog-libreria-ruiz'))return;
+ var overlay=document.getElementById('ruizBarcodeOverlay'), currentBarcodeUrl='';
+ window.abrirCodigoBarrasRuiz=function(code,name){
+  var img=document.getElementById('ruizBarcodeImage');
+  var url='https://bwipjs-api.metafloor.com/?bcid=code128&text='+encodeURIComponent(code)+'&scale=3&height=14&includetext&textxalign=center';
+  document.getElementById('ruizBarcodeTitle').textContent=name;
+  document.getElementById('ruizBarcodeValue').textContent=code;
+  img.src=url; img.alt='Código de barras Code 128 para '+name;
+  document.getElementById('ruizBarcodeOpenImage').href=url;
+  document.getElementById('ruizBarcodeProductLink').href='/p/'+encodeURIComponent(code);
+  currentBarcodeUrl=url; overlay.classList.add('open'); document.body.style.overflow='hidden';
+ };
+ window.cerrarCodigoBarrasRuiz=function(){if(overlay)overlay.classList.remove('open');document.body.style.overflow=''};
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarCodigoBarrasRuiz()});
+ document.querySelectorAll('.product-card[data-code]').forEach(function(card){
+  var code=card.getAttribute('data-code');if(!code)return;
+  var nameEl=card.querySelector('.prod-name');var name=nameEl?nameEl.textContent.trim():code;
+  var tools=card.querySelector('.ruiz-code-tools');
+  if(!tools){tools=document.createElement('div');tools.className='ruiz-code-tools';tools.setAttribute('aria-label','Códigos de producto: '+name);
+   var existingQr=card.querySelector('.ruiz-qr-btn');
+   if(existingQr){existingQr.remove();tools.appendChild(existingQr)}else{
+    var qr=document.createElement('button');qr.type='button';qr.innerHTML='<span aria-hidden="true">▦</span> Ver QR';qr.setAttribute('aria-label','Ver QR de '+name);qr.addEventListener('click',function(){mostrarQRProducto(code,name)});tools.appendChild(qr);
+   }
+   var bar=document.createElement('button');bar.type='button';bar.innerHTML='<span aria-hidden="true">▥</span> Ver barras';bar.setAttribute('aria-label','Ver código de barras de '+name);bar.addEventListener('click',function(){abrirCodigoBarrasRuiz(code,name)});tools.appendChild(bar);
+   var oldQr=card.querySelector('.ruiz-qr-btn');if(oldQr)oldQr.remove();
+   var footer=card.querySelector('.prod-footer');if(footer)footer.insertAdjacentElement('afterend',tools);else{var body=card.querySelector('.prod-body')||card;body.appendChild(tools)}
+  }
+ });
+})();
+</script>
+{% endif %}
+
 </body>
 </html>
