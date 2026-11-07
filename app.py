@@ -959,6 +959,30 @@ def catalogo_publico(slug):
     if not cfg: return redirect(url_for('index'))
     return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
 
+@app.route('/lector-qr')
+def lector_qr_independiente():
+    """Offline-installable QR-only reader. It decodes locally and never queries catalog data."""
+    response=make_response(send_from_directory(BASE_DIR,'lector_qr_libre.html',mimetype='text/html'))
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+    return response
+
+@app.route('/lector-qr/manifest.webmanifest')
+def lector_qr_manifest_scoped():
+    return send_from_directory(BASE_DIR,'lector-qr-independiente.webmanifest',mimetype='application/manifest+json')
+
+@app.route('/lector-qr/lector-qr-sw.js')
+def lector_qr_sw_scoped():
+    response=make_response(send_from_directory(BASE_DIR,'lector-qr-independiente-sw.js',mimetype='application/javascript'))
+    response.headers['Service-Worker-Allowed']='/lector-qr'
+    response.headers['Cache-Control']='no-cache'
+    return response
+
+@app.route('/lector-qr/html5-qrcode.min.js')
+def lector_qr_library_scoped():
+    response=make_response(send_from_directory(BASE_DIR,'lector-qr.min.js',mimetype='application/javascript'))
+    response.headers['Cache-Control']='public, max-age=31536000, immutable'
+    return response
+
 @app.route('/consulta-qr')
 def consulta_qr_libreria():
     """Installable QR price lookup for Librería Ruiz phones."""
