@@ -690,9 +690,10 @@ body.catalog-libreria-ruiz .ruiz-saved-at{display:block;margin-top:8px;color:#53
 {% if catalogo.slug == 'libreria-ruiz' %}<div id="ruizOfflineNotice" class="ruiz-offline-notice" role="status" aria-live="polite" hidden></div>{% endif %}
 
 {% if catalogo.slug == 'libreria-ruiz' %}
-<div class="ruiz-social-follow" aria-label="Redes sociales de Librería Ruiz">
+<div class="ruiz-social-follow" aria-label="Contacto y redes sociales de Librería Ruiz">
   <span class="ruiz-social-label">Seguinos</span>
   <a class="ruiz-social-pill ruiz-social-instagram" href="https://www.instagram.com/libreria.ruiz/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Librería Ruiz"><span class="ruiz-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.6" cy="6.6" r=".8" fill="currentColor" stroke="none"/></svg></span><span>Instagram</span></a>
+  <a class="ruiz-social-pill ruiz-social-email" href="mailto:libreriaruiz.salta@gmail.com?subject=Consulta%20a%20Librer%C3%ADa%20Ruiz" aria-label="Enviar un correo a Librería Ruiz"><span class="ruiz-social-icon" style="background:#176098;font-size:16px" aria-hidden="true">✉</span><span>Enviar email · libreriaruiz.salta@gmail.com</span></a>
 </div>
 {% endif %}
 {% set whatsapp_contacto = '5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp %}
