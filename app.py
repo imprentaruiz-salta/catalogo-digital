@@ -684,6 +684,120 @@ def current_config(): return get_catalogo_config(current_slug()) or get_catalogo
 # Dedicated read-only product feed for Alma; intentionally bypasses public page routes.
 ALMA_CATALOG_READONLY_KEY_ENV="ALMA_CATALOG_READONLY_KEY"
 
+# Alma chat público: búsqueda estrictamente de solo lectura en el catálogo vigente.
+# No persiste conversaciones ni expone costo, proveedor, clientes o datos internos.
+import re as _alma_re
+import unicodedata as _alma_unicodedata
+_ALMA_CHAT_ALIASES={'lapicera':'birome','lapiceras':'birome','boligrafo':'birome','boligrafos':'birome','biromes':'birome','lapices':'lapiz','marcadores':'marcador','resaltadores':'resaltador','pilas':'pila','cuadernos':'cuaderno','cuadernas':'cuaderno','negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'}
+_ALMA_CHAT_FILLERS=set('hola buenas buen dia tenes tiene tienen hay quiero necesito buscas busco buscar buscame quisiera si alguna algun alguno algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen venden vende vender comprar ustedes dame pregunta favor saber'.split())
+_ALMA_CHAT_COLORS=set('azul negra roja verde rosa amarillo naranja violeta celeste gris blanca blanco pastel'.split())
+_ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate'}
+def _alma_chat_tokens(value):
+    text=_alma_unicodedata.normalize('NFKD',str(value or '').lower())
+    text=''.join(ch for ch in text if not _alma_unicodedata.combining(ch))
+    return [_ALMA_CHAT_ALIASES.get(word,word) for word in _alma_re.findall(r'[a-z0-9]+',text) if word not in _ALMA_CHAT_FILLERS]
+def _alma_chat_search(question, rows):
+    exact_code=str(question or '').strip().upper()
+    exact=[row for row in rows if str(row.get('codigo') or '').upper()==exact_code]
+    if exact:
+        row=exact[0]
+        try: exact_price=float(row.get('precio'))
+        except (TypeError,ValueError): exact_price=0
+        try: exact_stock=max(0,int(row.get('stock_actual') or 0))
+        except (TypeError,ValueError): exact_stock=0
+        return [{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':exact_price if exact_price>0 else None,'stock':exact_stock,'foto':str(row.get('foto') or '')}]
+    terms=set(_alma_chat_tokens(question))
+    if not terms: return []
+    colors=terms & _ALMA_CHAT_COLORS
+    brands=terms & _ALMA_CHAT_BRANDS
+    hits=[]
+    for row in rows:
+        name=set(_alma_chat_tokens(row.get('nombre')))
+        brand=set(_alma_chat_tokens(row.get('marca')))
+        category=set(_alma_chat_tokens(row.get('categoria')))
+        desc=set(_alma_chat_tokens(row.get('desc_')))
+        code=set(_alma_chat_tokens(row.get('codigo')))
+        if brands and not brands <= brand: continue
+        if 'paper' in brands or 'mate' in brands:
+            if not {'paper','mate'} <= brand: continue
+        if colors and not colors & name: continue
+        if not terms <= (name|brand|category|desc|code): continue
+        score=4*len(terms&name)+3*len(terms&brand)+len(terms&category)+len(terms&desc)+len(terms&code)
+        try: price=float(row.get('precio'))
+        except (TypeError,ValueError): price=None
+        try: stock=max(0,int(row.get('stock_actual') or 0))
+        except (TypeError,ValueError): stock=0
+        hits.append((score,{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')}))
+    hits.sort(key=lambda hit:(-hit[0],_alma_unicodedata.normalize('NFKD',hit[1]['nombre'].lower())))
+    return [product for _,product in hits[:5]]
+_ALMA_CHAT_RATE={}
+_ALMA_CHAT_RATE_LOCK=threading.Lock()
+@app.route('/api/alma/chat',methods=['POST'])
+def alma_chat_publico():
+    if not request.is_json: return jsonify({'error':'Usá una consulta de texto.'}),415
+    body=request.get_json(silent=True)
+    question=(body or {}).get('pregunta','') if isinstance(body,dict) else ''
+    if not isinstance(question,str) or not question.strip() or len(question.strip())>200:
+        return jsonify({'error':'La pregunta debe tener entre 1 y 200 caracteres.'}),400
+    import time as _alma_time
+    client=request.remote_addr or 'unknown'; now=_alma_time.monotonic()
+    with _ALMA_CHAT_RATE_LOCK:
+        recent=[stamp for stamp in _ALMA_CHAT_RATE.get(client,[]) if now-stamp<60]
+        if len(recent)>=120: return jsonify({'error':'Alma recibió varias consultas seguidas. Esperá un minuto y probá de nuevo.'}),429
+        recent.append(now); _ALMA_CHAT_RATE[client]=recent
+        if len(_ALMA_CHAT_RATE)>2000: _ALMA_CHAT_RATE.clear()
+    try:
+        with get_db() as db:
+            rows=[dict(row) for row in db.execute("SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual FROM productos WHERE activo=1 AND catalogo_slug=?",('libreria-ruiz',)).fetchall()]
+        selected=body.get('producto_seleccionado','')
+        if not isinstance(selected,str) or len(selected)>100: selected=''
+        context=body.get('consulta_anterior','')
+        if not isinstance(context,str) or len(context)>200: context=''
+        normalized=_alma_unicodedata.normalize('NFKD',question.lower())
+        normalized=''.join(c for c in normalized if not _alma_unicodedata.combining(c))
+        spelled={'uno':'1','una':'1','dos':'2','tres':'3','cuatro':'4','cinco':'5','seis':'6','siete':'7','ocho':'8','nueve':'9','diez':'10','doce':'12'}
+        for word,number in spelled.items(): normalized=_alma_re.sub(r'\b'+word+r'\b',number,normalized)
+        qty_match=_alma_re.fullmatch(r'\s*(?:(?:quiero|necesito|dame|llevo|son|cuanto salen|cuanto cuestan)\s+)?(\d{1,4})\s*(?:unidades|unidad|u)?\s*[.!?]*\s*',normalized)
+        if qty_match and selected:
+            quantity=int(qty_match.group(1))
+            found=[row for row in rows if row.get('codigo')==selected]
+            if not found:
+                return jsonify({'respuesta':'Ese producto ya no está disponible en el catálogo. Busquemos otra opción.','productos':[]})
+            row=found[0]
+            try: unit_price=float(row.get('precio'))
+            except (TypeError,ValueError): unit_price=0
+            try: unit_stock=max(0,int(row.get('stock_actual') or 0))
+            except (TypeError,ValueError): unit_stock=0
+            p={'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':unit_price if unit_price>0 else None,'stock':unit_stock,'foto':str(row.get('foto') or '')}
+            products=[p]
+            if not 1 <= quantity <= 999:
+                text='Ingresá una cantidad entre 1 y 999 unidades.'
+            elif p.get('precio_ars'):
+                total=p['precio_ars']*quantity
+                money=lambda value: ('{:,.2f}'.format(value).replace(',','X').replace('.',',').replace('X','.')).rstrip('0').rstrip(',')
+                text=f"{quantity} × {p['nombre']} a ARS {money(p['precio_ars'])} = ARS {money(total)}. "+(f"El catálogo muestra {p['stock']} disponibles." if p['stock'] else 'No hay stock publicado; consultanos.')+' Precio y disponibilidad sujetos a confirmación.'
+                if quantity>p['stock'] and p['stock']>0: text+=' La cantidad solicitada supera el stock publicado.'
+            else:
+                text='El precio no está confirmado. Consultanos antes de calcular el total.'
+        elif qty_match:
+            text='Primero elegí un producto de los resultados y después indicame la cantidad.';products=[]
+        else:
+            clean=_alma_re.sub(r'\b(?:quiero|necesito|dame|llevo)?\s*\d{1,4}\s+(?=(?:unidades?\s+)?(?:biromes?|lapiceras?|boligrafos?|resaltadores?|pilas?|correctores?|bic)\b)', '', normalized, flags=_alma_re.I)
+            words=set(_alma_chat_tokens(clean))
+            colors=words & _ALMA_CHAT_COLORS
+            if context and colors and len(words)==1:
+                prev=[w for w in _alma_chat_tokens(context) if w not in _ALMA_CHAT_COLORS]
+                clean=' '.join(prev+list(colors))
+            products=_alma_chat_search(clean.strip(),rows)
+            text=('Encontré estas opciones en el catálogo vigente. Elegí un producto y decime cuántas unidades querés.' if products else 'No encuentro una coincidencia clara en el catálogo. Probá con otra marca, color o nombre; si no aparece, podés consultarnos por WhatsApp.')
+        response=jsonify({'respuesta':text,'productos':products})
+        response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['X-Content-Type-Options']='nosniff'
+        return response
+    except Exception:
+        app.logger.exception('Alma: falló la consulta de solo lectura al catálogo')
+        return jsonify({'error':'El catálogo no está disponible en este momento.'}),503
+
 @app.route('/api/alma/catalog/libreria-ruiz', methods=['GET'])
 def alma_readonly_libreria_ruiz():
     """Return public Librería Ruiz fields without rendering pages or recording visits."""
