@@ -701,12 +701,12 @@ body.catalog-libreria-ruiz .ruiz-saved-at{display:block;margin-top:8px;color:#53
   <h2>Escribinos por email</h2>
   <p>Completá el mensaje y lo recibimos en Librería Ruiz.</p>
   <label>Tu nombre<input name="name" type="text" maxlength="80" autocomplete="name" required></label>
-  <label>Tu email (opcional)<input name="email" type="email" maxlength="120" autocomplete="email"></label>
+  <label>Tu email para responderte<input name="email" type="email" maxlength="120" autocomplete="email" required></label>
   <label>Asunto<input name="_subject" type="text" maxlength="120" required></label>
   <label>Mensaje<textarea name="message" maxlength="3000" rows="5" required></textarea></label>
   <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" class="ruiz-email-honey">
   <button type="submit" id="ruizEmailSubmit">Enviar mensaje</button>
-  <p class="ruiz-email-privacy">Usaremos estos datos únicamente para responder tu consulta.</p>
+  <p class="ruiz-email-privacy">Los datos se procesan mediante FormSubmit para enviar tu consulta a Librería Ruiz.</p>
   <p id="ruizEmailStatus" role="status" aria-live="polite"></p>
  </form>
 </div>
@@ -726,7 +726,7 @@ body.catalog-libreria-ruiz .ruiz-email-honey{position:absolute;left:-10000px;wid
 @media(max-width:480px){body.catalog-libreria-ruiz .ruiz-email-box{margin:10px 12px;padding:13px}}
 </style>
 <script>
-(function(){var toggle=document.getElementById('ruizEmailToggle'),box=document.getElementById('ruizEmailBox'),form=document.getElementById('ruizEmailForm');if(!toggle||!box||!form)return;toggle.addEventListener('click',function(){var open=box.hidden;box.hidden=!open;toggle.setAttribute('aria-expanded',String(open));if(open){box.scrollIntoView({behavior:'smooth',block:'center'});form.querySelector('[name="name"]').focus()}});form.addEventListener('submit',async function(ev){ev.preventDefault();var status=document.getElementById('ruizEmailStatus'),btn=document.getElementById('ruizEmailSubmit');if(!form.reportValidity())return;if(form.elements._honey.value){status.textContent='No se pudo enviar el formulario.';return}btn.disabled=true;status.textContent='Enviando…';var data=Object.fromEntries(new FormData(form).entries());try{var response=await fetch('https://formsubmit.co/ajax/libreriaruiz.salta@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});var result=await response.json();if(!response.ok||result.success===false)throw new Error(result.message||'No se pudo enviar');status.textContent='✅ Mensaje enviado. Gracias por escribirnos.';form.reset()}catch(err){status.textContent='No se pudo confirmar el envío. Probá nuevamente o escribinos a libreriaruiz.salta@gmail.com.'}finally{btn.disabled=false}})})();
+(function(){var toggle=document.getElementById('ruizEmailToggle'),box=document.getElementById('ruizEmailBox'),form=document.getElementById('ruizEmailForm');if(!toggle||!box||!form)return;toggle.addEventListener('click',function(){var open=box.hidden;box.hidden=!open;toggle.setAttribute('aria-expanded',String(open));if(open){box.scrollIntoView({behavior:'smooth',block:'center'});form.querySelector('[name="name"]').focus()}});form.addEventListener('submit',async function(ev){ev.preventDefault();var status=document.getElementById('ruizEmailStatus'),btn=document.getElementById('ruizEmailSubmit');if(!form.reportValidity())return;if(form.elements._honey.value){status.textContent='No se pudo enviar el formulario.';return}btn.disabled=true;status.textContent='Enviando…';var data=Object.fromEntries(new FormData(form).entries());try{var response=await fetch('https://formsubmit.co/ajax/libreriaruiz.salta@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});var result=await response.json();if(!response.ok||String(result.success)!=='true')throw new Error(result.message||'No se pudo enviar');status.textContent='✅ Mensaje enviado. Gracias por escribirnos.';form.reset()}catch(err){status.textContent='No se pudo confirmar el envío. Probá nuevamente o escribinos a libreriaruiz.salta@gmail.com.'}finally{btn.disabled=false}})})();
 </script>
 {% endif %}
 {% set whatsapp_contacto = '5493872101274' if catalogo.slug == 'libreria-ruiz' else catalogo.whatsapp %}
