@@ -907,7 +907,7 @@ def alma_audio_transcribe():
     raw=audio.stream.read(6*1024*1024+1)
     if not raw: return jsonify({'error':'El audio llegó vacío. Probá grabarlo otra vez.'}),400
     if len(raw)>6*1024*1024: return jsonify({'error':'El audio supera 6 MB. Grabá una consulta más corta.'}),413
-    import base64 as _alma_b64, requests as _alma_requests, time as _alma_time
+    import base64 as _alma_b64, time as _alma_time, socket as _alma_socket
     caller=request.remote_addr or 'unknown'; now=_alma_time.monotonic()
     with _ALMA_CHAT_RATE_LOCK:
         recent=[stamp for stamp in _ALMA_CHAT_RATE.get('audio:'+caller,[]) if now-stamp<60]
@@ -915,14 +915,15 @@ def alma_audio_transcribe():
         recent.append(now); _ALMA_CHAT_RATE['audio:'+caller]=recent
     payload={'contents':[{'role':'user','parts':[{'text':'Transcribí exactamente, en español y sin responder ni resumir, la consulta hablada en este audio. Devolvé únicamente las palabras que se entienden. Si no se entiende ninguna palabra, devolvé exactamente: AUDIO_NO_ENTENDIBLE.'},{'inline_data':{'mime_type':mime,'data':_alma_b64.b64encode(raw).decode('ascii')}}]}],'generationConfig':{'temperature':0,'maxOutputTokens':256}}
     try:
-        response=_alma_requests.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',headers={'x-goog-api-key':key},json=payload,timeout=40)
-        response.raise_for_status(); data=response.json()
+        req=urllib.request.Request('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',data=json.dumps(payload).encode('utf-8'),headers={'x-goog-api-key':key,'Content-Type':'application/json'},method='POST')
+        with urllib.request.urlopen(req,timeout=22) as response:
+            data=json.loads(response.read().decode('utf-8'))
         text=' '.join(part.get('text','') for part in data.get('candidates',[{}])[0].get('content',{}).get('parts',[]) if part.get('text')).strip()
         text=text.strip('"“” \n\t')
         if not text or 'AUDIO_NO_ENTENDIBLE' in text.upper(): return jsonify({'error':'No entendí el audio. Podés grabarlo otra vez o escribir la consulta.'}),422
         if len(text)>500: text=text[:500].rsplit(' ',1)[0]
         return jsonify({'transcripcion':text,'mensaje':'Revisá lo que escuché y tocá Enviar para consultarle a Alma.'})
-    except _alma_requests.Timeout:
+    except (TimeoutError, _alma_socket.timeout):
         return jsonify({'error':'El audio tardó demasiado en procesarse. Probá con una grabación más corta.'}),504
     except Exception:
         app.logger.warning('Alma audio transcription failed without saving audio')
