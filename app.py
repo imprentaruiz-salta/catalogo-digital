@@ -889,6 +889,45 @@ def alma_chat_publico():
         app.logger.exception('Alma: falló la consulta de solo lectura al catálogo')
         return jsonify({'error':'El catálogo no está disponible en este momento.'}),503
 
+@app.route('/api/alma/audio/transcribe',methods=['POST'])
+def alma_audio_transcribe():
+    """Transcribe a short spoken question in memory only; never retain uploaded audio."""
+    key=os.environ.get('GEMINI_AUDIO_API_KEY','').strip()
+    if not key:
+        return jsonify({'error':'El micrófono de Alma todavía no está configurado. Escribí tu consulta por ahora.'}),503
+    audio=request.files.get('audio')
+    if not audio or not audio.filename:
+        return jsonify({'error':'No recibí el audio. Tocá el micrófono y probá otra vez.'}),400
+    allowed={'audio/webm','audio/mp4','audio/x-m4a','audio/m4a','audio/ogg','audio/wav','audio/x-wav','audio/mpeg','audio/mp3','audio/aac'}
+    mime=(audio.mimetype or '').lower().split(';',1)[0].strip()
+    mime_alias={'audio/x-m4a':'audio/mp4','audio/m4a':'audio/mp4','audio/x-wav':'audio/wav','audio/mp3':'audio/mpeg'}
+    mime=mime_alias.get(mime,mime)
+    if mime not in {'audio/webm','audio/mp4','audio/ogg','audio/wav','audio/mpeg','audio/aac'}:
+        return jsonify({'error':'Ese formato de audio no es compatible. Probá grabar de nuevo desde Firefox.'}),415
+    raw=audio.stream.read(6*1024*1024+1)
+    if not raw: return jsonify({'error':'El audio llegó vacío. Probá grabarlo otra vez.'}),400
+    if len(raw)>6*1024*1024: return jsonify({'error':'El audio supera 6 MB. Grabá una consulta más corta.'}),413
+    import base64 as _alma_b64, requests as _alma_requests, time as _alma_time
+    caller=request.remote_addr or 'unknown'; now=_alma_time.monotonic()
+    with _ALMA_CHAT_RATE_LOCK:
+        recent=[stamp for stamp in _ALMA_CHAT_RATE.get('audio:'+caller,[]) if now-stamp<60]
+        if len(recent)>=12: return jsonify({'error':'Ya recibí varios audios. Esperá un minuto y probá otra vez.'}),429
+        recent.append(now); _ALMA_CHAT_RATE['audio:'+caller]=recent
+    payload={'contents':[{'role':'user','parts':[{'text':'Transcribí exactamente, en español y sin responder ni resumir, la consulta hablada en este audio. Devolvé únicamente las palabras que se entienden. Si no se entiende ninguna palabra, devolvé exactamente: AUDIO_NO_ENTENDIBLE.'},{'inline_data':{'mime_type':mime,'data':_alma_b64.b64encode(raw).decode('ascii')}}]}],'generationConfig':{'temperature':0,'maxOutputTokens':256}}
+    try:
+        response=_alma_requests.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',headers={'x-goog-api-key':key},json=payload,timeout=40)
+        response.raise_for_status(); data=response.json()
+        text=' '.join(part.get('text','') for part in data.get('candidates',[{}])[0].get('content',{}).get('parts',[]) if part.get('text')).strip()
+        text=text.strip('"“” \n\t')
+        if not text or 'AUDIO_NO_ENTENDIBLE' in text.upper(): return jsonify({'error':'No entendí el audio. Podés grabarlo otra vez o escribir la consulta.'}),422
+        if len(text)>500: text=text[:500].rsplit(' ',1)[0]
+        return jsonify({'transcripcion':text,'mensaje':'Revisá lo que escuché y tocá Enviar para consultarle a Alma.'})
+    except _alma_requests.Timeout:
+        return jsonify({'error':'El audio tardó demasiado en procesarse. Probá con una grabación más corta.'}),504
+    except Exception:
+        app.logger.warning('Alma audio transcription failed without saving audio')
+        return jsonify({'error':'No pude procesar el audio. Probá otra vez o escribí tu consulta.'}),502
+
 @app.route('/api/alma/catalog/libreria-ruiz', methods=['GET'])
 def alma_readonly_libreria_ruiz():
     """Return public Librería Ruiz fields without rendering pages or recording visits."""
