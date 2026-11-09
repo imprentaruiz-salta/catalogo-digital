@@ -689,7 +689,7 @@ ALMA_CATALOG_READONLY_KEY_ENV="ALMA_CATALOG_READONLY_KEY"
 import re as _alma_re
 import unicodedata as _alma_unicodedata
 _ALMA_CHAT_ALIASES={'lapicera':'birome','lapiceras':'birome','boligrafo':'birome','boligrafos':'birome','biromes':'birome','lapices':'lapiz','marcadores':'marcador','resaltadores':'resaltador','pilas':'pila','cuadernos':'cuaderno','cuadernas':'cuaderno','negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'}
-_ALMA_CHAT_FILLERS=set('hola buenas buen dia tenes tiene tienen hay quiero necesito buscas busco buscar buscame quisiera si alguna algun alguno algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen venden vende vender comprar ustedes dame pregunta favor saber'.split())
+_ALMA_CHAT_FILLERS=set('alma hola buenas buen dia tenes tiene tienen hay quiero necesito buscas busco buscar buscame quisiera si alguna algun alguno algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen venden vende vender comprar ustedes dame pregunta favor saber'.split())
 _ALMA_CHAT_COLORS=set('azul negra roja verde rosa amarillo naranja violeta celeste gris blanca blanco pastel'.split())
 _ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate'}
 def _alma_chat_tokens(value):
