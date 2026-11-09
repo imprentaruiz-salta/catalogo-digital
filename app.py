@@ -732,6 +732,22 @@ def _alma_chat_search(question, rows):
     return [product for _,product in hits[:5]]
 _ALMA_CHAT_RATE={}
 _ALMA_CHAT_RATE_LOCK=threading.Lock()
+
+def _alma_visible_catalog_codes():
+    # Read the exact allowlist used to render public product cards. Fail closed.
+    import ast
+    try:
+        with open(os.path.join(BASE_DIR,'index.html'),encoding='utf-8') as source:
+            template=source.read()
+        match=_alma_re.search(r"catalogo\.slug != 'libreria-ruiz' or p\.codigo in (\[[^\]]+\])",template)
+        if not match: raise ValueError('public catalog product list is missing')
+        codes=ast.literal_eval(match.group(1))
+        if not isinstance(codes,list) or not codes or not all(isinstance(x,str) for x in codes):
+            raise ValueError('invalid public catalog product list')
+        return set(codes)
+    except Exception as exc:
+        app.logger.error('Alma public catalog filter unavailable: %s',exc)
+        raise RuntimeError('public catalog filter unavailable') from exc
 def _alma_catalog_explanation(question, rows):
     """Answer catalogue-wide questions from current public rows only."""
     q=_alma_unicodedata.normalize('NFKD',str(question or '').lower())
@@ -809,6 +825,8 @@ def alma_chat_publico():
     try:
         with get_db() as db:
             rows=[dict(row) for row in db.execute("SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual FROM productos WHERE activo=1 AND catalogo_slug=?",('libreria-ruiz',)).fetchall()]
+        visible_codes=_alma_visible_catalog_codes()
+        rows=[row for row in rows if row.get('codigo') in visible_codes]
         explanation, explanation_rows = _alma_catalog_explanation(question, rows)
         if explanation:
             products=[]
