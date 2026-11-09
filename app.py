@@ -759,7 +759,11 @@ def _alma_catalog_explanation(question, rows):
             if brand in q: normalized_brands |= parts
         normalized_brands |= asked_brands
         if len(normalized_brands)>1:
-            candidates=[r for r in rows if set(_alma_chat_tokens(r.get('marca'))) & normalized_brands and (not category or str(r.get('categoria') or '').lower()==category)]
+            candidates=[]
+            for brand in sorted(normalized_brands):
+                group=[r for r in rows if brand in set(_alma_chat_tokens(r.get('marca'))) and (not category or str(r.get('categoria') or '').lower()==category)]
+                candidates.extend(group[:3])
+            candidates=candidates[:6]
         else:
             candidates=[r for r in rows if normalized_brands and normalized_brands <= set(_alma_chat_tokens(r.get('marca'))) and (not category or str(r.get('categoria') or '').lower()==category)]
         if not candidates:
@@ -773,12 +777,12 @@ def _alma_catalog_explanation(question, rows):
             candidates=candidates[:6]
         if candidates:
             names='; '.join(str(r.get('nombre') or '') for r in candidates[:5])
-            compared=', '.join(sorted(str(r.get('marca') or '').title() for r in candidates if normalized_brands and set(_alma_chat_tokens(r.get('marca'))) & normalized_brands))
+            compared=', '.join(sorted({str(r.get('marca') or '').title() for r in candidates if normalized_brands and set(_alma_chat_tokens(r.get('marca'))) & normalized_brands}))
             prefix=f"En el catálogo veo {compared}. " if compared else ''
             return prefix+f"Puedo comparar estas fichas: {names}. Te muestro solo las diferencias que figuran publicadas, sin inventar características.", candidates[:5]
     if any(x in q for x in ('todo el catalogo','todo el catálogo','que hay','qué hay','todos los productos','todas las cosas','productos hay','cosas hay','que tiene','que hay en','del catalogo','de catalogo')):
         cats=sorted({str(r.get('categoria') or '').title() for r in rows})
-        return f"El catálogo tiene {len(rows)} productos en estas categorías: {', '.join(cats)}. Preguntame por una marca, color, tipo de producto, precio o disponibilidad.", []
+        return f"En la base actual del catálogo encuentro estas categorías: {', '.join(cats)}. Preguntame por una marca, color, tipo de producto, precio o disponibilidad.", []
     if category and any(x in q for x in ('que hay','que tienen','mostrar','mostrame','productos','todos','sticker','adhesiv','senalador')):
         chosen=[r for r in rows if str(r.get('categoria') or '').lower()==category]
         if category=='libreria':
