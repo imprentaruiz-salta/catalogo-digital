@@ -705,7 +705,7 @@ def _alma_chat_search(question, rows):
         except (TypeError,ValueError): exact_price=0
         try: exact_stock=max(0,int(row.get('stock_actual') or 0))
         except (TypeError,ValueError): exact_stock=0
-        return [{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':exact_price if exact_price>0 else None,'stock':exact_stock,'foto':str(row.get('foto') or '')}]
+        return [{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':exact_price if exact_price>0 else None,'stock':exact_stock,'foto':str(row.get('foto') or '')}]
     terms=set(_alma_chat_tokens(question))
     if not terms: return []
     colors=terms & _ALMA_CHAT_COLORS
@@ -727,11 +727,67 @@ def _alma_chat_search(question, rows):
         except (TypeError,ValueError): price=None
         try: stock=max(0,int(row.get('stock_actual') or 0))
         except (TypeError,ValueError): stock=0
-        hits.append((score,{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')}))
+        hits.append((score,{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')}))
     hits.sort(key=lambda hit:(-hit[0],_alma_unicodedata.normalize('NFKD',hit[1]['nombre'].lower())))
     return [product for _,product in hits[:5]]
 _ALMA_CHAT_RATE={}
 _ALMA_CHAT_RATE_LOCK=threading.Lock()
+def _alma_catalog_explanation(question, rows):
+    """Answer catalogue-wide questions from current public rows only."""
+    q=_alma_unicodedata.normalize('NFKD',str(question or '').lower())
+    q=''.join(ch for ch in q if not _alma_unicodedata.combining(ch))
+    words=set(_alma_chat_tokens(q))
+    wants_brands=any(x in q for x in ('marca','marcas'))
+    wants_compare=any(x in q for x in ('diferencia','diferencias','comparar','compare','mejor para'))
+    category=''
+    if any(x in q for x in ('resaltador','fluorescente')): category='resaltadores'
+    elif any(x in q for x in ('birome','lapicera','boligrafo')): category='biromes'
+    elif any(x in q for x in ('sticker','adhesiv','senalador','nota adhesiva')): category='libreria'
+    elif any(x in q for x in ('pila','regla','papel','pegamento','corrector','carpeta','marcador','encendedor')): category=''
+    if wants_brands and category:
+        values=sorted({str(r.get('marca') or '').title() for r in rows if str(r.get('categoria') or '').lower()==category})
+        if values:
+            return f"En {category} encontré estas marcas en el catálogo: {', '.join(values)}. Si querés, te muestro las variantes, colores y precios de una marca.", []
+    if wants_compare:
+        # Prefer records from any brands named in the question, then show only catalog facts.
+        asked_brands={b for b in _ALMA_CHAT_BRANDS if b in words}
+        brand_parts={'paper mate':{'paper','mate'}}
+        for brand in ('bic','filgo','pelikan','intra','pizzini','ezco','katania','leep','maped','duracell','ibi','global','auca','luma','art-jet','glister','unipox'):
+            if brand in q: brand_parts.setdefault(brand,{brand})
+        normalized_brands=set()
+        for brand,parts in brand_parts.items():
+            if brand in q: normalized_brands |= parts
+        normalized_brands |= asked_brands
+        if len(normalized_brands)>1:
+            candidates=[r for r in rows if set(_alma_chat_tokens(r.get('marca'))) & normalized_brands and (not category or str(r.get('categoria') or '').lower()==category)]
+        else:
+            candidates=[r for r in rows if normalized_brands and normalized_brands <= set(_alma_chat_tokens(r.get('marca'))) and (not category or str(r.get('categoria') or '').lower()==category)]
+        if not candidates:
+            candidates=_alma_chat_search(q,rows)
+        if not candidates:
+            candidates=[]
+            for r in rows:
+                cat=str(r.get('categoria') or '').lower()
+                if (category and cat==category) or (not category and any(x in q for x in (str(r.get('marca') or '').lower(),str(r.get('nombre') or '').lower()))):
+                    candidates.append(r)
+            candidates=candidates[:6]
+        if candidates:
+            names='; '.join(str(r.get('nombre') or '') for r in candidates[:5])
+            compared=', '.join(sorted(str(r.get('marca') or '').title() for r in candidates if normalized_brands and set(_alma_chat_tokens(r.get('marca'))) & normalized_brands))
+            prefix=f"En el catálogo veo {compared}. " if compared else ''
+            return prefix+f"Puedo comparar estas fichas: {names}. Te muestro solo las diferencias que figuran publicadas, sin inventar características.", candidates[:5]
+    if any(x in q for x in ('todo el catalogo','todo el catálogo','que hay','qué hay','todos los productos','todas las cosas','productos hay','cosas hay','que tiene','que hay en','del catalogo','de catalogo')):
+        cats=sorted({str(r.get('categoria') or '').title() for r in rows})
+        return f"El catálogo tiene {len(rows)} productos en estas categorías: {', '.join(cats)}. Preguntame por una marca, color, tipo de producto, precio o disponibilidad.", []
+    if category and any(x in q for x in ('que hay','que tienen','mostrar','mostrame','productos','todos','sticker','adhesiv','senalador')):
+        chosen=[r for r in rows if str(r.get('categoria') or '').lower()==category]
+        if category=='libreria':
+            chosen=[r for r in rows if str(r.get('categoria') or '').lower()=='libreria' and any(x in _alma_unicodedata.normalize('NFKD',str(r.get('nombre') or '').lower()) for x in ('adhesiv','senalador','nota'))]
+        chosen=chosen[:8]
+        if chosen:
+            return f"En el catálogo encontré {len(chosen)} opciones relacionadas: {', '.join(str(r.get('nombre') or '') for r in chosen)}. Te dejo las fichas para ver detalle, precio y stock publicados.", chosen
+    return None, []
+
 @app.route('/api/alma/chat',methods=['POST'])
 def alma_chat_publico():
     if not request.is_json: return jsonify({'error':'Usá una consulta de texto.'}),415
@@ -749,6 +805,19 @@ def alma_chat_publico():
     try:
         with get_db() as db:
             rows=[dict(row) for row in db.execute("SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual FROM productos WHERE activo=1 AND catalogo_slug=?",('libreria-ruiz',)).fetchall()]
+        explanation, explanation_rows = _alma_catalog_explanation(question, rows)
+        if explanation:
+            products=[]
+            for row in explanation_rows:
+                try: price=float(row.get('precio'))
+                except (TypeError,ValueError): price=None
+                try: stock=max(0,int(row.get('stock_actual') or 0))
+                except (TypeError,ValueError): stock=0
+                products.append({'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')})
+            response=jsonify({'respuesta':explanation,'productos':products})
+            response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+            response.headers['X-Content-Type-Options']='nosniff'
+            return response
         selected=body.get('producto_seleccionado','')
         if not isinstance(selected,str) or len(selected)>100: selected=''
         context=body.get('consulta_anterior','')
@@ -768,7 +837,7 @@ def alma_chat_publico():
             except (TypeError,ValueError): unit_price=0
             try: unit_stock=max(0,int(row.get('stock_actual') or 0))
             except (TypeError,ValueError): unit_stock=0
-            p={'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'precio_ars':unit_price if unit_price>0 else None,'stock':unit_stock,'foto':str(row.get('foto') or '')}
+            p={'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':unit_price if unit_price>0 else None,'stock':unit_stock,'foto':str(row.get('foto') or '')}
             products=[p]
             if not 1 <= quantity <= 999:
                 text='Ingresá una cantidad entre 1 y 999 unidades.'
