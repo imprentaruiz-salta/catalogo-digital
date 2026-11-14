@@ -2504,5 +2504,16 @@ window.addEventListener('pagehide',function(){if(worker){worker.terminate();work
 </script>
 {% endif %}
 
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+.keyroad-gallery{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:8px 0}.keyroad-gallery button{border:2px solid #dce6ee;border-radius:9px;padding:3px;background:#fff;width:48px;height:54px;cursor:pointer}.keyroad-gallery button[aria-pressed="true"]{border-color:#145da0;box-shadow:0 0 0 1px #145da0}.keyroad-gallery img{width:100%;height:100%;object-fit:contain}
+#productOverlay .keyroad-modal-gallery{display:flex;gap:8px;margin:10px 0;justify-content:center}.keyroad-modal-gallery button{width:62px;height:66px;background:#fff;border:2px solid #dce6ee;border-radius:9px;padding:3px}.keyroad-modal-gallery button[aria-pressed="true"]{border-color:#145da0}.keyroad-modal-gallery img{width:100%;height:100%;object-fit:contain}
+</style>
+<script>(function(){var code='KR-973388-2026',card=document.querySelector('.product-card[data-code="'+code+'"]');if(!card)return;var pics={frente:'/static/keyroad_sacapunta_frente.webp',orificios:'/static/keyroad_sacapunta_orificios.webp',lateral:'/static/keyroad_sacapunta_lateral.webp'},alts={frente:'Vista frontal del sacapuntas Keyroad Mellow',orificios:'Detalle de los dos orificios del sacapuntas Keyroad',lateral:'Vista lateral del sacapuntas Keyroad con depósito'};function setImage(src,alt,container){var img=(container||card).querySelector('.prod-img img');if(img){img.src=src;img.alt=alt}if(typeof currentProduct!=='undefined'&&currentProduct&&currentProduct.code===code){currentProduct.image=src;var mi=document.querySelector('#modalProductImage img');if(mi){mi.src=src;mi.alt=alt}}}
+function gallery(parent,cls){if(!parent||parent.querySelector('.'+cls))return;var row=document.createElement('div');row.className=cls;row.setAttribute('aria-label','Tres vistas del sacapuntas Keyroad');Object.keys(pics).forEach(function(k){var b=document.createElement('button');b.type='button';b.title=alts[k];b.setAttribute('aria-label',alts[k]);b.setAttribute('aria-pressed',k==='frente'?'true':'false');var im=document.createElement('img');im.src=pics[k];im.alt=alts[k];b.appendChild(im);b.onclick=function(e){e.stopPropagation();row.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});setImage(pics[k],alts[k],cls==='keyroad-modal-gallery'?document.getElementById('productOverlay'):card)};row.appendChild(b)});parent.appendChild(row)}
+var body=card.querySelector('.prod-body'),foot=body&&body.querySelector('.prod-footer');gallery(body,'keyroad-gallery');var g=body&&body.querySelector('.keyroad-gallery');if(foot&&g)foot.insertAdjacentElement('beforebegin',g);var open=window.openProduct;window.openProduct=function(){var args=arguments,result=open.apply(this,args);if(args[0]===code){var box=document.getElementById('modalProductImage');if(box){var imgs=box.querySelectorAll('img');if(imgs.length){imgs[0].src=pics.frente;imgs[0].alt=alts.frente}}gallery(box,'keyroad-modal-gallery');var thumbs=document.querySelector('#productOverlay .keyroad-modal-gallery');if(thumbs)box.insertAdjacentElement('afterend',thumbs)}return result}
+})();</script>
+{% endif %}
+
 </body>
 </html>
