@@ -2445,20 +2445,20 @@ window.addEventListener('pagehide',function(){if(worker){worker.terminate();work
  if(!card)return;
  var cardImage=card.querySelector('.prod-img img');if(!cardImage)return;
  var variants={rojo:cardImage.getAttribute('src'),azul:'/static/filgo_borrax_azul.jpg',negro:'/static/filgo_borrax_negro.jpg'};
- var active='', names={rojo:'Rojo',azul:'Azul',negro:'Negro'}, colorStyles={rojo:'#de2a2a',azul:'#205fd4',negro:'#171717'};
+ var active='', names={rojo:'Rojo',azul:'Azul',negro:'Negro'}, colorStyles={rojo:'#de2a2a',azul:'#205fd4',negro:'#171717'}, descriptions={rojo:'Tinta gel borrable roja, trazo 0,7 mm; se elimina por fricción con la goma incorporada.',azul:'Tinta gel borrable azul, trazo 0,7 mm; se elimina por fricción con la goma incorporada.',negro:'Tinta gel borrable negra, trazo 0,7 mm; se elimina por fricción con la goma incorporada.'};
  function addSelector(parent){
   if(!parent||parent.querySelector('.filgo-variante'))return;
   var row=document.createElement('div');row.className='filgo-variante';row.setAttribute('role','group');row.setAttribute('aria-label','Elegí color del roller Filgo');
   var title=document.createElement('span');title.className='filgo-variante-titulo';title.textContent='Elegí un color:';row.appendChild(title);
   ['rojo','azul','negro'].forEach(function(key){var b=document.createElement('button');b.type='button';b.className='filgo-variante-opcion';b.dataset.filgoColor=key;b.style.backgroundColor=colorStyles[key];b.setAttribute('aria-label','Ver color '+names[key]);b.setAttribute('aria-pressed',active===key?'true':'false');b.title=names[key];b.onclick=function(e){e.preventDefault();e.stopPropagation();choose(key)};row.appendChild(b)});
   var status=document.createElement('span');status.className='filgo-variante-estado';status.textContent=active?names[active]:'Sin elegir';row.appendChild(status);
-  var help=document.createElement('small');help.className='filgo-variante-ayuda';help.textContent='Disponibilidad de cada color a confirmar.';row.appendChild(help);
+  var help=document.createElement('small');help.className='filgo-variante-ayuda';help.textContent='Disponibilidad de cada color a confirmar.';row.appendChild(help);var d=document.createElement('div');d.className='filgo-variante-detalle';d.textContent='Elegí un color para ver sus características.';row.appendChild(d);
   parent.appendChild(row);
  }
  function choose(key){
   active=key;cardImage.src=variants[key];cardImage.alt='Roller Filgo Borrax '+names[key];
-  document.querySelectorAll('.filgo-variante').forEach(function(row){row.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.filgoColor===key?'true':'false')});row.querySelector('.filgo-variante-estado').textContent=names[key]});
-  if(typeof currentProduct!=='undefined'&&currentProduct&&currentProduct.code===code){currentProduct.image=variants[key];var img=document.querySelector('#modalProductImage img');if(img){img.src=variants[key];img.alt='Roller Filgo Borrax '+names[key]}}
+  document.querySelectorAll('.filgo-variante').forEach(function(row){row.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.filgoColor===key?'true':'false')});row.querySelector('.filgo-variante-estado').textContent=names[key];var detail=row.querySelector('.filgo-variante-detalle');if(detail)detail.textContent=names[key]+': '+descriptions[key]});var cardDesc=card.querySelector('.prod-desc');if(cardDesc)cardDesc.textContent='Color '+names[key]+'. '+descriptions[key];
+  if(typeof currentProduct!=='undefined'&&currentProduct&&currentProduct.code===code){currentProduct.image=variants[key];var img=document.querySelector('#modalProductImage img');if(img){img.src=variants[key];img.alt='Roller Filgo Borrax '+names[key]}var modalDesc=document.getElementById('modalProductDesc');if(modalDesc)modalDesc.textContent='Color '+names[key]+'. '+descriptions[key]}
  }
  var host=card.querySelector('.prod-body');var footer=host.querySelector('.prod-footer');addSelector(host);var cr=host.querySelector('.filgo-variante');if(footer&&cr)footer.insertAdjacentElement('beforebegin',cr);
  var originalOpen=window.openProduct;
