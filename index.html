@@ -2433,5 +2433,56 @@ window.addEventListener('pagehide',function(){if(worker){worker.terminate();work
 }
 </style>
 {% endif %}
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+.filgo-variante{padding:8px 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#17324d;font-weight:700}
+.filgo-variante-titulo{width:100%}.filgo-variante-opcion{width:35px;height:35px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #94a3b8;cursor:pointer;display:inline-block}.filgo-variante-opcion[aria-pressed="true"]{box-shadow:0 0 0 3px #145da0}.filgo-variante-opcion:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}.filgo-variante-estado{font-weight:700;color:#164e7a}.filgo-variante-ayuda{width:100%;font-weight:400;color:#526376;font-size:11px}
+</style>
+<script>
+(function(){
+ var code='FILGO-BORRAX-SE-COLORES-2026';
+ var card=document.querySelector('.product-card[data-code="'+code+'"]');
+ if(!card)return;
+ var cardImage=card.querySelector('.prod-img img');if(!cardImage)return;
+ var variants={rojo:cardImage.getAttribute('src'),azul:'/static/filgo_borrax_azul.jpg',negro:'/static/filgo_borrax_negro.jpg'};
+ var active='', names={rojo:'Rojo',azul:'Azul',negro:'Negro'}, colorStyles={rojo:'#de2a2a',azul:'#205fd4',negro:'#171717'};
+ function addSelector(parent){
+  if(!parent||parent.querySelector('.filgo-variante'))return;
+  var row=document.createElement('div');row.className='filgo-variante';row.setAttribute('role','group');row.setAttribute('aria-label','Elegí color del roller Filgo');
+  var title=document.createElement('span');title.className='filgo-variante-titulo';title.textContent='Elegí un color:';row.appendChild(title);
+  ['rojo','azul','negro'].forEach(function(key){var b=document.createElement('button');b.type='button';b.className='filgo-variante-opcion';b.dataset.filgoColor=key;b.style.backgroundColor=colorStyles[key];b.setAttribute('aria-label','Ver color '+names[key]);b.setAttribute('aria-pressed',active===key?'true':'false');b.title=names[key];b.onclick=function(e){e.preventDefault();e.stopPropagation();choose(key)};row.appendChild(b)});
+  var status=document.createElement('span');status.className='filgo-variante-estado';status.textContent=active?names[active]:'Sin elegir';row.appendChild(status);
+  var help=document.createElement('small');help.className='filgo-variante-ayuda';help.textContent='Disponibilidad de cada color a confirmar.';row.appendChild(help);
+  parent.appendChild(row);
+ }
+ function choose(key){
+  active=key;cardImage.src=variants[key];cardImage.alt='Roller Filgo Borrax '+names[key];
+  document.querySelectorAll('.filgo-variante').forEach(function(row){row.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.filgoColor===key?'true':'false')});row.querySelector('.filgo-variante-estado').textContent=names[key]});
+  if(typeof currentProduct!=='undefined'&&currentProduct&&currentProduct.code===code){currentProduct.image=variants[key];var img=document.querySelector('#modalProductImage img');if(img){img.src=variants[key];img.alt='Roller Filgo Borrax '+names[key]}}
+ }
+ var host=card.querySelector('.prod-body');var footer=host.querySelector('.prod-footer');addSelector(host);var cr=host.querySelector('.filgo-variante');if(footer&&cr)footer.insertAdjacentElement('beforebegin',cr);
+ var originalOpen=window.openProduct;
+ window.openProduct=function(){
+  var args=Array.prototype.slice.call(arguments),match=args[0]===code;if(match&&active)args[6]=variants[active];
+  var result=originalOpen.apply(this,args);
+  var old=document.querySelector('#productOverlay .filgo-variante');if(old)old.remove();
+  if(match){var parent=document.getElementById('modalProductDesc');addSelector(parent.parentNode);var r=parent.parentNode.querySelector('.filgo-variante');if(r)parent.insertAdjacentElement('afterend',r);if(active)choose(active);
+   var buy=document.getElementById('modalBuyBtn');if(buy)buy.onclick=function(){if(!active){showToast('Elegí rojo, azul o negro antes de agregar');return}var before=cart[code]?cart[code].qty:0;window.addToCart(currentProduct.code,currentProduct.name,currentProduct.price,currentProduct.icon,currentProduct.image,currentProduct.stock);var after=cart[code]?cart[code].qty:0;if(after>before)closeProduct()};
+  }
+  return result;
+ };
+ var originalAdd=window.addToCart;
+ window.addToCart=function(k,n,p,i,img,stock){
+  if(k===code){if(!active){showToast('Elegí rojo, azul o negro antes de agregar');return}
+   var existing=cart[code];if(existing && existing.filgoColor && existing.filgoColor!==active){showToast('Para cambiar de color, quitá primero este producto del pedido');return}
+   if(existing && !existing.filgoColor){showToast('Quitá la selección anterior y volvé a elegir un color');return}
+   var before=existing?existing.qty:0;originalAdd.call(this,k,n.split(' · Color:')[0]+' · Color: '+names[active],p,i,variants[active],stock);
+   if(cart[code]&&cart[code].qty>before){cart[code].filgoColor=active;saveCart();updateUI()};return;
+  }return originalAdd.apply(this,arguments);
+ };
+})();
+</script>
+{% endif %}
+
 </body>
 </html>
