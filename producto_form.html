@@ -60,7 +60,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
       </div>
       <div class="form-group">
         <label>Precio ($) *</label>
-        <input type="number" name="precio" value="{{ (producto['precio']|float|round(0)|int) if producto and catalogo.slug == 'libreria-ruiz' and (producto['precio']|float) == (producto['precio']|int) else (producto['precio'] if producto else '') }}" required min="0" step="{% if catalogo.slug == 'libreria-ruiz' %}any{% else %}1{% endif %}" placeholder="1500">
+        <input type="text" name="precio" value="{{ (producto['precio']|float|round(0)|int) if producto and catalogo.slug == 'libreria-ruiz' and (producto['precio']|float) == (producto['precio']|int) else (producto['precio'] if producto else '') }}" required inputmode="numeric" pattern="[0-9]+" autocomplete="off" placeholder="1500">
       </div>
       <div class="form-group">
         <label>Nivel de precio</label>
@@ -104,13 +104,10 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
     </div>
 
     <div class="row2">
-      <div class="form-group"><label for="stockActual">Stock actual</label><input id="stockActual" {% if catalogo.slug == 'libreria-ruiz' %}type="text" pattern="[0-9]+" aria-describedby="stockHelp" required{% else %}type="number" min="0" step="1"{% endif %} name="stock_actual" inputmode="numeric" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}">{% if catalogo.slug == 'libreria-ruiz' %}<small id="stockHelp" style="display:block;margin-top:5px;color:#475569;font-size:12px;line-height:1.4">Al tocar el campo se selecciona el número completo para reemplazarlo. Revisá el stock antes de guardar.</small>{% endif %}</div>
-      <div class="form-group"><label>Stock mínimo</label><input type="number" name="stock_minimo" min="0" value="{{ producto['stock_minimo'] if producto and producto['stock_minimo'] is defined else 0 }}"></div>
+      <div class="form-group"><label for="stockActual">Stock actual</label><input id="stockActual" type="text" pattern="[0-9]+" aria-describedby="stockHelp" required name="stock_actual" inputmode="numeric" autocomplete="off" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}"><small id="stockHelp" style="display:block;margin-top:5px;color:#475569;font-size:12px;line-height:1.4">Al enfocar se selecciona el número completo. Ingresá unidades enteras y guardá.</small></div>
+      <div class="form-group"><label>Stock mínimo (opcional)</label><input type="text" name="stock_minimo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="{{ producto['stock_minimo'] if producto and producto['stock_minimo'] is defined else 0 }}"></div>
     </div>
-    <div class="row2">
-      <div class="form-group"><label>Costo de compra</label><input type="number" name="costo" min="0" step="1" value="{{ producto['costo'] if producto and producto['costo'] is defined else 0 }}"></div>
-      <div class="form-group"><label>Proveedor</label><input type="text" name="proveedor" value="{{ producto['proveedor'] if producto and producto['proveedor'] is defined else '' }}" placeholder="Librería Lerma"></div>
-    </div>
+    <div class="form-group"><label>Proveedor (opcional)</label><input type="text" name="proveedor" value="{{ producto['proveedor'] if producto and producto['proveedor'] is defined else '' }}" placeholder="Librería Lerma"></div>
 
     <div class="form-group">
       <label>Descripción</label>
@@ -129,29 +126,23 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
 </form>
 
 <script>
-{% if catalogo.slug == 'libreria-ruiz' %}
 (function(){
-  var input=document.getElementById('stockActual'), form=input && input.form;
-  if(!input || !form)return;
-  var selecting=false;
-  function selectAll(){input.select();}
-  input.addEventListener('focus',selectAll);
-  input.addEventListener('mousedown',function(){selecting=document.activeElement!==input;});
-  input.addEventListener('mouseup',function(e){if(selecting){e.preventDefault();selectAll();selecting=false;}});
-  input.addEventListener('touchstart',function(){selecting=document.activeElement!==input;},{passive:true});
-  input.addEventListener('touchend',function(){if(selecting){setTimeout(selectAll,0);selecting=false;}});
-  form.addEventListener('submit',function(e){
-    var value=input.value.trim();
-    if(!/^[0-9]+$/.test(value) || !Number.isSafeInteger(Number(value))){
-      e.preventDefault();input.setCustomValidity('Ingresá un stock entero igual o mayor a cero.');input.reportValidity();return;
-    }
-    input.setCustomValidity('');
-    var initial=input.defaultValue;
-    if(Number(value)!==Number(initial) && !window.confirm('Revisá el stock actual: '+initial+' → '+value+' unidades. ¿Guardar este cambio?'))e.preventDefault();
+  var form=document.querySelector('form');
+  var numericFields=[document.querySelector('input[name="precio"]'),document.querySelector('input[name="stock_actual"]'),document.querySelector('input[name="stock_minimo"]')];
+  numericFields.forEach(function(input){
+    if(!input)return;
+    input.addEventListener('focus',function(){this.select();});
+    input.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'');this.setCustomValidity('');});
   });
-  input.addEventListener('input',function(){input.setCustomValidity('');});
+  var stock=document.getElementById('stockActual');
+  if(stock&&form){form.addEventListener('submit',function(e){
+    var value=stock.value.trim();
+    if(!/^[0-9]+$/.test(value)||!Number.isSafeInteger(Number(value))){e.preventDefault();stock.setCustomValidity('Ingresá un stock entero igual o mayor a cero.');stock.reportValidity();return;}
+    stock.setCustomValidity('');
+    var initial=stock.defaultValue;
+    if(Number(value)!==Number(initial)&&!window.confirm('Revisá el stock actual: '+initial+' → '+value+' unidades. ¿Guardar este cambio?'))e.preventDefault();
+  });}
 })();
-{% endif %}
 function previewFoto(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
