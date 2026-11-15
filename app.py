@@ -703,48 +703,103 @@ ALMA_CATALOG_READONLY_KEY_ENV="ALMA_CATALOG_READONLY_KEY"
 # No persiste conversaciones ni expone costo, proveedor, clientes o datos internos.
 import re as _alma_re
 import unicodedata as _alma_unicodedata
-_ALMA_CHAT_ALIASES={'lapicera':'birome','lapiceras':'birome','boligrafo':'birome','boligrafos':'birome','biromes':'birome','folios':'folio','lapices':'lapiz','marcadores':'marcador','resaltadores':'resaltador','pilas':'pila','cuadernos':'cuaderno','cuadernas':'cuaderno','negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'}
-_ALMA_CHAT_FILLERS=set('alma hola buenas buen dia tenes tiene tienen hay quiero necesito buscas busco buscar buscame quisiera si alguna algun alguno algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen venden vende vender comprar ustedes dame pregunta favor saber'.split())
+_ALMA_CHAT_ALIASES={
+ 'lapicera':'birome','lapiceras':'birome','lapicero':'birome','lapiceros':'birome','boligrafo':'birome','boligrafos':'birome','biromes':'birome','folios':'folio','carpetas':'carpeta',
+ 'lapices':'lapiz','fibra':'marcador','fibras':'marcador','fibron':'marcador','fibrones':'marcador','plumon':'marcador','plumones':'marcador','marcadores':'marcador','resaltadores':'resaltador','marcatexto':'resaltador','marcatextos':'resaltador','fluorescentes':'resaltador','fluorescente':'resaltador',
+ 'pilas':'pila','baterias':'pila','cuadernos':'cuaderno','notas':'nota','notitas':'nota','postits':'postit','postit':'nota','senaladores':'senalador','tijeras':'tijera','calculadoras':'calculadora','reglas':'regla','escuadras':'escuadra','transportadores':'transportador','encendedores':'encendedor','correctores':'corrector','adhesivos':'adhesivo','cintas':'cinta','pegamentos':'pegamento','pendrive':'usb','pendrives':'usb','memoria':'usb','memorias':'usb','sandisk':'sandisk',
+ 'negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'
+}
+_ALMA_CHAT_FILLERS=set('alma hola buenas buen dia tenes tiene tienen hay existe existen venden vende busco buscame buscas buscar quiero necesito quisiera si alguna algun alguno algunas algunos algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen comprar pedido pedidos ustedes dame pregunta favor saber mostrar mostrame mostra ver categoria catalogo todos todas disponibles disponible quiero quisiera decime por favor informacion info me interesa relacionados relacionado parecidos parecido'.split())
 _ALMA_CHAT_COLORS=set('azul negra roja verde rosa amarillo naranja violeta celeste gris blanca blanco pastel'.split())
-_ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate'}
+_ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate','keyroad','luma','global','auca','sandisk','glister','unipox','leep'}
 def _alma_chat_tokens(value):
     text=_alma_unicodedata.normalize('NFKD',str(value or '').lower())
     text=''.join(ch for ch in text if not _alma_unicodedata.combining(ch))
+    text=_alma_re.sub(r'\bpost[ -]?it\b','postit',text)
+    text=_alma_re.sub(r'\bmemoria\s+(?:usb|flash)\b','usb',text)
+    text=_alma_re.sub(r'\bnotas?\s+adhesivas?\b','nota',text)
+    text=_alma_re.sub(r'\bmarcadores?\s+fluorescentes?\b','resaltador',text)
     return [_ALMA_CHAT_ALIASES.get(word,word) for word in _alma_re.findall(r'[a-z0-9]+',text) if word not in _ALMA_CHAT_FILLERS]
-def _alma_chat_search(question, rows):
+
+_ALMA_CATEGORY_ALIASES={
+ 'biromes':('biromes',('birome','lapicera','lapicero','boligrafo','esfero')),
+ 'carpetas':('carpetas',('carpeta','folio','folder','funda plastica')),
+ 'cinta adhesiva':('cinta adhesiva',('cinta','scotch','cinta adhesiva')),
+ 'corrector en cinta':('corrector en cinta',('corrector en cinta','cinta correctora')),
+ 'encendedores':('encendedores',('encendedor','encendedores')),
+ 'farmacia':('farmacia',('farmacia','glister','cuidado bucal','spray bucal')),
+ 'libreria':('libreria',('nota adhesiva','nota','postit','senalador','banderita')),
+ 'lapices':('lapices',('lapiz','lapices','lapiz de color','lapices de colores')),
+ 'marcadores':('marcadores',('marcador','fibra','fibron','plumon','permanente')),
+ 'oficina':('oficina',('oficina','usb','pendrive','memoria usb')),
+ 'papel':('papel',('papel','papeles','glace','fotografico','matelina','resma','hojas')),
+ 'pegamento':('pegamento',('pegamento','adhesivo','plasticola','unipox','gotita')),
+ 'pilas':('pilas',('pila','bateria')),
+ 'reglas':('reglas',('regla','geometria','escuadra','transportador')),
+ 'resaltadores':('resaltadores',('resaltador','marcatexto','fluorescente')),
+ 'accesorios':('accesorios',('accesorio','tijera','tijera escolar')),
+ 'calculadoras':('calculadoras',('calculadora',)),
+ 'cartucheras':('cartucheras',('cartuchera',)),
+ 'cuadernos':('cuadernos',('cuaderno','libreta')),
+ 'escolar':('escolar',('goma','sacapunta','escolar')),
+ 'mochilas':('mochilas',('mochila',)),
+}
+def _alma_requested_category(question):
+    q=_alma_unicodedata.normalize('NFKD',str(question or '').lower())
+    q=''.join(ch for ch in q if not _alma_unicodedata.combining(ch))
+    padded=' '+_alma_re.sub(r'[^a-z0-9]+',' ',q).strip()+' '
+    for plural,singular in [('folios','folio'),('carpetas','carpeta'),('biromes','birome'),('lapiceras','lapicera'),('lapiceros','lapicero'),('boligrafos','boligrafo'),('tijeras','tijera'),('calculadoras','calculadora'),('resaltadores','resaltador'),('fibras','fibra'),('fibrones','fibron'),('marcadores','marcador'),('notas','nota'),('senaladores','senalador'),('reglas','regla'),('resmas','resma'),('lapices','lapiz'),('cuadernos','cuaderno'),('pilas','pila'),('encendedores','encendedor'),('correctores','corrector'),('pegamentos','pegamento')]:
+        padded=padded.replace(' '+plural+' ',' '+singular+' ')
+    choices=[]
+    for slug,(_,phrases) in _ALMA_CATEGORY_ALIASES.items():
+        for phrase in phrases:
+            phrase=_alma_re.sub(r'[^a-z0-9]+',' ',phrase).strip()
+            if phrase and (' '+phrase+' ') in padded: choices.append((len(phrase.split()),len(phrase),slug))
+    return sorted(choices,reverse=True)[0][2] if choices else ''
+def _alma_category_matches(row,slug):
+    cat=str(row.get('categoria') or '').strip().lower()
+    name=_alma_unicodedata.normalize('NFKD',str(row.get('nombre') or '').lower())
+    name=''.join(ch for ch in name if not _alma_unicodedata.combining(ch))
+    if slug=='libreria': return cat=='libreria' and any(x in name for x in ('nota','senalador','adhesiv'))
+    if slug=='carpetas': return cat=='carpetas'
+    if slug=='accesorios': return cat=='accesorios' or 'tijera' in name
+    if slug=='escolar': return cat=='escolar' or 'sacapunta' in name
+    if slug=='lapices': return cat in ('lapices','colores')
+    return cat==slug
+def _alma_chat_public_product(row):
+    try: price=float(row.get('precio'))
+    except (TypeError,ValueError): price=None
+    try: stock=max(0,int(row.get('stock_actual') or 0))
+    except (TypeError,ValueError): stock=0
+    return {'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')}
+def _alma_chat_search(question,rows):
     exact_code=str(question or '').strip().upper()
     exact=[row for row in rows if str(row.get('codigo') or '').upper()==exact_code]
-    if exact:
-        row=exact[0]
-        try: exact_price=float(row.get('precio'))
-        except (TypeError,ValueError): exact_price=0
-        try: exact_stock=max(0,int(row.get('stock_actual') or 0))
-        except (TypeError,ValueError): exact_stock=0
-        return [{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':exact_price if exact_price>0 else None,'stock':exact_stock,'foto':str(row.get('foto') or '')}]
+    if exact:return [_alma_chat_public_product(exact[0])]
     terms=set(_alma_chat_tokens(question))
-    if not terms: return []
-    colors=terms & _ALMA_CHAT_COLORS
-    brands=terms & _ALMA_CHAT_BRANDS
+    if not terms:return []
+    colors=terms & _ALMA_CHAT_COLORS;brands=terms & _ALMA_CHAT_BRANDS;category=_alma_requested_category(question)
+    browsing=any(x in _alma_unicodedata.normalize('NFKD',str(question or '').lower()) for x in ('que hay','qué hay','mostrar','mostrame','ver todos','todos los','todas las','productos de','productos en','categoria','catálogo de','catalogo de','lista de','que tienen'))
+    category_only=bool(category and terms <= {category,'producto','disponible','mostrar','categoria','catalogo','todos','todas','hay','que','marca','marcas'})
+    if category and (browsing or category_only):
+        selected=[r for r in rows if _alma_category_matches(r,category)]
+        if selected:return [_alma_chat_public_product(r) for r in selected[:8]]
     hits=[]
     for row in rows:
-        name=set(_alma_chat_tokens(row.get('nombre')))
-        brand=set(_alma_chat_tokens(row.get('marca')))
-        category=set(_alma_chat_tokens(row.get('categoria')))
-        desc=set(_alma_chat_tokens(row.get('desc_')))
-        code=set(_alma_chat_tokens(row.get('codigo')))
-        if brands and not brands <= brand: continue
-        if 'paper' in brands or 'mate' in brands:
-            if not {'paper','mate'} <= brand: continue
-        if colors and not colors & name: continue
-        if not terms <= (name|brand|category|desc|code): continue
-        score=4*len(terms&name)+3*len(terms&brand)+len(terms&category)+len(terms&desc)+len(terms&code)
-        try: price=float(row.get('precio'))
-        except (TypeError,ValueError): price=None
-        try: stock=max(0,int(row.get('stock_actual') or 0))
-        except (TypeError,ValueError): stock=0
-        hits.append((score,{'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')}))
-    hits.sort(key=lambda hit:(-hit[0],_alma_unicodedata.normalize('NFKD',hit[1]['nombre'].lower())))
-    return [product for _,product in hits[:5]]
+        name=set(_alma_chat_tokens(row.get('nombre'))); brand=set(_alma_chat_tokens(row.get('marca'))); cats=set(_alma_chat_tokens(row.get('categoria'))); desc=set(_alma_chat_tokens(row.get('desc_'))); code=set(_alma_chat_tokens(row.get('codigo'))); fields=name|brand|cats|desc|code
+        if brands and not brands <= brand:continue
+        if ('paper' in brands or 'mate' in brands) and not {'paper','mate'}<=brand:continue
+        if colors and not colors & name:continue
+        if category and not _alma_category_matches(row,category):continue
+        if len(terms)>1 and not terms<=fields:continue
+        if not terms&fields:continue
+        prod=_alma_chat_public_product(row)
+        score=8*len(terms&name)+6*len(terms&brand)+3*len(terms&cats)+len(terms&desc)+len(terms&code)
+        normalized_query=' '.join(_alma_chat_tokens(question));normalized_name=' '.join(_alma_chat_tokens(row.get('nombre')))
+        if normalized_query and normalized_query in normalized_name:score+=15
+        hits.append((score,prod))
+    hits.sort(key=lambda item:(-item[0],_alma_unicodedata.normalize('NFKD',item[1]['nombre'].lower())))
+    return [p for _,p in hits[:5]]
 _ALMA_CHAT_RATE={}
 _ALMA_CHAT_RATE_LOCK=threading.Lock()
 
@@ -763,65 +818,21 @@ def _alma_visible_catalog_codes():
     except Exception as exc:
         app.logger.error('Alma public catalog filter unavailable: %s',exc)
         raise RuntimeError('public catalog filter unavailable') from exc
-def _alma_catalog_explanation(question, rows):
-    """Answer catalogue-wide questions from current public rows only."""
+def _alma_catalog_explanation(question,rows):
     q=_alma_unicodedata.normalize('NFKD',str(question or '').lower())
     q=''.join(ch for ch in q if not _alma_unicodedata.combining(ch))
-    words=set(_alma_chat_tokens(q))
-    wants_brands=any(x in q for x in ('marca','marcas'))
-    wants_compare=any(x in q for x in ('diferencia','diferencias','comparar','compare','mejor para'))
-    category=''
-    if any(x in q for x in ('resaltador','fluorescente')): category='resaltadores'
-    elif any(x in q for x in ('birome','lapicera','boligrafo')): category='biromes'
-    elif any(x in q for x in ('sticker','adhesiv','senalador','nota adhesiva')): category='libreria'
-    elif any(x in q for x in ('pila','regla','papel','pegamento','corrector','carpeta','marcador','encendedor')): category=''
-    if wants_brands and category:
-        values=sorted({str(r.get('marca') or '').title() for r in rows if str(r.get('categoria') or '').lower()==category})
-        if values:
-            return f"En {category} encontré estas marcas en el catálogo: {', '.join(values)}. Si querés, te muestro las variantes, colores y precios de una marca.", []
-    if wants_compare:
-        # Prefer records from any brands named in the question, then show only catalog facts.
-        asked_brands={b for b in _ALMA_CHAT_BRANDS if b in words}
-        brand_parts={'paper mate':{'paper','mate'}}
-        for brand in ('bic','filgo','pelikan','intra','pizzini','ezco','katania','leep','maped','duracell','ibi','global','auca','luma','art-jet','glister','unipox'):
-            if brand in q: brand_parts.setdefault(brand,{brand})
-        normalized_brands=set()
-        for brand,parts in brand_parts.items():
-            if brand in q: normalized_brands |= parts
-        normalized_brands |= asked_brands
-        if len(normalized_brands)>1:
-            candidates=[]
-            for brand in sorted(normalized_brands):
-                group=[r for r in rows if brand in set(_alma_chat_tokens(r.get('marca'))) and (not category or str(r.get('categoria') or '').lower()==category)]
-                candidates.extend(group[:3])
-            candidates=candidates[:6]
-        else:
-            candidates=[r for r in rows if normalized_brands and normalized_brands <= set(_alma_chat_tokens(r.get('marca'))) and (not category or str(r.get('categoria') or '').lower()==category)]
-        if not candidates:
-            candidates=_alma_chat_search(q,rows)
-        if not candidates:
-            candidates=[]
-            for r in rows:
-                cat=str(r.get('categoria') or '').lower()
-                if (category and cat==category) or (not category and any(x in q for x in (str(r.get('marca') or '').lower(),str(r.get('nombre') or '').lower()))):
-                    candidates.append(r)
-            candidates=candidates[:6]
-        if candidates:
-            names='; '.join(str(r.get('nombre') or '') for r in candidates[:5])
-            compared=', '.join(sorted({str(r.get('marca') or '').title() for r in candidates if normalized_brands and set(_alma_chat_tokens(r.get('marca'))) & normalized_brands}))
-            prefix=f"En el catálogo veo {compared}. " if compared else ''
-            return prefix+f"Puedo comparar estas fichas: {names}. Te muestro solo las diferencias que figuran publicadas, sin inventar características.", candidates[:5]
-    if any(x in q for x in ('todo el catalogo','todo el catálogo','que hay','qué hay','todos los productos','todas las cosas','productos hay','cosas hay','que tiene','que hay en','del catalogo','de catalogo')):
+    category=_alma_requested_category(q)
+    wants_browse=any(x in q for x in ('que hay','qué hay','mostrar','mostrame','ver todos','todos los','todas las','productos de','productos en','categoria','catálogo de','catalogo de','lista de','que tienen'))
+    if category and wants_browse:
+        chosen=[r for r in rows if _alma_category_matches(r,category)]
+        if chosen:return f"En {category} encontré {len(chosen)} productos publicados. Te muestro hasta 8; abrí una ficha para ver precio y stock actualizados.",[ _alma_chat_public_product(r) for r in chosen[:8] ]
+    if any(x in q for x in ('todo el catalogo','todo el catálogo','todos los productos','todas las cosas','catalogo completo','catálogo completo')):
         cats=sorted({str(r.get('categoria') or '').title() for r in rows})
-        return f"En la base actual del catálogo encuentro estas categorías: {', '.join(cats)}. Preguntame por una marca, color, tipo de producto, precio o disponibilidad.", []
-    if category and any(x in q for x in ('que hay','que tienen','mostrar','mostrame','productos','todos','sticker','adhesiv','senalador')):
-        chosen=[r for r in rows if str(r.get('categoria') or '').lower()==category]
-        if category=='libreria':
-            chosen=[r for r in rows if str(r.get('categoria') or '').lower()=='libreria' and any(x in _alma_unicodedata.normalize('NFKD',str(r.get('nombre') or '').lower()) for x in ('adhesiv','senalador','nota'))]
-        chosen=chosen[:8]
-        if chosen:
-            return f"En el catálogo encontré {len(chosen)} opciones relacionadas: {', '.join(str(r.get('nombre') or '') for r in chosen)}. Te dejo las fichas para ver detalle, precio y stock publicados.", chosen
-    return None, []
+        return f"El catálogo público tiene {len(rows)} productos en estas categorías: {', '.join(cats)}. Preguntame por una categoría, marca, color o característica.",[]
+    if 'marca' in q and category:
+        brands=sorted({str(r.get('marca') or '').title() for r in rows if _alma_category_matches(r,category)})
+        if brands:return f"En {category} figuran estas marcas: {', '.join(brands)}.",[]
+    return None,[]
 
 @app.route('/api/alma/chat',methods=['POST'])
 def alma_chat_publico():
