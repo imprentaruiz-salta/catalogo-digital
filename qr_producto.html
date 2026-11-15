@@ -36,15 +36,15 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:17px 8px}.cod
 <style>
 .keyroad-qr-picker{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;margin:16px 0 8px;padding:14px;background:#f7fafc;border:1px solid #e2eaf1;border-radius:14px}
 .keyroad-qr-picker strong,.keyroad-qr-picker small,.keyroad-qr-picker .keyroad-qr-picked{width:100%}
-.keyroad-qr-choice{width:45px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.keyroad-qr-choice img{width:31px;height:53px;object-fit:contain}
-.keyroad-qr-choice button{width:23px;height:23px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #8ca0b4;cursor:pointer;padding:0}
+.keyroad-qr-choice{width:58px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 2px;border:1px solid #e2eaf1;border-radius:10px;background:white}
+.keyroad-qr-choice img{width:44px;height:84px;object-fit:contain;background:#fff}
+.keyroad-qr-choice button{width:26px;height:26px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #8ca0b4;cursor:pointer;padding:0}.keyroad-qr-choice small{font-size:8px;line-height:1.1;text-align:center;color:#465b70;white-space:normal}
 .keyroad-qr-choice button[aria-pressed="true"]{box-shadow:0 0 0 3px #1767a2}
 .keyroad-qr-picked{font-weight:700;color:#164e7a}.keyroad-qr-picker small{font-size:12px;color:#61758a}
 </style>
 <div class="keyroad-qr-picker" role="group" aria-label="Fotos y colores de biromes Keyroad"><strong>Elegí tu birome: tocá una foto o su círculo de color</strong>
 {% for color,label,hex in [('amarillo','Amarillo','#f4dc14'),('naranja','Naranja','#f28c18'),('rojo','Rojo','#e4312b'),('violeta','Violeta','#8546a8'),('celeste','Celeste','#69c8e8'),('rojo-claro','Coral','#f18b83'),('negro','Negro','#242424'),('celeste-claro','Celeste claro','#a9e2ef'),('azul','Azul','#2768c9'),('verde-lima','Verde lima','#a6d627'),('verde-agua','Verde agua','#54bda9')] %}
-<div class="keyroad-qr-choice"><img src="/static/keyroad_gel_{{ color }}.webp" alt="Birome Keyroad {{ label }}" loading="lazy"><button type="button" data-keyroad-qr-color="{{ color }}" aria-label="Elegir birome {{ label }}" aria-pressed="false" style="background:{{ hex }}"></button></div>
+<div class="keyroad-qr-choice"><img src="/static/keyroad_gel_{{ color }}.webp" alt="Birome Keyroad {{ label }}" loading="lazy"><button type="button" data-keyroad-qr-color="{{ color }}" aria-label="Elegir birome {{ label }}" aria-pressed="false" style="background:{{ hex }}"></button><small>{{ label }}</small></div>
 {% endfor %}
 <span class="keyroad-qr-picked" id="keyroadQrPicked">Sin elegir</span><small>Stock total: 46 unidades. Disponibilidad por color a confirmar.</small>
 </div>
