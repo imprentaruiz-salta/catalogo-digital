@@ -32,6 +32,25 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:17px 8px}.cod
 <script>(function(){var b=document.querySelectorAll('.keyroad-qr-gallery button'),p=document.getElementById('qrPhoto'),a=['Vista frontal del sacapuntas Keyroad Mellow','Detalle de los dos orificios del sacapuntas Keyroad','Vista lateral del sacapuntas Keyroad con depósito'];b.forEach(function(x,i){x.addEventListener('click',function(){b.forEach(function(y){y.setAttribute('aria-pressed',y===x?'true':'false')});if(p){p.src=x.dataset.image;p.alt=a[i];p.parentElement.style.display='flex'}})})})();</script>
 {% endif %}
 
+{% if producto.codigo == 'KEYROAD-ADV-GEL-07-COLORES-2026' %}
+<style>
+.keyroad-qr-picker{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;margin:16px 0 8px;padding:14px;background:#f7fafc;border:1px solid #e2eaf1;border-radius:14px}
+.keyroad-qr-picker strong,.keyroad-qr-picker small,.keyroad-qr-picker .keyroad-qr-picked{width:100%}
+.keyroad-qr-choice{width:45px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.keyroad-qr-choice img{width:31px;height:53px;object-fit:contain}
+.keyroad-qr-choice button{width:23px;height:23px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #8ca0b4;cursor:pointer;padding:0}
+.keyroad-qr-choice button[aria-pressed="true"]{box-shadow:0 0 0 3px #1767a2}
+.keyroad-qr-picked{font-weight:700;color:#164e7a}.keyroad-qr-picker small{font-size:12px;color:#61758a}
+</style>
+<div class="keyroad-qr-picker" role="group" aria-label="Fotos y colores de biromes Keyroad"><strong>Elegí tu birome: tocá una foto o su círculo de color</strong>
+{% for color,label,hex in [('amarillo','Amarillo','#f4dc14'),('naranja','Naranja','#f28c18'),('rojo','Rojo','#e4312b'),('violeta','Violeta','#8546a8'),('celeste','Celeste','#69c8e8'),('rojo-claro','Coral','#f18b83'),('negro','Negro','#242424'),('celeste-claro','Celeste claro','#a9e2ef'),('azul','Azul','#2768c9'),('verde-lima','Verde lima','#a6d627'),('verde-agua','Verde agua','#54bda9')] %}
+<div class="keyroad-qr-choice"><img src="/static/keyroad_gel_{{ color }}.webp" alt="Birome Keyroad {{ label }}" loading="lazy"><button type="button" data-keyroad-qr-color="{{ color }}" aria-label="Elegir birome {{ label }}" aria-pressed="false" style="background:{{ hex }}"></button></div>
+{% endfor %}
+<span class="keyroad-qr-picked" id="keyroadQrPicked">Sin elegir</span><small>Stock total: 46 unidades. Disponibilidad por color a confirmar.</small>
+</div>
+<script>(function(){var opts={amarillo:'Amarillo',naranja:'Naranja',rojo:'Rojo',violeta:'Violeta',celeste:'Celeste','rojo-claro':'Coral',negro:'Negro','celeste-claro':'Celeste claro',azul:'Azul','verde-lima':'Verde lima','verde-agua':'Verde agua'};document.querySelectorAll('[data-keyroad-qr-color]').forEach(function(b){function choose(){var c=b.dataset.keyroadQrColor;document.querySelectorAll('[data-keyroad-qr-color]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});var label=opts[c];document.getElementById('keyroadQrPicked').textContent='Seleccionada: '+label;var p=document.getElementById('qrPhoto');if(p){p.src='/static/keyroad_gel_'+c+'.webp';p.alt='Birome Keyroad Advanced Gel Pen 0,7 mm color '+label;p.parentElement.style.display='flex'}var d=document.querySelector('.desc');if(d)d.textContent='Birome retráctil Keyroad Advanced Gel Pen, tinta gel, punta de 0,7 mm. Color seleccionado: '+label+'. Stock total: 46 unidades; disponibilidad por color a confirmar.';var a=document.querySelector('a.btn');if(a){a.href='https://wa.me/5493872101274?text='+encodeURIComponent('Hola, quiero consultar por la birome Keyroad Advanced Gel Pen 0,7 mm, color '+label+' (código KEYROAD-ADV-GEL-07-COLORES-2026). ¿Me confirmás disponibilidad?');a.textContent='Consultar color '+label+' por WhatsApp'}}b.addEventListener('click',choose);b.parentElement.querySelector('img').addEventListener('click',choose)})})();</script>
+{% endif %}
+
 <div class="body"><span class="pill">{{ producto.categoria }}{% if producto.marca %} · {{ producto.marca }}{% endif %}</span>
 <h1>{{ producto.nombre }}</h1><p class="price">ARS {{ producto.precio_display }} <span class="unit">{{ 'por paquete' if producto.codigo == 'SEN-PIZZINI-5X25-12X45-2026' else 'c/u' }}</span></p>
 <div class="stock">{{ producto.stock_display }}</div><div class="desc">{{ producto.description_display }}</div>
