@@ -9,7 +9,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 app = Flask(__name__, static_folder=None, template_folder=".")
 app.secret_key = os.environ.get("CATALOGO_SESSION_SECRET") or os.urandom(32)
 app.config['MAX_CONTENT_LENGTH']=52*1024*1024
-app.config.update(SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SECURE=True,SESSION_COOKIE_SAMESITE="Lax")
+app.config.update(SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SECURE=True,SESSION_COOKIE_SAMESITE="Lax",PERMANENT_SESSION_LIFETIME=timedelta(hours=12))
 BASE_DIR=os.path.dirname(os.path.abspath(__file__))
 # DATA_DIR can be mounted on a persistent disk in production. The application code
 # and the data are deliberately kept separate so deploys never replace user data.
@@ -64,6 +64,15 @@ def cloud_request(path, method="GET", data=None, content_type="application/octet
         "Content-Type":content_type,
         "x-upsert":"true"})
     return urllib.request.urlopen(req, timeout=timeout)
+
+CLOUD_SYNC_LOCK=threading.Lock()
+
+def cloud_sync_background():
+    """Mirror a committed change off the request path so admin saves stay responsive."""
+    def worker():
+        with CLOUD_SYNC_LOCK:
+            cloud_sync()
+    threading.Thread(target=worker,name="catalog-cloud-sync",daemon=True).start()
 
 def cloud_sync():
     """Upload one atomic catalog snapshot after a successful local change."""
@@ -140,7 +149,9 @@ if not os.path.exists(DB_PATH) and os.path.exists(_OLD_DB): shutil.copy2(_OLD_DB
 ALLOWED_EXT={"png","jpg","jpeg","webp","gif"}
 MAX_IMAGE_SIDE=1600
 MAX_IMAGE_BYTES=12*1024*1024
-ADMIN_USER="admin"; ADMIN_PASS="catalogo2026"
+ADMIN_USER=os.environ.get("CATALOGO_ADMIN_USER","admin"); ADMIN_PASS=os.environ.get("CATALOGO_ADMIN_PASSWORD","")
+if ADMIN_PASS and (len(ADMIN_PASS)<16 or ADMIN_PASS=='catalogo2026'):
+    raise RuntimeError('CATALOGO_ADMIN_PASSWORD must be rotated to a unique 16+ character secret')
 CAT_ICONS={
  "bebidas":"🥤","panales":"👶","comestibles":"🥫","golosinas":"🍬","limpieza":"🧼","verduleria":"🥬","lacteos":"🥛","libreria":"📚","fotos":"📷","fotografia":"📷","carniceria":"🥩","panaderia":"🍞","ferreteria":"🔧","farmacia":"💊","papel higienico":"🧻","papel higienicos":"🧻","pegamento":"🧴","escobas":"🧹","escoba":"🧹","dentifricos":"🪥","dentifrico":"🪥","pasta dental":"🪥","pastas dentales":"🪥","jabones":"🧼","jabon":"🧼","shampoo":"🧴","desodorantes":"🧴","cuadernos":"📒","lapices":"✏️","biromes":"🖊️","cartucheras":"🎒","utiles escolares":"✏️","impresiones":"🖨️","aromaticas":"🌿","arreglos florales":"💐","frutales":"🍎","herbaceas":"🌿","macetas":"🪴","plantines":"🌱","plantines de cesped":"🌱","plantines de pasto":"🌱","arboles":"🌳","tierra":"🌎","encendedores":"🔥","maquillaje":"💄"}
 def _norm(s): return ''.join(c for c in unicodedata.normalize('NFD',str(s or '').lower()) if unicodedata.category(c)!='Mn')
@@ -232,6 +243,8 @@ def init_db():
         db.execute("ALTER TABLE catalogos ADD COLUMN telegram TEXT DEFAULT ''") if 'telegram' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("ALTER TABLE catalogos ADD COLUMN banner TEXT DEFAULT ''") if 'banner' not in [r['name'] for r in db.execute('PRAGMA table_info(catalogos)').fetchall()] else None
         db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('libreria-ruiz','Librería Ruiz','Útiles · Fotos · Impresiones','https://share.zapia.com/lw6ro8nz7tp7k487va08fu','5493872101274','LibreriaRuizSaltaBot',''))
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('impresiones-ruiz','Impresiones Ruiz','Impresiones · Copias · Fotos','','5493872101274','',''))
+        db.execute("INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)",('impresiones-ruiz','Impresiones Ruiz','Impresiones · Copias · Fotos','','5493872101274','',''))
         db.execute("UPDATE productos SET catalogo_slug='libreria-ruiz' WHERE catalogo_slug IS NULL OR catalogo_slug=''")
         db.execute("UPDATE catalogos SET banner=? WHERE slug='limpieza-abigail' AND (banner IS NULL OR banner='')",('https://share.zapia.com/edtuh2ffu9fz19o7ulk70j',))
         db.execute("""CREATE TABLE IF NOT EXISTS sugerencias (id INTEGER PRIMARY KEY AUTOINCREMENT,catalogo_slug TEXT NOT NULL,producto TEXT NOT NULL,nombre TEXT DEFAULT '',cantidad INTEGER DEFAULT 1,cantidad_necesita INTEGER DEFAULT 1,comentario TEXT DEFAULT '',estado TEXT DEFAULT 'pendiente',creado TEXT DEFAULT CURRENT_TIMESTAMP)""")
@@ -677,7 +690,9 @@ def get_showcase(slug='libreria-ruiz'):
         product=by_name.get(r['producto'].strip().lower())
         if product: requested.append(product)
     return {'destacados':featured,'novedades':newest,'ofertas':offers,'recomendaciones':unique(recommendations),'pedidos':unique(requested),'pilas':unique([p for p in rows if str(p.get('categoria') or '').strip().lower()=='pilas']),'total':len(rows)}
-def current_slug(): return session.get('catalogo_slug','libreria-ruiz')
+def current_slug():
+    slug=session.get('catalogo_slug','libreria-ruiz')
+    return slug if slug in {'libreria-ruiz','impresiones-ruiz'} else 'libreria-ruiz'
 def current_config(): return get_catalogo_config(current_slug()) or get_catalogo_config('libreria-ruiz')
 
 
@@ -1000,7 +1015,7 @@ def static_asset(filename):
     static_path=os.path.join(BASE_DIR,'static',filename)
     if os.path.isfile(static_path):
         return send_from_directory(os.path.join(BASE_DIR,'static'), filename)
-    if filename.startswith('banner_') or filename.startswith('social_preview_') or filename.startswith('category_') or filename.startswith('renata-beauty-'):
+    if filename.startswith('banner_') or filename.startswith('libreria_ruiz_') or filename.startswith('social_preview_') or filename.startswith('category_') or filename.startswith('renata-beauty-'):
         return send_from_directory(BASE_DIR, filename)
     return ('',404)
 
@@ -1061,6 +1076,16 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
+    # Day-specific Librería Ruiz banner, bounded to Sunday in the user's timezone.
+    if catalogo and catalogo.get('slug') == 'libreria-ruiz':
+        try:
+            now_local=datetime.now(ZoneInfo('America/Argentina/Salta'))
+            if now_local.date().isoformat() == '2026-11-15':
+                catalogo=dict(catalogo)
+                catalogo['banner']='/static/libreria_ruiz_sunday_2026-11-15.jpg'
+                catalogo['banner_alt']='Dejá lista la semana que viene'
+        except Exception:
+            pass
     if catalogo and catalogo.get('slug') == 'renas-beauty' and request.path.rstrip('/') == '/c/renas-beauty':
         catalogo=dict(catalogo)
         user_agent=(request.headers.get('User-Agent') or '').lower()
@@ -1567,8 +1592,13 @@ _RUIZ_ORDERS_PAGE='''<!doctype html><html lang="es"><meta name="viewport" conten
 def admin_login():
     error=None
     if request.method=='POST':
-        if request.form.get('user')==ADMIN_USER and request.form.get('pass')==ADMIN_PASS: session['admin']=True; return redirect(url_for('admin_index'))
-        error='Usuario o contrasena incorrectos'
+        if not ADMIN_PASS:
+            error='El acceso del panel no está configurado. Contactá al administrador del servicio.'
+        elif hmac.compare_digest(request.form.get('user',''),ADMIN_USER) and hmac.compare_digest(request.form.get('pass',''),ADMIN_PASS):
+            session.clear(); session['admin']=True; session.permanent=True
+            return redirect(url_for('admin_index'))
+        else:
+            error='Usuario o contraseña incorrectos. Revisalos e intentá otra vez.'
     return render_template('login.html',error=error)
 @app.route('/admin/logout')
 def admin_logout(): session.clear(); return redirect(url_for('admin_login'))
@@ -1578,7 +1608,7 @@ def admin_logout(): session.clear(); return redirect(url_for('admin_login'))
 def admin_index():
     slug=current_slug()
     with get_db() as db:
-        productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute('SELECT * FROM catalogos WHERE activo=1 ORDER BY nombre').fetchall()
+        productos=db.execute('SELECT * FROM productos WHERE catalogo_slug=? ORDER BY categoria,marca,nombre',(slug,)).fetchall(); catalogos=db.execute("SELECT * FROM catalogos WHERE activo=1 AND slug IN ('libreria-ruiz','impresiones-ruiz') ORDER BY CASE slug WHEN 'libreria-ruiz' THEN 0 ELSE 1 END").fetchall()
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
         intereses_faltantes=db.execute('SELECT producto,detalle,unidades,solicitudes,estado,actualizado FROM producto_interes WHERE catalogo_slug=? ORDER BY unidades DESC,solicitudes DESC,producto',(slug,)).fetchall() if slug=='libreria-ruiz' else []
     return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias],intereses_faltantes=[dict(s) for s in intereses_faltantes])
@@ -1586,13 +1616,14 @@ def admin_index():
 @login_required
 def seleccionar_catalogo():
     slug=request.form.get('slug','libreria-ruiz')
-    if get_catalogo_config(slug): session['catalogo_slug']=slug
+    if slug in {'libreria-ruiz','impresiones-ruiz'} and get_catalogo_config(slug): session['catalogo_slug']=slug
     return redirect(url_for('admin_index'))
 @app.route('/admin/catalogo/editar',methods=['POST'])
 @login_required
 def editar_catalogo():
     backup_db('antes-editar-catalogo')
     slug=request.form.get('slug','')
+    if slug not in {'libreria-ruiz','impresiones-ruiz'}: return redirect(url_for('admin_index'))
     with get_db() as db:
         db.execute('UPDATE catalogos SET nombre=?,subtitulo=?,logo=?,whatsapp=?,telegram=?,banner=? WHERE slug=?',(request.form.get('nombre','').strip(),request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp',''),request.form.get('telegram','').lstrip('@'),request.form.get('banner',''),slug)); db.commit()
     cloud_sync()
@@ -1604,7 +1635,7 @@ def editar_catalogo():
 def nuevo_catalogo():
     backup_db('antes-nuevo-catalogo')
     slug=secure_filename(request.form.get('slug','')).lower().replace('_','-'); nombre=request.form.get('nombre','').strip()
-    if slug and nombre:
+    if slug in {'libreria-ruiz','impresiones-ruiz'} and nombre:
         with get_db() as db: db.execute('INSERT OR IGNORE INTO catalogos(slug,nombre,subtitulo,logo,whatsapp,telegram,banner) VALUES(?,?,?,?,?,?,?)',(slug,nombre,request.form.get('subtitulo',''),request.form.get('logo',''),request.form.get('whatsapp','5493872101274'),request.form.get('telegram',''),request.form.get('banner',''))); db.commit()
         cloud_sync()
         session['catalogo_slug']=slug
@@ -1626,12 +1657,24 @@ def admin_editar(pid):
     return render_template('producto_form.html',producto=dict(prod),categorias=get_categorias(),catalogo=current_config())
 def _guardar_producto(pid):
     backup_db('antes-producto')
-    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); codigo_barras=''.join(ch for ch in f.get('codigo_barras','').strip() if ch.isalnum()); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip(); precio=float(f.get('precio',0) or 0); marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
-    try: stock_actual=max(0,int(f.get('stock_actual',0) or 0)); stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
-    except ValueError: stock_actual=stock_minimo=0; costo=0
+    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); codigo_barras=''.join(ch for ch in f.get('codigo_barras','').strip() if ch.isalnum()); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip();
+    try: precio=float(str(f.get('precio',0) or 0).replace(',','.'))
+    except (ValueError,TypeError): precio=-1
+    marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
+    try:
+        existing_stock=0
+        if pid:
+            with get_db() as stock_db:
+                existing_row=stock_db.execute('SELECT stock_actual FROM productos WHERE id=?',(pid,)).fetchone()
+                if existing_row: existing_stock=int(existing_row['stock_actual'] or 0)
+        raw_stock=f.get('stock_actual','').strip()
+        stock_actual=max(0,int(raw_stock)) if raw_stock else existing_stock
+        stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
+    except (ValueError,TypeError):
+        return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Revisá stock, stock mínimo y costo: usá números enteros para las unidades.')
     proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
-    if not codigo or not nombre or not cat or not marca:
-        return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Completá código, nombre, categoría y marca.')
+    if not codigo or not nombre or not cat or not marca or precio<0:
+        return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Completá código, nombre, categoría y marca; el precio debe ser un número válido.')
     if file and file.filename:
         if not allowed_file(file.filename): return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Formato de imagen no permitido.')
     with get_db() as db:
@@ -1653,7 +1696,7 @@ def _guardar_producto(pid):
             db.execute('UPDATE productos SET codigo=?,codigo_barras=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
         else: db.execute('INSERT INTO productos(codigo,codigo_barras,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
         db.commit()
-    cloud_sync()
+    cloud_sync_background()
     log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
     return redirect(url_for('admin_index'))
 @app.route('/admin/productos/disponibles',methods=['POST'])
@@ -1810,8 +1853,11 @@ def admin_foto_rapida(pid):
     if not allowed_file(file.filename): return jsonify(ok=False,error='Formato no permitido')
     try: fname=save_optimized_image(file)
     except ValueError as exc: return jsonify(ok=False,error=str(exc)),400
-    with get_db() as db: db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
-    cloud_sync()
+    with get_db() as db:
+        exists=db.execute('SELECT id FROM productos WHERE id=? AND catalogo_slug=?',(pid,current_slug())).fetchone()
+        if not exists: return jsonify(ok=False,error='Producto no encontrado en este catálogo'),404
+        db.execute('UPDATE productos SET foto=? WHERE id=?',(fname,pid)); db.commit()
+    cloud_sync_background()
     log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
 # Restore the cloud snapshot at startup, but never upload at startup.

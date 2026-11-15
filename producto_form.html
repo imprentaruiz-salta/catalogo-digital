@@ -6,25 +6,26 @@
 <title>{{ 'Editar' if producto else 'Nuevo' }} Producto — Admin</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh}
-header{background:linear-gradient(135deg,#128C7E,#25D366);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(145deg,#edf5f3,#f4f7fb 52%,#eef2f7);min-height:100vh}
+header{background:linear-gradient(120deg,#164e42,#16836b);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
 header a{color:rgba(255,255,255,.85);text-decoration:none;font-size:22px}
 header h1{font-size:17px;font-weight:800}
-.form-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin:16px;padding:22px}
+.form-card{background:#fff;border-radius:20px;box-shadow:0 12px 32px rgba(20,55,45,.09);margin:16px auto;padding:22px;max-width:780px;border:1px solid #e5eee9}
 .form-group{margin-bottom:18px}
 label{display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px}
 input[type=text],input[type=number],select,textarea{width:100%;padding:12px 16px;border:2px solid #e5e7eb;border-radius:10px;font-size:15px;outline:none;transition:.2s;background:#fff}
-input:focus,select:focus,textarea:focus{border-color:#25D366}
+input:focus,select:focus,textarea:focus{border-color:#16836b;box-shadow:0 0 0 3px #16836b18}
 textarea{resize:vertical;min-height:80px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 /* FOTO */
 .foto-preview{width:100%;height:160px;background:#f5f5f5;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:10px;overflow:hidden;border:2px dashed #e5e7eb}
-.foto-preview img{width:100%;height:100%;object-fit:cover}
-.btn-save{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;margin-top:8px}
+.foto-preview img{width:100%;height:100%;object-fit:contain}
+.btn-save{width:100%;background:linear-gradient(120deg,#16836b,#126354);color:#fff;border:none;padding:16px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;margin-top:8px}
 .btn-save:hover{opacity:.9}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f9fffe;border-radius:10px;border:2px solid #e5e7eb}
 .toggle-label{font-size:14px;font-weight:700;color:#1a1a2e}
 input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
+@media(max-width:640px){header{padding:13px 16px}.form-card{margin:12px;padding:16px;border-radius:16px}.row2{grid-template-columns:1fr;gap:0}.foto-preview{height:190px}.btn-save{position:sticky;bottom:10px;z-index:20;box-shadow:0 6px 20px #12635440}}
 </style>
 </head>
 <body>
@@ -49,7 +50,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
         <span id="fotoEmoji">📦</span>
         {% endif %}
       </div>
-      <input type="file" name="foto" accept="image/*" id="fotoInput" style="display:none" onchange="previewFoto(this)">
+      <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="fotoInput" style="display:none" onchange="previewFoto(this)"><small style="display:block;color:#64748b;text-align:center;margin:-4px 0 10px">JPG, PNG o WEBP · hasta 12 MB</small>
       <button type="button" onclick="document.getElementById('fotoInput').click()" style="width:100%;background:#f3f4f6;border:1px solid #e5e7eb;padding:10px;border-radius:50px;font-size:14px;cursor:pointer;font-weight:600">📷 Elegir foto</button>
     </div>
 
@@ -104,7 +105,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
     </div>
 
     <div class="row2">
-      <div class="form-group"><label for="stockActual">Stock actual</label><input id="stockActual" type="text" pattern="[0-9]+" aria-describedby="stockHelp" required name="stock_actual" inputmode="numeric" autocomplete="off" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}"><small id="stockHelp" style="display:block;margin-top:5px;color:#475569;font-size:12px;line-height:1.4">Al enfocar se selecciona el número completo. Ingresá unidades enteras y guardá.</small></div>
+      <div class="form-group"><label for="stockActual">Stock actual (opcional)</label><input id="stockActual" type="text" pattern="[0-9]*" aria-describedby="stockHelp" name="stock_actual" inputmode="numeric" autocomplete="off" value="{{ producto['stock_actual'] if producto and producto['stock_actual'] is defined else 0 }}"><small id="stockHelp" style="display:block;margin-top:5px;color:#475569;font-size:12px;line-height:1.4">Podés dejarlo vacío; si es un producto nuevo, queda en 0 hasta confirmar el inventario.</small></div>
       <div class="form-group"><label>Stock mínimo (opcional)</label><input type="text" name="stock_minimo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="{{ producto['stock_minimo'] if producto and producto['stock_minimo'] is defined else 0 }}"></div>
     </div>
     <div class="form-group"><label>Proveedor (opcional)</label><input type="text" name="proveedor" value="{{ producto['proveedor'] if producto and producto['proveedor'] is defined else '' }}" placeholder="Librería Lerma"></div>
@@ -121,7 +122,7 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
       </div>
     </div>
 
-    <button class="btn-save" type="submit">💾 Guardar producto</button>
+    <button class="btn-save" id="saveButton" type="submit">💾 Guardar producto</button><p id="saveStatus" role="status" aria-live="polite" style="display:none;text-align:center;color:#475569;font-size:13px;margin-top:10px">Guardando cambios… no cierres esta pantalla.</p>
   </div>
 </form>
 
@@ -137,14 +138,16 @@ input[type=checkbox]{width:44px;height:24px;cursor:pointer;accent-color:#25D366}
   var stock=document.getElementById('stockActual');
   if(stock&&form){form.addEventListener('submit',function(e){
     var value=stock.value.trim();
-    if(!/^[0-9]+$/.test(value)||!Number.isSafeInteger(Number(value))){e.preventDefault();stock.setCustomValidity('Ingresá un stock entero igual o mayor a cero.');stock.reportValidity();return;}
+    if(value && (!/^[0-9]+$/.test(value)||!Number.isSafeInteger(Number(value)))){e.preventDefault();stock.setCustomValidity('Ingresá un stock entero igual o mayor a cero.');stock.reportValidity();return;}
     stock.setCustomValidity('');
     var initial=stock.defaultValue;
-    if(Number(value)!==Number(initial)&&!window.confirm('Revisá el stock actual: '+initial+' → '+value+' unidades. ¿Guardar este cambio?'))e.preventDefault();
+    if(value && Number(value)!==Number(initial)&&!window.confirm('Revisá el stock actual: '+initial+' → '+value+' unidades. ¿Guardar este cambio?'))e.preventDefault();
+    if(!e.defaultPrevented){var b=document.getElementById('saveButton'),st=document.getElementById('saveStatus');if(b){b.disabled=true;b.textContent='⏳ Guardando…';b.style.opacity='.7';}if(st)st.style.display='block';}
   });}
 })();
 function previewFoto(input) {
   if (!input.files || !input.files[0]) return;
+  if(input.files[0].size>12*1024*1024){input.value='';alert('La foto supera el límite de 12 MB. Elegí una imagen más liviana.');return;}
   var reader = new FileReader();
   reader.onload = function(e) {
     var prev = document.getElementById('fotoPreview');
