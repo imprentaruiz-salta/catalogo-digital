@@ -1355,9 +1355,36 @@ def producto_por_qr(code):
     producto['precio_display']=format(int(round(float(producto.get('precio') or 0))),',').replace(',','.')
     stock_count=max(0,int(producto.get('stock_actual') or 0)); producto['stock_display']=(f'{stock_count} disponible' if stock_count==1 else f'{stock_count} disponibles') if stock_count>0 else 'Consultá disponibilidad'
     producto['description_display']=producto.get('desc_') or 'Consultá características con Librería Ruiz.'
+    # Per-product QR and Code 128 images are rendered by lightweight SVG endpoints below.
+    producto['barcode_value']='GELAZ' if producto['codigo']=='BIC-GELOCITY-ILLUSION-AZUL-ENTERO-2026' else producto['codigo']
     response=make_response(render_template('qr_producto.html',producto=producto))
     response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
     response.headers['X-Robots-Tag']='noindex, nofollow'
+    return response
+
+@app.route('/product-code/<code>/<kind>.svg')
+def ruiz_product_code_svg(code,kind):
+    """Serve a ficha QR or the verified Code 128 value for an active Librería Ruiz product."""
+    if kind not in ('qr','barcode') or not code or len(code)>120:
+        return ('Not found',404)
+    with get_db() as db:
+        row=db.execute('SELECT codigo FROM productos WHERE activo=1 AND catalogo_slug=? AND codigo=? LIMIT 1',('libreria-ruiz',code)).fetchone()
+    if not row:
+        return ('Not found',404)
+    from reportlab.graphics.barcode import createBarcodeDrawing
+    from reportlab.graphics.shapes import Drawing
+    from reportlab.graphics import renderSVG
+    value=request.url_root.rstrip('/')+'/p/'+urllib.parse.quote(code,safe='') if kind=='qr' else ('GELAZ' if code=='BIC-GELOCITY-ILLUSION-AZUL-ENTERO-2026' else code)
+    if kind=='qr':
+        widget=createBarcodeDrawing('QR',value=value,barLevel='M',barBorder=2)
+    else:
+        widget=createBarcodeDrawing('Code128',value=value,barHeight=42,barWidth=0.48,humanReadable=False)
+    drawing=Drawing(widget.width,widget.height)
+    drawing.add(widget)
+    response=make_response(renderSVG.drawToString(drawing))
+    response.headers['Content-Type']='image/svg+xml; charset=utf-8'
+    response.headers['Cache-Control']='public, max-age=300'
+    response.headers['X-Content-Type-Options']='nosniff'
     return response
 
 @app.route('/admin/cargar-renata')
