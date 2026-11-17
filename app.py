@@ -1,5 +1,5 @@
 import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from flask import (Flask, render_template, render_template_string, request, redirect,
                    url_for, session, jsonify, send_from_directory, send_file, flash, make_response)
@@ -253,6 +253,15 @@ def init_db():
             except sqlite3.OperationalError: pass
         db.execute("""CREATE TABLE IF NOT EXISTS producto_interes (id INTEGER PRIMARY KEY AUTOINCREMENT, catalogo_slug TEXT NOT NULL, product_key TEXT NOT NULL, producto TEXT NOT NULL, detalle TEXT NOT NULL DEFAULT '', unidades INTEGER NOT NULL DEFAULT 0, solicitudes INTEGER NOT NULL DEFAULT 0, estado TEXT NOT NULL DEFAULT 'pendiente', actualizado TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(catalogo_slug,product_key))""")
         db.execute("CREATE INDEX IF NOT EXISTS idx_producto_interes_slug ON producto_interes(catalogo_slug,unidades DESC)")
+        # Per-ficha Mercado Pago orders; balances are stored in the catalog DB snapshot.
+        db.execute("""CREATE TABLE IF NOT EXISTS ruiz_mp_orders (
+            ref TEXT PRIMARY KEY, codigo TEXT NOT NULL, nombre TEXT NOT NULL,
+            qty INTEGER NOT NULL, unit_price REAL NOT NULL, total REAL NOT NULL,
+            preference_id TEXT DEFAULT '', payment_id TEXT DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending', expires_at TEXT NOT NULL,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        )""")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_ruiz_mp_orders_status_expiry ON ruiz_mp_orders(status,expires_at)")
         # Keep the pre-existing product seed; the admin can replace it.
         db.commit()
 
@@ -1336,15 +1345,21 @@ def producto_por_qr(code):
     """Ficha individual por QR: siempre consulta el precio y datos vigentes."""
     if not code or len(code)>120:
         return ('Producto no encontrado',404)
+    expired_orders=0
     with get_db() as db:
+        db.execute('BEGIN IMMEDIATE')
+        expired_orders=_ruiz_release_expired_mp_orders(db,datetime.now(timezone.utc).isoformat(timespec='seconds'))
         row=db.execute(
             'SELECT codigo,nombre,desc_,precio,categoria,marca,foto,stock_actual '
             'FROM productos WHERE activo=1 AND catalogo_slug=? AND codigo=? LIMIT 1',
             ('libreria-ruiz',code)
         ).fetchone()
+        db.commit()
+    if expired_orders: cloud_sync_background()
     if not row:
         return ('Producto no encontrado',404)
     producto=dict(row)
+    producto['catalogo_slug']='libreria-ruiz'
     if producto['codigo']=='SANDISK-CRUZER-BLADE-16GB-2026':
         foto='https://raw.githubusercontent.com/imprentaruiz-salta/catalogo-digital/main/sandisk_cruzer_blade_16gb.webp'
     else:
@@ -1355,12 +1370,193 @@ def producto_por_qr(code):
     producto['precio_display']=format(int(round(float(producto.get('precio') or 0))),',').replace(',','.')
     stock_count=max(0,int(producto.get('stock_actual') or 0)); producto['stock_display']=(f'{stock_count} disponible' if stock_count==1 else f'{stock_count} disponibles') if stock_count>0 else 'Consultá disponibilidad'
     producto['description_display']=producto.get('desc_') or 'Consultá características con Librería Ruiz.'
+    # Color variants with shared/untracked stock remain consultation-only.
+    product_label=price_label(producto)
+    purchase_unit=product_label.split(' por ',1)[1].strip() if ' por ' in product_label.lower() else ''
+    producto['purchase_available']=(int(producto.get('stock_actual') or 0)>0 and float(producto.get('precio') or 0)>0 and bool(purchase_unit) and producto['codigo'] not in RUÍZ_MP_VARIANT_CODES)
+    producto['purchase_stock']=max(0,int(producto.get('stock_actual') or 0))
+    producto['purchase_unit_label']=purchase_unit or 'unidad'
+    producto['purchase_csrf']=session.setdefault('ruiz_mp_csrf',uuid.uuid4().hex)
     # Per-product QR and Code 128 images are rendered by lightweight SVG endpoints below.
     producto['barcode_value']='GELAZ' if producto['codigo']=='BIC-GELOCITY-ILLUSION-AZUL-ENTERO-2026' else producto['codigo']
     response=make_response(render_template('qr_producto.html',producto=producto))
     response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
     response.headers['X-Robots-Tag']='noindex, nofollow'
     return response
+
+RUÍZ_MP_RATE_LIMIT={}
+RUÍZ_MP_WEBHOOK_URL='https://catalogo-app-zm3w.onrender.com/api/mercadopago/webhook'
+RUÍZ_MP_RETURN_URL='https://catalogo-app-zm3w.onrender.com/pago/resultado'
+RUÍZ_MP_VARIANT_CODES={'FILGO-BORRAX-SE-COLORES-2026','KEYROAD-ADV-GEL-07-COLORES-2026','MAR-OLAMI-FIBRA-DOBLE-PUNTA-X12-2026','INTRA-GEL-FLUO-08-2026'}
+
+
+def _ruiz_mp_request(path,method='GET',payload=None,timeout=20):
+    token=os.environ.get('MERCADOPAGO_ACCESS_TOKEN','').strip()
+    if not token: raise RuntimeError('Mercado Pago no está configurado')
+    body=json.dumps(payload,ensure_ascii=False).encode('utf-8') if payload is not None else None
+    headers={'Authorization':'Bearer '+token,'Accept':'application/json'}
+    if body is not None: headers['Content-Type']='application/json'
+    req=urllib.request.Request('https://api.mercadopago.com'+path,data=body,method=method,headers=headers)
+    try:
+        with urllib.request.urlopen(req,timeout=timeout) as response:
+            return json.loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        try: detail=e.read().decode('utf-8','replace')[:1000]
+        except Exception: detail=''
+        app.logger.error('Mercado Pago API HTTP %s: %s',e.code,detail)
+        raise
+
+
+def _ruiz_release_expired_mp_orders(db,now_iso):
+    rows=db.execute("SELECT ref,codigo,qty FROM ruiz_mp_orders WHERE status='pending' AND expires_at<=?",(now_iso,)).fetchall()
+    for order in rows:
+        db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(int(order['qty']),order['codigo']))
+        db.execute("UPDATE ruiz_mp_orders SET status='expired',updated_at=? WHERE ref=? AND status='pending'",(now_iso,order['ref']))
+    return len(rows)
+
+
+@app.route('/comprar/<path:code>',methods=['POST'])
+def ruiz_checkout_product(code):
+    # Always read name, price and stock from the database, not from the submitted form.
+    if not code or len(code)>120: return ('Producto no encontrado',404)
+    submitted_csrf=str(request.form.get('csrf_token') or '')
+    session_csrf=str(session.get('ruiz_mp_csrf') or '')
+    if not session_csrf or not hmac.compare_digest(submitted_csrf,session_csrf):
+        flash('La ficha venció. Actualizala antes de iniciar el pago.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    now=datetime.now(timezone.utc); now_iso=now.isoformat(timespec='seconds')
+    peer=request.remote_addr or 'unknown'
+    recent=[x for x in RUÍZ_MP_RATE_LIMIT.get(peer,[]) if (now-x).total_seconds()<60]
+    if len(recent)>=8:
+        flash('Esperá un minuto antes de volver a intentar.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    try: qty=int(request.form.get('cantidad') or 1)
+    except (TypeError,ValueError): qty=0
+    if qty<1 or qty>10:
+        flash('La cantidad elegida no es válida.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    ref='LRMP-'+uuid.uuid4().hex[:24].upper()
+    expires=now+timedelta(minutes=30);expires_iso=expires.isoformat(timespec='seconds')
+    try:
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            expired_count=_ruiz_release_expired_mp_orders(db,now_iso)
+            row=db.execute("SELECT codigo,nombre,precio,stock_actual FROM productos WHERE activo=1 AND catalogo_slug='libreria-ruiz' AND codigo=? LIMIT 1",(code,)).fetchone()
+            if not row:
+                db.rollback();return ('Producto no encontrado',404)
+            if code in RUÍZ_MP_VARIANT_CODES:
+                db.rollback();flash('Este producto tiene variantes con stock compartido. Consultanos para confirmar disponibilidad.','error')
+                return redirect(url_for('producto_por_qr',code=code),code=303)
+            unit_price=float(int(round(float(row['precio'] or 0))));available=max(0,int(row['stock_actual'] or 0))
+            if unit_price<=0:
+                db.rollback();flash('Este producto no tiene precio confirmado para pagar online. Consultanos.','error')
+                return redirect(url_for('producto_por_qr',code=code),code=303)
+            if available<qty:
+                db.rollback();flash('No hay suficiente stock disponible para esa cantidad. Actualizá la ficha o consultanos.','error')
+                return redirect(url_for('producto_por_qr',code=code),code=303)
+            total=round(unit_price*qty,2)
+            db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz' AND stock_actual>=?",(qty,code,qty))
+            if db.execute('SELECT changes()').fetchone()[0]!=1:
+                db.rollback();flash('El stock cambió. Actualizá la ficha y volvé a intentar.','error')
+                return redirect(url_for('producto_por_qr',code=code),code=303)
+            db.execute("INSERT INTO ruiz_mp_orders(ref,codigo,nombre,qty,unit_price,total,status,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,'pending',?,?,?)",(ref,code,row['nombre'],qty,unit_price,total,expires_iso,now_iso,now_iso))
+            db.commit(); product_name=str(row['nombre'])
+        if expired_count: cloud_sync_background()
+        cloud_sync_background();RUÍZ_MP_RATE_LIMIT[peer]=recent+[now]
+        payload={
+            'items':[{'id':code,'title':product_name[:256],'quantity':qty,'currency_id':'ARS','unit_price':unit_price}],
+            'external_reference':ref,
+            'notification_url':RUÍZ_MP_WEBHOOK_URL,
+            'back_urls':{'success':RUÍZ_MP_RETURN_URL+'?estado=retorno','pending':RUÍZ_MP_RETURN_URL+'?estado=pendiente','failure':RUÍZ_MP_RETURN_URL+'?estado=problema'},
+            'auto_return':'approved','statement_descriptor':'LIBRERIA RUIZ','expires':True,
+            'expiration_date_from':(now-timedelta(minutes=5)).isoformat(timespec='seconds'),'expiration_date_to':expires.isoformat(timespec='seconds'),
+            'metadata':{'catalogo':'libreria-ruiz','codigo':code,'cantidad':qty,'referencia':ref}
+        }
+        pref=_ruiz_mp_request('/checkout/preferences','POST',payload)
+        checkout=pref.get('init_point');pref_id=str(pref.get('id') or '')
+        if not checkout or not pref_id: raise RuntimeError('Mercado Pago no devolvió un enlace de pago')
+        with get_db() as db:
+            db.execute("UPDATE ruiz_mp_orders SET preference_id=?,updated_at=? WHERE ref=? AND status='pending'",(pref_id,datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));db.commit()
+        cloud_sync_background()
+        return redirect(checkout,code=303)
+    except Exception:
+        app.logger.exception('Could not create Mercado Pago checkout for Librería Ruiz')
+        try:
+            with get_db() as db:
+                db.execute('BEGIN IMMEDIATE')
+                order=db.execute("SELECT codigo,qty,status FROM ruiz_mp_orders WHERE ref=?",(ref,)).fetchone()
+                if order and order['status']=='pending':
+                    db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
+                    db.execute("UPDATE ruiz_mp_orders SET status='preference_error',updated_at=? WHERE ref=?",(datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));db.commit()
+            cloud_sync_background()
+        except Exception: app.logger.exception('Could not release stock after Mercado Pago preference failure')
+        flash('No se pudo generar el pago. No se realizó ningún cobro; volvé a intentar.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+
+
+@app.route('/api/mercadopago/webhook',methods=['POST'])
+def ruiz_mercadopago_webhook():
+    # Do not trust the notification body. Fetch the payment from Mercado Pago and verify it.
+    data=request.get_json(silent=True) or {}
+    payment_id=str((data.get('data') or {}).get('id') or request.args.get('data.id') or request.args.get('id') or '').strip()
+    if not payment_id or not payment_id.isdigit(): return ('',200)
+    try:
+        payment=_ruiz_mp_request('/v1/payments/'+urllib.parse.quote(payment_id,safe=''),'GET')
+        if payment.get('status')!='approved': return ('',200)
+        expected_collector=str(os.environ.get('MERCADOPAGO_COLLECTOR_ID','321049832')).strip()
+        if expected_collector and str(payment.get('collector_id') or '')!=expected_collector:
+            app.logger.error('Mercado Pago collector mismatch for payment %s',payment_id)
+            return ('',200)
+        ref=str(payment.get('external_reference') or '')
+        if not ref.startswith('LRMP-'): return ('',200)
+        notify=False;stock_issue=False
+        with get_db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            order=db.execute('SELECT * FROM ruiz_mp_orders WHERE ref=?',(ref,)).fetchone()
+            if not order: db.rollback();return ('',200)
+            amount=round(float(payment.get('transaction_amount') or 0),2)
+            if abs(amount-float(order['total']))>0.01 or str(payment.get('currency_id') or '')!='ARS':
+                db.rollback();app.logger.error('Mercado Pago amount or currency mismatch for %s',ref);return ('',200)
+            if order['status']=='pending':
+                db.execute("UPDATE ruiz_mp_orders SET status='approved',payment_id=?,updated_at=? WHERE ref=? AND status='pending'",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
+                notify=db.execute('SELECT changes()').fetchone()[0]==1
+            elif order['status'] in ('expired','preference_error'):
+                stock=db.execute("SELECT stock_actual FROM productos WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['codigo'],)).fetchone()
+                if stock and int(stock['stock_actual'] or 0)>=int(order['qty']):
+                    db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
+                    db.execute("UPDATE ruiz_mp_orders SET status='approved',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
+                else:
+                    db.execute("UPDATE ruiz_mp_orders SET status='paid_stock_issue',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));stock_issue=True
+                notify=True
+            db.commit()
+        if notify:
+            cloud_sync_background()
+            token=os.environ.get('TELEGRAM_BOT_TOKEN','').strip();chat_id=os.environ.get('TELEGRAM_CHAT_ID','8899404755').strip()
+            if token and chat_id:
+                state='PAGO APROBADO' if not stock_issue else 'PAGO APROBADO · REVISAR STOCK/REINTEGRO'
+                payer=payment.get('payer') or {}
+                payer_name=' '.join(str(payer.get(key) or '').strip() for key in ('first_name','last_name')).strip()
+                payer_email=str(payer.get('email') or '').strip()
+                payer_phone=payer.get('phone') or {}
+                phone_text=''.join(str(payer_phone.get(key) or '') for key in ('area_code','number')).strip()
+                contact_lines=('\nCliente: '+payer_name if payer_name else '')+('\nEmail: '+payer_email if payer_email else '')+('\nTeléfono: '+phone_text if phone_text else '')
+                notice=f"💳 {state} · Librería Ruiz\nPedido {ref}\n{order['qty']} × {order['nombre']} ({order['codigo']})\nARS {format(float(order['total']),',').replace(',', '.')}\nMercado Pago {payment_id}{contact_lines}\nCoordinar retiro/envío por WhatsApp."
+                try:
+                    body=json.dumps({'chat_id':chat_id,'text':notice},ensure_ascii=False).encode('utf-8')
+                    req=urllib.request.Request('https://api.telegram.org/bot'+token+'/sendMessage',data=body,method='POST',headers={'Content-Type':'application/json'})
+                    with urllib.request.urlopen(req,timeout=15) as response: response.read()
+                except Exception: app.logger.exception('Paid product notification to Telegram failed')
+        return ('',200)
+    except Exception:
+        app.logger.exception('Mercado Pago webhook processing failed')
+        return ('',500)
+
+
+@app.route('/pago/resultado')
+def ruiz_pago_resultado():
+    html='''<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Resultado del pago · Librería Ruiz</title><body style="font:16px system-ui;background:#f3f7fb;color:#20354b;margin:0;padding:24px"><main style="max-width:520px;margin:8vh auto;background:white;padding:24px;border-radius:18px;box-shadow:0 8px 26px #1232"><h1 id="title" style="color:#103b67">Volviste de Mercado Pago</h1><p id="message">El pago se confirma cuando Librería Ruiz recibe la notificación oficial de Mercado Pago. Retiro o envío se coordina aparte por WhatsApp.</p><a href="/c/libreria-ruiz" style="display:block;text-align:center;background:#087447;color:white;padding:13px;border-radius:10px;text-decoration:none;font-weight:700">Volver a Librería Ruiz</a></main><script>var state=new URLSearchParams(location.search).get('estado');if(state==='pendiente'){document.getElementById('title').textContent='Pago pendiente';document.getElementById('message').textContent='Mercado Pago todavía no lo informa como aprobado. Te avisaremos cuando se confirme. Retiro o envío se coordina aparte.'}else if(state==='problema'){document.getElementById('title').textContent='Pago no completado';document.getElementById('message').textContent='No figura como pago aprobado. Podés volver a la ficha e intentar nuevamente; no vuelvas a pagar si ya ves el cargo en Mercado Pago. Retiro o envío se coordina aparte.'}else{document.getElementById('title').textContent='Gracias';document.getElementById('message').textContent='Volviste de Mercado Pago. La tienda confirma el pago cuando recibe su notificación oficial. Retiro o envío se coordina aparte.'}</script></body></html>'''
+    return make_response(html,200,{'Cache-Control':'no-store'})
+
 
 @app.route('/product-code/<code>/<kind>.svg')
 def ruiz_product_code_svg(code,kind):
