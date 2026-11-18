@@ -261,6 +261,9 @@ def init_db():
             status TEXT NOT NULL DEFAULT 'pending', expires_at TEXT NOT NULL,
             created_at TEXT NOT NULL, updated_at TEXT NOT NULL
         )""")
+        for col,definition in [('backorder','INTEGER NOT NULL DEFAULT 0')]:
+            try: db.execute(f"ALTER TABLE ruiz_mp_orders ADD COLUMN {col} {definition}")
+            except sqlite3.OperationalError: pass
         db.execute("CREATE INDEX IF NOT EXISTS idx_ruiz_mp_orders_status_expiry ON ruiz_mp_orders(status,expires_at)")
         # Keep the pre-existing product seed; the admin can replace it.
         db.commit()
@@ -1373,8 +1376,10 @@ def producto_por_qr(code):
     # Color variants with shared/untracked stock remain consultation-only.
     product_label=price_label(producto)
     purchase_unit=product_label.split(' por ',1)[1].strip() if ' por ' in product_label.lower() else ''
-    producto['purchase_available']=(int(producto.get('stock_actual') or 0)>0 and float(producto.get('precio') or 0)>0 and bool(purchase_unit) and producto['codigo'] not in RUÍZ_MP_VARIANT_CODES)
     producto['purchase_stock']=max(0,int(producto.get('stock_actual') or 0))
+    producto['purchase_backorder']=producto['purchase_stock']==0
+    producto['purchase_available']=(float(producto.get('precio') or 0)>0 and bool(purchase_unit) and producto['codigo'] not in RUÍZ_MP_VARIANT_CODES)
+    producto['purchase_stock_limit']=max(10,producto['purchase_stock']) if producto['purchase_backorder'] else min(10,producto['purchase_stock'])
     producto['purchase_unit_label']=purchase_unit or 'unidad'
     producto['purchase_csrf']=session.setdefault('ruiz_mp_csrf',uuid.uuid4().hex)
     # Per-product QR and Code 128 images are rendered by lightweight SVG endpoints below.
@@ -1410,7 +1415,9 @@ def _ruiz_mp_request(path,method='GET',payload=None,timeout=20):
 def _ruiz_release_expired_mp_orders(db,now_iso):
     rows=db.execute("SELECT ref,codigo,qty FROM ruiz_mp_orders WHERE status='pending' AND expires_at<=?",(now_iso,)).fetchall()
     for order in rows:
-        db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(int(order['qty']),order['codigo']))
+        order_full=db.execute("SELECT backorder FROM ruiz_mp_orders WHERE ref=?",(order['ref'],)).fetchone()
+        if order_full and not int(order_full['backorder'] or 0):
+            db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(int(order['qty']),order['codigo']))
         db.execute("UPDATE ruiz_mp_orders SET status='expired',updated_at=? WHERE ref=? AND status='pending'",(now_iso,order['ref']))
     return len(rows)
 
@@ -1451,15 +1458,17 @@ def ruiz_checkout_product(code):
             if unit_price<=0:
                 db.rollback();flash('Este producto no tiene precio confirmado para pagar online. Consultanos.','error')
                 return redirect(url_for('producto_por_qr',code=code),code=303)
-            if available<qty:
-                db.rollback();flash('No hay suficiente stock disponible para esa cantidad. Actualizá la ficha o consultanos.','error')
+            backorder=available==0
+            if not backorder and available<qty:
+                db.rollback();flash('El stock disponible no alcanza esa cantidad. Actualizá la ficha y volvé a intentar.','error')
                 return redirect(url_for('producto_por_qr',code=code),code=303)
             total=round(unit_price*qty,2)
-            db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz' AND stock_actual>=?",(qty,code,qty))
-            if db.execute('SELECT changes()').fetchone()[0]!=1:
-                db.rollback();flash('El stock cambió. Actualizá la ficha y volvé a intentar.','error')
-                return redirect(url_for('producto_por_qr',code=code),code=303)
-            db.execute("INSERT INTO ruiz_mp_orders(ref,codigo,nombre,qty,unit_price,total,status,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,'pending',?,?,?)",(ref,code,row['nombre'],qty,unit_price,total,expires_iso,now_iso,now_iso))
+            if not backorder:
+                db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz' AND stock_actual>=?",(qty,code,qty))
+                if db.execute('SELECT changes()').fetchone()[0]!=1:
+                    db.rollback();flash('El stock cambió. Actualizá la ficha y volvé a intentar.','error')
+                    return redirect(url_for('producto_por_qr',code=code),code=303)
+            db.execute("INSERT INTO ruiz_mp_orders(ref,codigo,nombre,qty,unit_price,total,status,expires_at,created_at,updated_at,backorder) VALUES(?,?,?,?,?,?,'pending',?,?,?,?)",(ref,code,row['nombre'],qty,unit_price,total,expires_iso,now_iso,now_iso,int(backorder)))
             db.commit(); product_name=str(row['nombre'])
         if expired_count: cloud_sync_background()
         cloud_sync_background();RUÍZ_MP_RATE_LIMIT[peer]=recent+[now]
@@ -1470,7 +1479,7 @@ def ruiz_checkout_product(code):
             'back_urls':{'success':RUÍZ_MP_RETURN_URL+'?estado=retorno','pending':RUÍZ_MP_RETURN_URL+'?estado=pendiente','failure':RUÍZ_MP_RETURN_URL+'?estado=problema'},
             'auto_return':'approved','statement_descriptor':'LIBRERIA RUIZ','expires':True,
             'expiration_date_from':(now-timedelta(minutes=5)).isoformat(timespec='seconds'),'expiration_date_to':expires.isoformat(timespec='seconds'),
-            'metadata':{'catalogo':'libreria-ruiz','codigo':code,'cantidad':qty,'referencia':ref}
+            'metadata':{'catalogo':'libreria-ruiz','codigo':code,'cantidad':qty,'referencia':ref,'modalidad':'bajo_pedido' if backorder else 'stock_disponible'}
         }
         pref=_ruiz_mp_request('/checkout/preferences','POST',payload)
         checkout=pref.get('init_point');pref_id=str(pref.get('id') or '')
@@ -1484,9 +1493,10 @@ def ruiz_checkout_product(code):
         try:
             with get_db() as db:
                 db.execute('BEGIN IMMEDIATE')
-                order=db.execute("SELECT codigo,qty,status FROM ruiz_mp_orders WHERE ref=?",(ref,)).fetchone()
+                order=db.execute("SELECT codigo,qty,status,backorder FROM ruiz_mp_orders WHERE ref=?",(ref,)).fetchone()
                 if order and order['status']=='pending':
-                    db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
+                    if not int(order['backorder'] or 0):
+                        db.execute("UPDATE productos SET stock_actual=COALESCE(stock_actual,0)+? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
                     db.execute("UPDATE ruiz_mp_orders SET status='preference_error',updated_at=? WHERE ref=?",(datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));db.commit()
             cloud_sync_background()
         except Exception: app.logger.exception('Could not release stock after Mercado Pago preference failure')
@@ -1518,22 +1528,28 @@ def ruiz_mercadopago_webhook():
             if abs(amount-float(order['total']))>0.01 or str(payment.get('currency_id') or '')!='ARS':
                 db.rollback();app.logger.error('Mercado Pago amount or currency mismatch for %s',ref);return ('',200)
             if order['status']=='pending':
-                db.execute("UPDATE ruiz_mp_orders SET status='approved',payment_id=?,updated_at=? WHERE ref=? AND status='pending'",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
+                approved_status='approved_backorder' if int(order['backorder'] or 0) else 'approved'
+                db.execute("UPDATE ruiz_mp_orders SET status=?,payment_id=?,updated_at=? WHERE ref=? AND status='pending'",(approved_status,str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
                 notify=db.execute('SELECT changes()').fetchone()[0]==1
+                if approved_status=='approved_backorder': stock_issue=True
             elif order['status'] in ('expired','preference_error'):
-                stock=db.execute("SELECT stock_actual FROM productos WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['codigo'],)).fetchone()
-                if stock and int(stock['stock_actual'] or 0)>=int(order['qty']):
-                    db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
-                    db.execute("UPDATE ruiz_mp_orders SET status='approved',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
+                if int(order['backorder'] or 0):
+                    db.execute("UPDATE ruiz_mp_orders SET status='approved_backorder',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));stock_issue=True
+                    notify=True
                 else:
-                    db.execute("UPDATE ruiz_mp_orders SET status='paid_stock_issue',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));stock_issue=True
-                notify=True
+                    stock=db.execute("SELECT stock_actual FROM productos WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['codigo'],)).fetchone()
+                    if stock and int(stock['stock_actual'] or 0)>=int(order['qty']):
+                        db.execute("UPDATE productos SET stock_actual=stock_actual-? WHERE codigo=? AND catalogo_slug='libreria-ruiz'",(order['qty'],order['codigo']))
+                        db.execute("UPDATE ruiz_mp_orders SET status='approved',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref))
+                    else:
+                        db.execute("UPDATE ruiz_mp_orders SET status='paid_stock_issue',payment_id=?,updated_at=? WHERE ref=?",(str(payment_id),datetime.now(timezone.utc).isoformat(timespec='seconds'),ref));stock_issue=True
+                    notify=True
             db.commit()
         if notify:
             cloud_sync_background()
             token=os.environ.get('TELEGRAM_BOT_TOKEN','').strip();chat_id=os.environ.get('TELEGRAM_CHAT_ID','8899404755').strip()
             if token and chat_id:
-                state='PAGO APROBADO' if not stock_issue else 'PAGO APROBADO · REVISAR STOCK/REINTEGRO'
+                state='PAGO APROBADO' if not stock_issue else ('PAGO APROBADO · BAJO PEDIDO, COORDINAR REPOSICIÓN' if int(order['backorder'] or 0) else 'PAGO APROBADO · REVISAR STOCK/REINTEGRO')
                 payer=payment.get('payer') or {}
                 payer_name=' '.join(str(payer.get(key) or '').strip() for key in ('first_name','last_name')).strip()
                 payer_email=str(payer.get('email') or '').strip()
