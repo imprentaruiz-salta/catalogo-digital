@@ -1099,6 +1099,8 @@ def get_vivero_cover_urls():
     return {'vivero_cover_video_url':video_url,'vivero_cover_poster_url':VIVERO_COVER_POSTER}
 
 def render_catalog_page(cats,showcase,catalogo):
+    # Reuse the same CSRF token for direct Mercado Pago buttons in catalog cards and fichas.
+    ruiz_purchase_csrf=session.setdefault('ruiz_mp_csrf',uuid.uuid4().hex) if catalogo and catalogo.get('slug')=='libreria-ruiz' else ''
     # Day-specific Librería Ruiz banner, bounded to Sunday in the user's timezone.
     if catalogo and catalogo.get('slug') == 'libreria-ruiz':
         try:
@@ -1125,7 +1127,7 @@ def render_catalog_page(cats,showcase,catalogo):
                 visits=max(visits,remote)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits,',').replace(',','.')
-        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
+        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,ruiz_purchase_csrf=ruiz_purchase_csrf,**get_vivero_cover_urls()))
         rendered.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         rendered.headers['Pragma']='no-cache'
         return rendered
@@ -1141,7 +1143,7 @@ def render_catalog_page(cats,showcase,catalogo):
             visits=max(int(row['visitas'] or 0) if row else 0,VIVERO_VISIT_COUNT_CACHE)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
-        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls()))
+        rendered=make_response(render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,ruiz_purchase_csrf=ruiz_purchase_csrf,**get_vivero_cover_urls()))
         rendered.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         rendered.headers['Pragma']='no-cache'
         return rendered
@@ -1157,7 +1159,7 @@ def render_catalog_page(cats,showcase,catalogo):
         catalogo=dict(catalogo)
         catalogo['visitas']=visits
         catalogo['visitas_formateadas']=format(visits, ',').replace(',', '.')
-    return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,**get_vivero_cover_urls())
+    return render_template('index.html',cats=cats,showcase=showcase,catalogo=catalogo,ruiz_purchase_csrf=ruiz_purchase_csrf,**get_vivero_cover_urls())
 
 @app.route('/vivero/portada/subir',methods=['GET','POST'])
 @login_required
