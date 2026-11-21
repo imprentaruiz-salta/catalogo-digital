@@ -1,0 +1,46 @@
+name: Publish Ruiz Navegador v1.1
+on:
+  push:
+    branches: [ruiz-navegador-build]
+    paths: ['ruiz-navegador-android.zip', '.github/workflows/publish-ruiz-v11.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-and-release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK platform and build tools
+        run: sdkmanager --channel=3 'platforms;android-37.2' 'build-tools;37.0.0'
+      - name: Unpack project
+        run: unzip -q ruiz-navegador-android.zip -d .
+      - name: Build APK
+        run: |
+          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-9.6.0-bin.zip -o "$RUNNER_TEMP/gradle.zip"
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/gradle-9.6.0/bin/gradle" --no-daemon :app:assembleDebug
+      - name: Validate package/signature/audio/video support
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          BT="$ANDROID_HOME/build-tools/37.0.0"
+          test -s "$APK"
+          "$BT/aapt" dump badging "$APK" | grep -q "package: name='com.zapia.ruizbrowser2026v11'"
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt" dump permissions "$APK" | grep -q 'android.permission.RECORD_AUDIO'
+          "$BT/aapt" dump permissions "$APK" | grep -q 'android.permission.CAMERA'
+          unzip -Z1 "$APK" | grep -q 'lib/arm64-v8a/libmozglue.so'
+      - name: Publish v1.1 direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ruiz-navegador-android15-v1.1 app/build/outputs/apk/debug/app-debug.apk \
+            --repo imprentaruiz-salta/catalogo-digital \
+            --target "$GITHUB_SHA" \
+            --title 'Ruiz Navegador Android 15 — permisos de Alma mejorados' \
+            --notes 'APK reconstruida con Gradle y GeckoView integrado. Paquete com.zapia.ruizbrowser2026v11. Validada con firma v2/v3, permisos audio/cámara y bibliotecas ARM64. Se recuerda la decisión de permiso web por sitio para no preguntar repetidamente. Android todavía exige autorización nativa la primera vez que se usa micrófono o cámara; no se omiten permisos del sistema. No probada en el TCL físico.'
