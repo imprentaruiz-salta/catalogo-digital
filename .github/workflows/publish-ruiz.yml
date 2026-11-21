@@ -1,0 +1,48 @@
+name: Publish Ruiz Navegador APK
+on:
+  push:
+    branches: [ruiz-navegador-build]
+    paths: ['.github/workflows/publish-ruiz.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools system-images;android-35;google_apis;x86_64'
+      - name: Install Android 37.2 SDK platform
+        run: sdkmanager --channel=3 'platforms;android-37.2' 'build-tools;37.0.0'
+      - name: Unpack Android project
+        run: unzip -q ruiz-navegador-android.zip -d .
+      - name: Build APK with Gradle
+        run: |
+          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-9.6.0-bin.zip -o "$RUNNER_TEMP/gradle.zip"
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/gradle-9.6.0/bin/gradle" --no-daemon :app:assembleDebug
+      - name: Verify package, signature, permissions, and ARM64 engine
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          BT="$ANDROID_HOME/build-tools/37.0.0"
+          test -s "$APK"
+          "$BT/aapt" dump badging "$APK" | grep -q "package: name='com.zapia.ruizbrowser2026'"
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt" dump permissions "$APK" | grep -q 'android.permission.RECORD_AUDIO'
+          unzip -Z1 "$APK" | grep -q 'lib/arm64-v8a/libmozglue.so'
+      - name: Publish installable APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ruiz-navegador-android15-v1.0 app/build/outputs/apk/debug/app-debug.apk \
+            --repo imprentaruiz-salta/catalogo-digital \
+            --target "$GITHUB_SHA" \
+            --title 'Ruiz Navegador Android 15' \
+            --notes 'APK universal construida con Gradle y GeckoView integrado de Mozilla. Paquete: com.zapia.ruizbrowser2026. Verificada con firmas v2/v3, permisos multimedia y bibliotecas nativas ARM64. Diseñada para Android 8+; esta build no se ha probado en el TCL real. No requiere abrir Chrome ni Firefox. GeckoView reproduce audio y video web compatibles; no es compatible con todos los complementos de escritorio.'
