@@ -23,7 +23,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-37 build-tools;37.0.0 emulator system-images;android-35;google_apis;x86_64'
+          packages: 'platform-tools emulator system-images;android-35;google_apis;x86_64'
+      - name: Install Android 17 preview platform
+        run: sdkmanager --channel=3 'platforms;android-37' 'build-tools;37.0.0'
       - name: Unpack app source
         run: unzip -q ruiz-navegador-android.zip -d .
       - name: Download Gradle and build
