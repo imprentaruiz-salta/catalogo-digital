@@ -23,14 +23,14 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0 emulator system-images;android-35;google_apis;x86_64'
+          packages: 'platform-tools platforms;android-37 build-tools;37.0.0 emulator system-images;android-35;google_apis;x86_64'
       - name: Unpack app source
         run: unzip -q ruiz-navegador-android.zip -d .
       - name: Download Gradle and build
         run: |
-          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-8.13-bin.zip -o "$RUNNER_TEMP/gradle.zip"
+          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-9.6.0-bin.zip -o "$RUNNER_TEMP/gradle.zip"
           unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
-          "$RUNNER_TEMP/gradle-8.13/bin/gradle" --no-daemon --stacktrace :app:assembleDebug
+          "$RUNNER_TEMP/gradle-9.6.0/bin/gradle" --no-daemon --stacktrace :app:assembleDebug
       - name: Validate APK contents and signing
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
