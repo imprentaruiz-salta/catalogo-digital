@@ -9,7 +9,75 @@ on:
 permissions:
   contents: read
   actions: read
+name: Build Ruiz Navegador Android
+on:
+  push:
+    branches: [ruiz-navegador-build]
+    paths: ['ruiz-navegador-android.zip', '.github/workflows/build-ruiz-navegador.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
 jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools emulator system-images;android-35;google_apis;x86_64'
+      - name: Install Android 37.2 SDK platform
+        run: sdkmanager --channel=3 'platforms;android-37.2' 'build-tools;37.0.0'
+      - name: Unpack app source
+        run: unzip -q ruiz-navegador-android.zip -d .
+      - name: Build debug APK
+        run: |
+          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-9.6.0-bin.zip -o "$RUNNER_TEMP/gradle.zip"
+          unzip -q "$RUNNER_TEMP/gradle.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/gradle-9.6.0/bin/gradle" --no-daemon --stacktrace :app:assembleDebug
+      - name: Validate APK contents and signing
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          aapt dump badging "$APK" | grep -q "package: name='com.zapia.ruizbrowser2026'"
+          apksigner verify --verbose "$APK"
+          aapt dump permissions "$APK" | grep -q 'android.permission.RECORD_AUDIO'
+          aapt dump permissions "$APK" | grep -q 'android.permission.CAMERA'
+          unzip -Z1 "$APK" | grep -q 'lib/x86_64/libmozglue.so'
+          unzip -Z1 "$APK" | grep -q 'lib/arm64-v8a/libmozglue.so'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ruiz-Navegador-Android15
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Boot API 35 emulator and install
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-boot-timeout: 600
+          script: |
+            adb install app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -n com.zapia.ruizbrowser2026/com.zapia.ruizweb.MainActivity
+            sleep 75
+            adb shell dumpsys activity activities | grep -q 'com.zapia.ruizbrowser2026/com.zapia.ruizweb.MainActivity'
+            adb logcat -d -t 5000 > "$RUNNER_TEMP/ruiz-logcat.txt"
+            if grep -E 'FATAL EXCEPTION|Process: com.zapia.ruizbrowser2026, PID' "$RUNNER_TEMP/ruiz-logcat.txt"; then exit 1; fi
+      - name: Upload emulator log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ruiz-Navegador-emulator-evidence
+          path: ${{ runner.temp }}/ruiz-logcat.txt
+          if-no-files-found: ignore
+          retention-days: 7jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
