@@ -1506,6 +1506,44 @@ def ruiz_checkout_product(code):
         return redirect(url_for('producto_por_qr',code=code),code=303)
 
 
+@app.route('/transferencia/<path:code>', methods=['POST'])
+def ruiz_transferencia_product(code):
+    """Quote a current product for an external bank transfer, without marking it paid or reserving stock."""
+    if not code or len(code)>120:
+        return ('Producto no encontrado',404)
+    submitted=str(request.form.get('csrf_token') or '')
+    expected=str(session.get('ruiz_mp_csrf') or '')
+    if not expected or not hmac.compare_digest(submitted,expected):
+        flash('La ficha venció. Actualizala y volvé a intentar.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    try: qty=int(request.form.get('cantidad') or '0')
+    except (TypeError,ValueError): qty=0
+    if not 1<=qty<=10:
+        flash('Elegí una cantidad entre 1 y 10.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    with get_db() as db:
+        row=db.execute("SELECT codigo,nombre,precio,stock_actual FROM productos WHERE activo=1 AND catalogo_slug='libreria-ruiz' AND codigo=? LIMIT 1",(code,)).fetchone()
+    if not row: return ('Producto no encontrado',404)
+    if code in RUÍZ_MP_VARIANT_CODES:
+        flash('Consultanos para confirmar la variante y su disponibilidad antes de transferir.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    price=float(row['precio'] or 0)
+    available=max(0,int(row['stock_actual'] or 0))
+    if price<=0 or qty>available:
+        flash('El precio o stock no está confirmado para esa cantidad. Consultanos antes de transferir.','error')
+        return redirect(url_for('producto_por_qr',code=code),code=303)
+    total=int(round(price))*qty
+    total_display=format(total,',').replace(',','.')
+    message=('Hola, quiero consultar el pedido para pagar por transferencia a Fiwind: '
+             +str(qty)+' × '+str(row['nombre'])+' (código '+str(row['codigo'])+') · total ARS '+total_display+
+             '. ¿Me confirmás disponibilidad y total antes de transferir?')
+    wa='https://wa.me/5493872101274?text='+urllib.parse.quote(message,safe='')
+    page='''<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Transferencia Fiwind · Librería Ruiz</title><body style="font:16px system-ui;background:#f3f7fb;color:#20354b;margin:0;padding:20px"><main style="max-width:520px;margin:3vh auto;background:white;padding:22px;border-radius:18px;box-shadow:0 8px 26px #1232"><h1 style="color:#103b67;font-size:23px">Pagar por transferencia · Fiwind</h1><p><strong>{{ qty }} × {{ nombre }}</strong><br>Código: {{ code }}</p><p style="font-size:24px;color:#087447"><strong>Total: ARS {{ total }}</strong></p><p>Alias de destino:</p><p style="background:#eaf3fb;padding:14px;border-radius:10px;font-weight:800;overflow-wrap:anywhere" id="alias">libreriaruiz.fiwind</p><button type="button" id="copy" style="padding:11px;border-radius:9px;border:1px solid #aaa;background:white">Copiar alias</button><p id="copied" role="status"></p><p><strong>Antes de transferir, confirmá por WhatsApp el total y la disponibilidad.</strong> Esta pantalla no reserva stock ni envía un pedido automáticamente.</p><p>Transferí desde tu banco o billetera. Tu pedido y pago quedan pendientes hasta que Librería Ruiz verifique la acreditación en Fiwind. Un comprobante no confirma el pago.</p><a href="{{ wa }}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#128c55;color:white;padding:14px;border-radius:10px;text-decoration:none;font-weight:bold">Consultar pedido por WhatsApp</a><a href="{{ back }}" style="display:block;text-align:center;padding:14px">Volver al producto</a></main><script>document.getElementById('copy').addEventListener('click',async function(){try{await navigator.clipboard.writeText('libreriaruiz.fiwind');document.getElementById('copied').textContent='Alias copiado.'}catch(e){document.getElementById('copied').textContent='Seleccioná y copiá el alias de arriba.'}})</script></body></html>'''
+    response=make_response(render_template_string(page,qty=qty,nombre=row['nombre'],code=code,total=total_display,wa=wa,back=url_for('producto_por_qr',code=code)))
+    response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+    return response
+
+
 @app.route('/api/mercadopago/webhook',methods=['POST'])
 def ruiz_mercadopago_webhook():
     # Do not trust the notification body. Fetch the payment from Mercado Pago and verify it.
