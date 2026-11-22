@@ -1318,7 +1318,7 @@ def api_consulta_qr_libreria(raw_code):
     value=value.split('?',1)[0].split('#',1)[0].rstrip('/')
     value=value.rsplit('/',1)[-1].strip()
     # Compact barcode alias used for the narrow two-column Code 128 print test.
-    value={'LUMA10':'PAPEL-GLACE-LUMA-METALIZADO-10H-2026','GELAZ':'BIC-GELOCITY-ILLUSION-AZUL-ENTERO-2026'}.get(value.upper(),value)
+    value={'LUMA10':'PAPEL-GLACE-LUMA-METALIZADO-10H-2026','GELAZ':'BIC-GELOCITY-ILLUSION-AZUL-ENTERO-2026','OLAMI39':'MAR-OLAMI-FIBRA-DOBLE-PUNTA-X12-2026','MAPED68':'MAPED-COLORPEPS-STRONG-X12-2026'}.get(value.upper(),value)
     if not value or len(value)>120:
         return jsonify({'error':'No reconocí un código de producto'}),400
     with get_db() as db:
