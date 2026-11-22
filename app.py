@@ -1524,14 +1524,22 @@ def ruiz_transferencia_product(code):
     with get_db() as db:
         row=db.execute("SELECT codigo,nombre,precio,stock_actual FROM productos WHERE activo=1 AND catalogo_slug='libreria-ruiz' AND codigo=? LIMIT 1",(code,)).fetchone()
     if not row: return ('Producto no encontrado',404)
-    if code in RUÍZ_MP_VARIANT_CODES:
-        flash('Consultanos para confirmar la variante y su disponibilidad antes de transferir.','error')
-        return redirect(url_for('producto_por_qr',code=code),code=303)
     price=float(row['precio'] or 0)
     available=max(0,int(row['stock_actual'] or 0))
-    if price<=0 or qty>available:
-        flash('El precio o stock no está confirmado para esa cantidad. Consultanos antes de transferir.','error')
-        return redirect(url_for('producto_por_qr',code=code),code=303)
+    block_reason=''
+    if code in RUÍZ_MP_VARIANT_CODES:
+        block_reason='Este producto tiene colores o variantes. Consultanos para confirmar que la variante elegida esté disponible antes de transferir.'
+    elif price<=0:
+        block_reason='Este producto todavía no tiene un precio confirmado. Consultanos el precio antes de transferir.'
+    elif qty>available:
+        block_reason='No hay stock confirmado para esa cantidad. Consultanos antes de transferir; no se aceptó ni reservó nada.'
+    if block_reason:
+        msg=('Hola, quiero consultar por '+str(row['nombre'])+' (código '+str(row['codigo'])+') antes de pagar por transferencia a Fiwind. ¿Me confirmás precio y disponibilidad?')
+        wa_block='https://wa.me/5493872101274?text='+urllib.parse.quote(msg,safe='')
+        blocker='''<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Confirmar antes de transferir · Librería Ruiz</title><body style="font:16px system-ui;background:#f3f7fb;color:#20354b;margin:0;padding:20px"><main style="max-width:520px;margin:3vh auto;background:white;padding:22px;border-radius:18px;box-shadow:0 8px 26px #1232"><h1 style="color:#103b67;font-size:23px">Confirmá antes de transferir</h1><p><strong>{{ nombre }}</strong><br>Código: {{ code }}</p><p>{{ reason }}</p><p>No transfieras todavía. Esta consulta no reserva stock ni confirma un pedido.</p><a href="{{ wa }}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#128c55;color:white;padding:14px;border-radius:10px;text-decoration:none;font-weight:bold">Consultar precio o disponibilidad por WhatsApp</a><a href="{{ back }}" style="display:block;text-align:center;padding:14px">Volver al producto</a></main></body></html>'''
+        resp=make_response(render_template_string(blocker,nombre=row['nombre'],code=code,reason=block_reason,wa=wa_block,back=url_for('producto_por_qr',code=code)))
+        resp.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
+        return resp
     total=int(round(price))*qty
     total_display=format(total,',').replace(',','.')
     message=('Hola, quiero consultar el pedido para pagar por transferencia a Fiwind: '
