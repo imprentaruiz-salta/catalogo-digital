@@ -2162,6 +2162,21 @@ def admin_foto_rapida(pid):
     cloud_sync_background()
     log_change('foto',current_slug(),str(pid))
     return jsonify(ok=True,foto=fname)
+
+# BIC-IA-PRUEBA-24H-INICIO
+@app.route('/prueba-bic-ia-24h.mp4')
+def bic_prueba_ia_temporal():
+    if datetime.now(timezone.utc) >= datetime(2026,11,26,19,15,tzinfo=timezone.utc):
+        return ('Prueba finalizada',404)
+    try:
+        with urllib.request.urlopen('https://share.zapia.com/t1w8zahutdtrn5nz91hoqp',timeout=20) as remote:
+            video = remote.read(2*1024*1024)
+        response=send_file(io.BytesIO(video), mimetype='video/mp4', conditional=True, download_name='bic-prueba.mp4')
+        response.headers['Cache-Control']='no-store'
+        return response
+    except Exception:
+        return ('Video temporalmente no disponible',503)
+# BIC-IA-PRUEBA-24H-FIN
 # Restore the cloud snapshot at startup, but never upload at startup.
 # Uploading here could overwrite a valid catalog while Render is starting.
 restore_from_cloud()
