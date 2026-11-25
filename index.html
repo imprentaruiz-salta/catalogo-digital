@@ -2582,5 +2582,20 @@ if(expand)expand.addEventListener('click',function(){var target=overlay.requestF
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&overlay.classList.contains('open')&&!document.fullscreenElement)window.closeRuizDemo()});
 })();
 </script>{% endif %}
+
+<!-- BIC-IA-PRUEBA-24H-INICIO 2026-11-26T19:15:00Z -->
+<style>#ruizDemoVideoTemporary{display:block;width:auto;max-width:100%;max-height:58vh;object-fit:contain}#ruizDemoVideoTemporary[hidden]{display:none}</style>
+<script>(function(){
+var code='Birome BIC 4 Colores Original · blíster', until=Date.parse('2026-11-26T19:15:00Z'), url='https://share.zapia.com/t1w8zahutdtrn5nz91hoqp';
+var o=document.getElementById('ruizDemoViewer');if(!o)return;
+var title=document.getElementById('ruizDemoTitle'),stage=document.getElementById('ruizDemoStage'),poster=document.getElementById('ruizDemoPoster'),status=o.querySelector('.ruiz-demo-status'),note=o.querySelector('.ruiz-demo-note');
+var play=o.querySelector('[aria-label="Reproducir"]'),pause=o.querySelector('[aria-label="Pausar"]'),stop=o.querySelector('[aria-label="Detener"]');if(!title||!stage||!poster||!status||!play||!pause||!stop)return;
+var video=document.createElement('video');video.id='ruizDemoVideoTemporary';video.playsInline=true;video.preload='none';video.hidden=true;stage.appendChild(video);
+var active=false;function clear(){if(!active)return;video.pause();video.removeAttribute('src');video.load();video.hidden=true;poster.hidden=false;[play,pause,stop].forEach(function(b){b.disabled=true});status.textContent='El video real de prueba de este producto todavía no está cargado. La imagen es solo una vista del producto.';note.textContent='Cuando esté el video real, se podrán usar los controles de reproducción.';active=false}
+function sync(){var target=o.classList.contains('open')&&title.textContent.indexOf(code)!==-1&&Date.now()<until;if(!target){clear();return}if(active)return;active=true;poster.hidden=true;video.hidden=false;video.src=url;video.load();[play,pause,stop].forEach(function(b){b.disabled=false});status.textContent='Recreación generada con inteligencia artificial. No es una prueba real de escritura ni del producto.';note.textContent='Vista ilustrativa temporal.'}
+play.addEventListener('click',function(){if(active)video.play().catch(function(){status.textContent='No se pudo reproducir el video en este dispositivo. Es una recreación con IA, no una prueba real.'})});pause.addEventListener('click',function(){if(active)video.pause()});stop.addEventListener('click',function(){if(active){video.pause();video.currentTime=0}});
+new MutationObserver(sync).observe(o,{attributes:true,attributeFilter:['class']});new MutationObserver(sync).observe(title,{childList:true,subtree:true,characterData:true});setTimeout(sync,Math.max(0,until-Date.now()));
+})();</script>
+<!-- BIC-IA-PRUEBA-24H-FIN -->
 </body>
 </html>
