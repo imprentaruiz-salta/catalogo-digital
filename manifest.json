@@ -10,8 +10,8 @@
   "theme_color": "#102a43",
   "description": "Catálogo digital de Librería Ruíz en Salta. Consultá productos, precios y disponibilidad.",
   "icons": [
-    {"src":"/static/icons/libreria-ruiz-user-192-20261126.png?v=ruiz-brand-20261126","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"/static/icons/libreria-ruiz-user-512-20261126.png?v=ruiz-brand-20261126","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {"src":"/static/icons/libreria-ruiz-user-192-20261126.png?v=ruiz-brand-20261126b","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/static/icons/libreria-ruiz-user-512-20261126.png?v=ruiz-brand-20261126b","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }
 {% else %}
