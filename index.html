@@ -1169,7 +1169,7 @@ form.addEventListener('submit',async function(e){e.preventDefault();var q=input.
 {% if catalogo.slug == 'libreria-ruiz' %}
 <aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="false" aria-label="Un escritorio más ordenado. Placa promocional de Librería Ruíz.">
   <button class="ruiz-mothers-banner-close" id="ruizMothersBannerClose" type="button" aria-label="Cerrar placa">×</button>
-  <img src="/static/libreria_ruiz_thursday_user_logo_slogan_20261126.jpg?v=ruiz-logo-20261126c" alt="Un escritorio más ordenado. Librería Ruíz." loading="eager">
+  <img src="/static/libreria_placa_3dias_1_20261126.png" alt="Un escritorio más ordenado. Librería Ruíz." loading="eager">
 </aside>
 {% endif %}
 <!-- FLOAT CART -->
@@ -2171,11 +2171,24 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner)return;
-  var start=Date.parse('2026-11-26T00:00:00-03:00');
-  var end=Date.parse('2026-11-27T00:00:00-03:00');
-  if(Date.now()<start||Date.now()>=end){banner.classList.add('is-expired');return;}
+  // Una placa cada 72 horas, desde 26/11/2026 15:30 en Salta; vuelve a empezar tras la cuarta.
+  var inicio=Date.parse('2026-11-26T15:30:00-03:00'), periodo=3*24*60*60*1000;
+  var imagen=banner.querySelector('img');
+  var placas=[
+    ['/static/libreria_placa_3dias_1_20261126.png','Un escritorio más ordenado'],
+    ['/static/libreria_placa_3dias_2_20261126.png','Terminá la semana con todo en orden'],
+    ['/static/libreria_placa_3dias_3_20261126.png','Ideas para tus trabajos y proyectos'],
+    ['/static/libreria_placa_3dias_4_20261126.png','Dejá lista la semana que viene']
+  ];
+  function actualizarPlaca(){
+    var indice=Math.max(0,Math.floor((Date.now()-inicio)/periodo))%placas.length;
+    if(imagen.getAttribute('src')!==placas[indice][0])imagen.setAttribute('src',placas[indice][0]);
+    imagen.alt=placas[indice][1]+'. Librería Ruíz.';
+    banner.setAttribute('aria-label',placas[indice][1]+'. Placa promocional de Librería Ruíz.');
+  }
   if(closeButton)closeButton.addEventListener('click',function(){banner.classList.add('is-dismissed');});
-  window.setTimeout(function(){banner.classList.add('is-expired');},end-Date.now());
+  actualizarPlaca();
+  window.setInterval(actualizarPlaca,60000);
 })();
 </script>
 {% endif %}
