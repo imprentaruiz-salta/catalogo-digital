@@ -1916,29 +1916,6 @@ def admin_index():
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
         intereses_faltantes=db.execute('SELECT producto,detalle,unidades,solicitudes,estado,actualizado FROM producto_interes WHERE catalogo_slug=? ORDER BY unidades DESC,solicitudes DESC,producto',(slug,)).fetchall() if slug=='libreria-ruiz' else []
     return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias],intereses_faltantes=[dict(s) for s in intereses_faltantes])
-# Temporary, authenticated operation to disconnect only Rena's Beauty contact.
-@app.route('/admin/renas-beauty/retiro',methods=['GET','POST'])
-@login_required
-def admin_retiro_renas():
-    if request.method=='POST':
-        if not hmac.compare_digest(str(session.get('renas_retiro_csrf','')),str(request.form.get('csrf',''))) or not session.get('renas_retiro_csrf'):
-            return ('Solicitud inválida',403)
-        backup_db('antes-desconectar-renas')
-        with get_db() as db:
-            row=db.execute("SELECT slug FROM catalogos WHERE slug='renas-beauty'").fetchone()
-            if not row: return ('Catálogo no encontrado',404)
-            db.execute("UPDATE catalogos SET whatsapp='' WHERE slug='renas-beauty'")
-            db.commit()
-        synced=cloud_sync()
-        log_change('desconectar-whatsapp','renas-beauty','Contacto retirado')
-        return ('Contacto retirado; copia persistente sincronizada' if synced else 'Contacto retirado localmente; copia persistente NO sincronizada',200 if synced else 503)
-    with get_db() as db:
-        row=db.execute("SELECT whatsapp FROM catalogos WHERE slug='renas-beauty'").fetchone()
-        count=db.execute("SELECT COUNT(*) FROM productos WHERE catalogo_slug='renas-beauty'").fetchone()[0]
-    if not row: return ('Catálogo no encontrado',404)
-    token=session.setdefault('renas_retiro_csrf',uuid.uuid4().hex)
-    return render_template_string("<p>WhatsApp vacío: {{ empty }}; productos conservados: {{ count }}</p><form method='post'><input type='hidden' name='csrf' value='{{ token }}'><button type='submit'>Desconectar WhatsApp de Renata</button></form>",empty=not bool(row['whatsapp']),count=count,token=token)
-
 @app.route('/admin/catalogo/seleccionar',methods=['POST'])
 @login_required
 def seleccionar_catalogo():
