@@ -1177,7 +1177,7 @@ form.addEventListener('submit',async function(e){e.preventDefault();var q=input.
 {% if catalogo.slug == 'libreria-ruiz' %}
 <aside class="ruiz-mothers-banner" id="ruizMothersBanner" aria-hidden="false" aria-label="Un escritorio más ordenado. Placa promocional de Librería Ruíz.">
   <button class="ruiz-mothers-banner-close" id="ruizMothersBannerClose" type="button" aria-label="Cerrar placa">×</button>
-  <img src="/static/libreria_ruiz_thursday_user_logo_slogan_20261126.jpg?v=ruiz-logo-20261126c" alt="Un escritorio más ordenado. Librería Ruíz." loading="eager">
+  <img src="/static/libreria_popup_30s_1_20261126.png" alt="Un escritorio más ordenado. Librería Ruíz." loading="eager">
 </aside>
 {% endif %}
 <!-- FLOAT CART -->
@@ -2179,11 +2179,19 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner)return;
-  var dias={Sun:['sunday','Dejá lista la semana que viene'],Mon:['monday','¡Arrancá la semana con todo listo!'],Tue:['tuesday','Dale color a tus apuntes'],Wed:['wednesday','Tus ideas, siempre a mano'],Thu:['thursday','Un escritorio más ordenado'],Fri:['friday','Terminá la semana con todo en orden'],Sat:['saturday','Ideas para tus trabajos y proyectos']};
+  var placas=[
+    ['1','Un escritorio más ordenado'],
+    ['2','Terminá la semana con todo en orden'],
+    ['3','Ideas para tus trabajos y proyectos'],
+    ['4','Dejá lista la semana que viene']
+  ];
   function actualizarPlacaFlotante(){
-    var dia=new Intl.DateTimeFormat('en-US',{weekday:'short',timeZone:'America/Argentina/Salta'}).format(new Date());
-    var dato=dias[dia];if(!dato)return;
-    var imagen=banner.querySelector('img'), src='/static/libreria_ruiz_'+dato[0]+'_user_logo_slogan_20261126.jpg?v=ruiz-logo-20261126c';
+    var fecha=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Salta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var partes={};fecha.forEach(function(p){partes[p.type]=p.value;});
+    var hoy=Date.UTC(Number(partes.year),Number(partes.month)-1,Number(partes.day));
+    var inicio=Date.UTC(2026,10,26), dias=Math.floor((hoy-inicio)/86400000);
+    var dato=placas[((dias%placas.length)+placas.length)%placas.length];
+    var imagen=banner.querySelector('img'), src='/static/libreria_popup_30s_'+dato[0]+'_20261126.png';
     if(imagen.getAttribute('src')!==src)imagen.setAttribute('src',src);
     imagen.alt=dato[1]+'. Librería Ruíz.';banner.setAttribute('aria-label',dato[1]+'. Placa promocional de Librería Ruíz.');
   }
