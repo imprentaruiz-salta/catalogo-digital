@@ -1,4 +1,5 @@
 import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
+from decimal import Decimal, ROUND_CEILING, InvalidOperation
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from flask import (Flask, render_template, render_template_string, request, redirect,
@@ -1916,6 +1917,103 @@ def admin_index():
         sugerencias=db.execute('SELECT producto,SUM(cantidad) AS votos,SUM(cantidad_necesita) AS unidades,GROUP_CONCAT(DISTINCT nombre) AS nombres,MAX(estado) AS estado,GROUP_CONCAT(DISTINCT comentario) AS comentarios FROM sugerencias WHERE catalogo_slug=? GROUP BY lower(producto) ORDER BY votos DESC,producto',(slug,)).fetchall()
         intereses_faltantes=db.execute('SELECT producto,detalle,unidades,solicitudes,estado,actualizado FROM producto_interes WHERE catalogo_slug=? ORDER BY unidades DESC,solicitudes DESC,producto',(slug,)).fetchall() if slug=='libreria-ruiz' else []
     return render_template('admin.html',productos=[dict(p) for p in productos],catalogos=[dict(c) for c in catalogos],catalogo=current_config(),sugerencias=[dict(s) for s in sugerencias],intereses_faltantes=[dict(s) for s in intereses_faltantes])
+_RUIZ_BULK_PRICE_TEMPLATE = r'''<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Revisión de precios · Librería Ruíz</title>
+<style>body{font:15px system-ui,-apple-system,sans-serif;background:#f1f5f9;color:#17324d;margin:0}.wrap{max-width:980px;margin:22px auto;padding:0 14px}.card{background:white;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 2px 10px #1231}h1{font-size:22px;margin:0 0 8px}.muted{color:#526273}.alert{padding:14px;border-radius:10px;margin:12px 0}.ok{background:#e7f8ed;color:#14532d}.err{background:#fff1f2;color:#9f1239}.warn{background:#fff7dd;color:#854d0e}.table-wrap{overflow:auto;max-height:62vh;border:1px solid #dbe3ea;border-radius:10px}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #e5eaf0}th{position:sticky;top:0;background:#edf5f3;z-index:1}.num{text-align:right;white-space:nowrap}.new{font-weight:800;color:#116149}.btn{display:inline-block;border:0;border-radius:10px;padding:12px 17px;background:#16836b;color:white;font-weight:800;text-decoration:none;cursor:pointer;font-size:15px}.back{background:#e2e8f0;color:#17324d}.confirm{display:flex;gap:10px;align-items:flex-start;margin:16px 0}.phrase{width:100%;max-width:300px;padding:10px;border:1px solid #94a3b8;border-radius:8px;font-size:16px}code{background:#eef2f7;padding:2px 5px;border-radius:4px}</style></head><body><main class="wrap">
+<a class="btn back" href="/admin/">← Volver al panel</a>
+<section class="card"><h1>Revisión de aumento de precios · Librería Ruíz</h1><p class="muted">Este cambio solo actualizará el campo <b>precio</b> de los productos activos de Librería Ruíz que ya tienen un precio mayor que cero. No toca stock, costos, códigos, fotos ni otros catálogos.</p>
+{% if error %}<div class="alert err">{{ error }}</div>{% endif %}
+{% if success %}<div class="alert ok"><b>Precios actualizados.</b> Se cambiaron {{ count }} productos. El respaldo previo quedó guardado. {% if sync_ok %}La copia persistente en la nube también se sincronizó.{% else %}<b>Atención:</b> el guardado local se completó, pero no se pudo confirmar la sincronización en la nube; revisá el estado de almacenamiento antes de volver a editar.{% endif %}</div><p><a class="btn" href="/admin/">Volver al panel</a></p>
+{% else %}<div class="alert warn"><b>Regla propuesta:</b> aumento exacto del 8,24% y redondeo hacia arriba al siguiente múltiplo de ARS 100. Se excluyen {{ zero_count }} productos activos sin precio positivo; no tienen importe sobre el que calcular el aumento.</div>
+<p>Se revisarán {{ rows|length }} productos. El botón de abajo solo estará habilitado después de revisar la tabla, marcar la casilla y escribir <code>APLICAR</code>. Antes de guardar, el sistema vuelve a comprobar que los precios base no hayan cambiado.</p>
+<div class="table-wrap"><table><thead><tr><th>Código</th><th>Producto</th><th class="num">Precio actual</th><th class="num">Precio propuesto</th></tr></thead><tbody>{% for r in rows %}<tr><td>{{ r.code }}</td><td>{{ r.name }}</td><td class="num">ARS {{ r.old }}</td><td class="num new">ARS {{ r.new }}</td></tr>{% endfor %}</tbody></table></div>
+<form method="post" action="/admin/precios-masivos" onsubmit="return confirm('¿Confirmás el cambio de precios mostrado en esta tabla?')"><input type="hidden" name="plan_token" value="{{ token }}"><label class="confirm"><input type="checkbox" name="confirm_reviewed" value="yes" required><span>Revisé los productos y los importes propuestos. Confirmo aplicar únicamente estos precios.</span></label><label for="phrase"><b>Escribí APLICAR para habilitar el guardado:</b></label><p><input class="phrase" id="phrase" name="confirm_phrase" autocomplete="off" required pattern="APLICAR" title="Escribí exactamente APLICAR"></p><button class="btn" type="submit">Aplicar precios propuestos</button></form>{% endif %}
+</section></main></body></html>'''
+
+def _ruiz_price_rows(db):
+    rows=db.execute("SELECT id,codigo,nombre,precio FROM productos WHERE catalogo_slug='libreria-ruiz' AND activo=1 ORDER BY id").fetchall()
+    priced=[]; zero_count=0
+    for row in rows:
+        try: original=Decimal(str(row['precio']))
+        except (InvalidOperation,TypeError,ValueError):
+            raise ValueError('Hay un precio inválido; no se cambió ningún producto.')
+        if not original.is_finite() or original < 0:
+            raise ValueError('Hay un precio inválido; no se cambió ningún producto.')
+        if original <= 0:
+            zero_count+=1
+            continue
+        proposed=((original*Decimal('1.0824')/Decimal('100')).to_integral_value(rounding=ROUND_CEILING)*Decimal('100'))
+        priced.append({'id':int(row['id']),'code':str(row['codigo']),'name':str(row['nombre']),'original':original,'proposed':proposed})
+    return priced,zero_count
+
+def _ruiz_price_fingerprint(rows):
+    material='\n'.join(f"{r['id']}|{r['code']}|{r['original'].normalize()}" for r in rows)
+    return hashlib.sha256(material.encode('utf-8')).hexdigest()
+
+def _ruiz_money(value):
+    return f"{int(value):,}".replace(',', '.')
+
+@app.route('/admin/precios-masivos',methods=['GET','POST'])
+@login_required
+def admin_precios_masivos():
+    if request.method=='GET':
+        if request.args.get('done'):
+            result=session.get('ruiz_price_batch_done')
+            if result:
+                return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,success=True,count=result['count'],sync_ok=result['sync_ok'])
+        try:
+            with get_db() as db: rows,zero_count=_ruiz_price_rows(db)
+        except ValueError as exc:
+            return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error=str(exc),success=False,rows=[],zero_count=0,token=''),400
+        if not rows:
+            return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='No hay productos activos con precio para actualizar.',success=False,rows=[],zero_count=zero_count,token=''),400
+        token=uuid.uuid4().hex
+        session['ruiz_price_batch_plan']={'token':token,'fingerprint':_ruiz_price_fingerprint(rows),'count':len(rows)}
+        display=[{'code':r['code'],'name':r['name'],'old':_ruiz_money(r['original']),'new':_ruiz_money(r['proposed'])} for r in rows]
+        return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,success=False,rows=display,zero_count=zero_count,token=token)
+
+    plan=session.get('ruiz_price_batch_plan') or {}
+    supplied_token=request.form.get('plan_token','')
+    if (not supplied_token or not hmac.compare_digest(supplied_token,str(plan.get('token',''))) or
+        request.form.get('confirm_reviewed')!='yes' or request.form.get('confirm_phrase')!='APLICAR'):
+        session.pop('ruiz_price_batch_plan',None)
+        return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='La confirmación no coincide o venció. No se cambió ningún precio; volvé al panel y abrí una vista previa nueva.',success=False,rows=[],zero_count=0,token=''),400
+
+    backup_path=backup_db('antes-aumento-precios-libreria-ruiz')
+    if not backup_path or not os.path.exists(backup_path):
+        session.pop('ruiz_price_batch_plan',None)
+        return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='No se pudo crear un respaldo previo. No se aplicó ningún cambio.',success=False,rows=[],zero_count=0,token=''),500
+
+    db=get_db()
+    try:
+        db.execute('BEGIN IMMEDIATE')
+        rows,zero_count=_ruiz_price_rows(db)
+        current_fingerprint=_ruiz_price_fingerprint(rows)
+        if len(rows)!=int(plan.get('count',-1)) or not hmac.compare_digest(current_fingerprint,str(plan.get('fingerprint',''))):
+            db.rollback()
+            session.pop('ruiz_price_batch_plan',None)
+            return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='Los precios o el listado cambiaron desde la vista previa. No se guardó nada; recargá para revisar los valores actuales.',success=False,rows=[],zero_count=0,token=''),409
+        for row in rows:
+            cursor=db.execute("UPDATE productos SET precio=? WHERE id=? AND codigo=? AND catalogo_slug='libreria-ruiz' AND activo=1 AND precio=?",(float(row['proposed']),row['id'],row['code'],float(row['original'])))
+            if cursor.rowcount!=1:
+                db.rollback()
+                session.pop('ruiz_price_batch_plan',None)
+                return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='La validación de un producto falló. Se revirtió el lote completo; no se guardó ningún precio.',success=False,rows=[],zero_count=0,token=''),409
+        db.commit()
+    except Exception:
+        db.rollback()
+        app.logger.exception('Falló el aumento masivo de precios de Librería Ruíz')
+        session.pop('ruiz_price_batch_plan',None)
+        return render_template_string(_RUIZ_BULK_PRICE_TEMPLATE,error='Ocurrió un error y el lote fue revertido. No se guardaron cambios.',success=False,rows=[],zero_count=0,token=''),500
+    finally:
+        db.close()
+
+    session.pop('ruiz_price_batch_plan',None)
+    log_change('precios-masivos','libreria-ruiz',f"8.24% y redondeo hacia arriba a ARS 100; {len(rows)} productos")
+    sync_ok=cloud_sync()
+    session['ruiz_price_batch_done']={'count':len(rows),'sync_ok':bool(sync_ok)}
+    return redirect(url_for('admin_precios_masivos',done=1),code=303)
+
 @app.route('/admin/catalogo/seleccionar',methods=['POST'])
 @login_required
 def seleccionar_catalogo():
