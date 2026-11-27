@@ -720,9 +720,9 @@ _ALMA_CHAT_ALIASES={
  'lapicera':'birome','lapiceras':'birome','lapicero':'birome','lapiceros':'birome','boligrafo':'birome','boligrafos':'birome','biromes':'birome','folios':'folio','carpetas':'carpeta',
  'lapices':'lapiz','fibra':'marcador','fibras':'marcador','fibron':'marcador','fibrones':'marcador','plumon':'marcador','plumones':'marcador','marcadores':'marcador','resaltadores':'resaltador','marcatexto':'resaltador','marcatextos':'resaltador','fluorescentes':'resaltador','fluorescente':'resaltador',
  'pilas':'pila','baterias':'pila','cuadernos':'cuaderno','notas':'nota','notitas':'nota','postits':'postit','postit':'nota','senaladores':'senalador','tijeras':'tijera','calculadoras':'calculadora','reglas':'regla','escuadras':'escuadra','transportadores':'transportador','encendedores':'encendedor','correctores':'corrector','adhesivos':'adhesivo','cintas':'cinta','pegamentos':'pegamento','pendrive':'usb','pendrives':'usb','memoria':'usb','memorias':'usb','sandisk':'sandisk',
- 'negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'
+ 'negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','amarillos':'amarillo','verdes':'verde','rosas':'rosa','resaltar':'resaltador','subrayar':'resaltador','remarcar':'resaltador'
 }
-_ALMA_CHAT_FILLERS=set('alma lia hola buenas buen dia tenes tiene tienen hay existe existen venden vende busco buscame buscas buscar quiero necesito quisiera si alguna algun alguno algunas algunos algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen comprar pedido pedidos ustedes dame pregunta favor saber mostrar mostrame mostra ver categoria catalogo todos todas disponibles disponible quiero quisiera decime por favor informacion info me interesa relacionados relacionado parecidos parecido'.split())
+_ALMA_CHAT_FILLERS=set('alma lia hola buenas buen dia tenes tiene tienen hay existe existen venden vende busco buscame buscas buscar quiero necesito quisiera si alguna algun alguno algunas algunos algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen comprar pedido pedidos ustedes dame pregunta favor saber mostrar mostrame mostra ver categoria catalogo todos todas disponibles disponible quiero quisiera decime por favor informacion info me interesa relacionados relacionado parecidos parecido tengo tenemos apuntes apunte estudiar estudio estudios opciones opcion recomendame recomendas recomendar recomendacion sugerime sugeris podrias podes cual cuales'.split())
 _ALMA_CHAT_COLORS=set('azul negra roja verde rosa amarillo naranja violeta celeste gris blanca blanco pastel'.split())
 _ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate','keyroad','luma','global','auca','sandisk','glister','unipox','leep'}
 def _alma_chat_tokens(value):
@@ -794,7 +794,7 @@ def _alma_chat_search(question,rows):
     colors=terms & _ALMA_CHAT_COLORS;brands=terms & _ALMA_CHAT_BRANDS;category=_alma_requested_category(question)
     browsing=any(x in _alma_unicodedata.normalize('NFKD',str(question or '').lower()) for x in ('que hay','qué hay','mostrar','mostrame','ver todos','todos los','todas las','productos de','productos en','categoria','catálogo de','catalogo de','lista de','que tienen'))
     category_only=bool(category and terms <= {category,'producto','disponible','mostrar','categoria','catalogo','todos','todas','hay','que','marca','marcas'})
-    if category and (browsing or category_only):
+    if category and (browsing or category_only) and not (colors or brands):
         selected=[r for r in rows if _alma_category_matches(r,category)]
         if selected:return [_alma_chat_public_product(r) for r in selected[:8]]
     hits=[]
@@ -836,7 +836,10 @@ def _alma_catalog_explanation(question,rows):
     q=''.join(ch for ch in q if not _alma_unicodedata.combining(ch))
     category=_alma_requested_category(q)
     wants_browse=any(x in q for x in ('que hay','qué hay','mostrar','mostrame','ver todos','todos los','todas las','productos de','productos en','categoria','catálogo de','catalogo de','lista de','que tienen'))
-    if category and wants_browse:
+    query_terms=set(_alma_chat_tokens(question))
+    category_terms=set(_alma_chat_tokens(category)) if category else set()
+    category_only=bool(category and query_terms <= category_terms)
+    if category and (wants_browse or category_only) and not (query_terms & (_ALMA_CHAT_COLORS|_ALMA_CHAT_BRANDS)) and not (query_terms-category_terms):
         chosen=[r for r in rows if _alma_category_matches(r,category)]
         if chosen:return f"En {category} encontré {len(chosen)} productos publicados. Te muestro hasta 8; abrí una ficha para ver precio y stock actualizados.",[ _alma_chat_public_product(r) for r in chosen[:8] ]
     if any(x in q for x in ('todo el catalogo','todo el catálogo','todos los productos','todas las cosas','catalogo completo','catálogo completo')):
@@ -868,14 +871,9 @@ def alma_chat_publico():
         rows=[row for row in rows if row.get('codigo') in visible_codes]
         explanation, explanation_rows = _alma_catalog_explanation(question, rows)
         if explanation:
-            products=[]
-            for row in explanation_rows:
-                try: price=float(row.get('precio'))
-                except (TypeError,ValueError): price=None
-                try: stock=max(0,int(row.get('stock_actual') or 0))
-                except (TypeError,ValueError): stock=0
-                products.append({'codigo':str(row.get('codigo') or ''),'nombre':str(row.get('nombre') or 'Producto'),'marca':str(row.get('marca') or ''),'categoria':str(row.get('categoria') or ''),'descripcion':str(row.get('desc_') or ''),'precio_ars':price if price and price>0 else None,'stock':stock,'foto':str(row.get('foto') or '')})
-            response=jsonify({'respuesta':explanation,'productos':products})
+            # Explanation rows are already public product objects; do not
+            # remap them as database rows and lose price, stock and description.
+            response=jsonify({'respuesta':explanation,'productos':explanation_rows})
             response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
             response.headers['X-Content-Type-Options']='nosniff'
             return response
