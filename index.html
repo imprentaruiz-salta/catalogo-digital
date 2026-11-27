@@ -633,7 +633,22 @@ body.catalog-libreria-ruiz .alma-chat-form #almaChatMic[aria-pressed="true"]{bac
 @keyframes almaMicPulse{50%{box-shadow:0 0 0 5px rgba(180,35,24,.15)}}
 body.catalog-libreria-ruiz .alma-chat-note{padding:0 12px 9px;font-size:11px;color:#627486;background:#fff}
 body.catalog-libreria-ruiz .alma-chat-audio{font-size:12px!important;background:transparent!important;color:#125b8c!important;padding:4px 0!important}
-@media(max-width:599px){body.catalog-libreria-ruiz .alma-chat-fab{left:12px;right:auto;bottom:calc(132px + env(safe-area-inset-bottom,0px));padding:10px 11px;font-size:11px;min-height:44px}body.catalog-libreria-ruiz .alma-chat-modal{align-items:flex-end;padding:8px}body.catalog-libreria-ruiz .alma-chat-window{height:min(600px,86dvh);border-radius:18px}}
+body.catalog-libreria-ruiz .alma-chat-fab{left:18px;right:auto;bottom:82px;background:linear-gradient(135deg,#163f67,#287fba);box-shadow:0 8px 24px rgba(14,61,102,.28)}
+body.catalog-libreria-ruiz .alma-chat-window{width:min(520px,100%);height:min(760px,92dvh)}
+body.catalog-libreria-ruiz .alma-chat-head{min-height:68px;background:linear-gradient(135deg,#102a43,#1d70b8)}
+body.catalog-libreria-ruiz .lia-assistant-identity{display:flex;align-items:center;gap:10px;min-width:0}
+body.catalog-libreria-ruiz .lia-assistant-identity img{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#fff;flex:none}
+body.catalog-libreria-ruiz .lia-assistant-tabs{display:flex;gap:8px;padding:10px 12px;background:#f8fafc;border-bottom:1px solid #e0e8ef}
+body.catalog-libreria-ruiz .lia-mode-tab{flex:1;min-height:42px;padding:8px 10px;border:1px solid #d5e1eb;border-radius:12px;background:#fff;color:#35516b;font-weight:750;font-size:13px;cursor:pointer}
+body.catalog-libreria-ruiz .lia-mode-tab.is-active{border-color:#1d70b8;background:#eaf4fc;color:#124e7d;box-shadow:inset 0 0 0 1px #1d70b8}
+body.catalog-libreria-ruiz .lia-chat-pane{display:flex;flex-direction:column;min-height:0;flex:1}
+body.catalog-libreria-ruiz .lia-avatar-pane{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1;padding:10px;background:#f2f6fa}
+body.catalog-libreria-ruiz .lia-avatar-pane[hidden],body.catalog-libreria-ruiz .lia-chat-pane[hidden]{display:none!important}
+body.catalog-libreria-ruiz .lia-avatar-hint,body.catalog-libreria-ruiz .lia-avatar-note{padding:9px 11px;border-radius:10px;background:#fff;color:#52677a;font-size:12px;line-height:1.4}
+body.catalog-libreria-ruiz .lia-avatar-hint{border:1px solid #dce7ef}
+body.catalog-libreria-ruiz .lia-avatar-frame{width:100%;flex:1;min-height:250px;border:0;border-radius:14px;background:#0b1d2c}
+body.catalog-libreria-ruiz .lia-avatar-note{background:#fff8e4;color:#735f2d}
+@media(max-width:599px){body.catalog-libreria-ruiz .alma-chat-fab{left:12px;right:auto;bottom:calc(132px + env(safe-area-inset-bottom,0px));padding:10px 12px;font-size:11px;min-height:44px}body.catalog-libreria-ruiz .alma-chat-modal{align-items:flex-end;padding:8px}body.catalog-libreria-ruiz .alma-chat-window{height:min(700px,90dvh);border-radius:18px}body.catalog-libreria-ruiz .lia-assistant-tabs{gap:6px;padding:8px}body.catalog-libreria-ruiz .lia-mode-tab{font-size:12px;padding:7px 5px}body.catalog-libreria-ruiz .lia-avatar-frame{min-height:180px}}
 </style>
 </head>
 <body class="notranslate catalog-{{ catalogo.slug }}{% if catalogo.slug == 'vivero-los-colibries' %} vivero-accordion{% endif %}{% if catalogo.slug == 'limpieza-abigail' %} has-abigail{% elif catalogo.slug == 'libreria-ruiz' %} has-ruiz{% elif catalogo.slug == 'renas-beauty' %} has-renata{% endif %}">
@@ -1102,27 +1117,38 @@ body.catalog-libreria-ruiz .ruiz-email-honey{position:absolute;left:-10000px;wid
 {% if catalogo.slug == 'libreria-ruiz' %}
 <!-- Lía hablante de LiveAvatar, educada exclusivamente con el catálogo de Librería Ruíz -->
 <div class="victoria-ruiz-widget" id="victoriaRuizWidget">
- <div class="alma-actions" aria-label="Opciones de atención de Lía">
- <button aria-controls="victoriaRuizPanel" aria-expanded="false" class="victoria-ruiz-fab" id="victoriaRuizFab" type="button"><span class="victoria-ruiz-dot" aria-hidden="true"></span> Hablar con Lía</button>
- <button class="alma-chat-fab" id="almaChatOpen" type="button" aria-haspopup="dialog">💬 Chatear con Lía</button>
+ <div class="alma-actions" aria-label="Asistente de ventas">
+  <button class="alma-chat-fab" id="almaChatOpen" type="button" aria-haspopup="dialog" aria-controls="almaChatDialog">✨ Asesora de ventas · Lía</button>
  </div>
- <section aria-hidden="true" aria-label="Lía, vendedora virtual de Librería Ruíz" class="victoria-ruiz-panel" id="victoriaRuizPanel">
-  <header class="victoria-ruiz-head"><div class="victoria-ruiz-title"><span class="victoria-ruiz-avatar" aria-hidden="true"><img src="https://files2.heygen.ai/avatar/v3/75e0a87b7fd94f0981ff398b593dd47f_45570/preview_talk_4.webp" alt="Lía, vendedora virtual" style="width:34px;height:34px;border-radius:50%;object-fit:cover" onerror="this.parentElement.textContent='B'"></span><div><strong>Lía</strong><span>Vendedora virtual · Librería Ruíz</span></div></div><button aria-label="Cerrar Lía" class="victoria-ruiz-close" id="victoriaRuizClose" type="button">×</button></header>
-  <iframe allow="microphone; autoplay" allowfullscreen class="victoria-ruiz-frame" src="https://embed.liveavatar.com/v1/cb5fccf6-d190-4605-b9c8-6aaf1ce1f0ef?orientation=vertical" title="Lía, vendedora virtual de Librería Ruíz"></iframe>
-  <div class="victoria-ruiz-foot"><strong>Preguntale por nuestras biromes BIC</strong> · negra · roja · precios · pedidos</div>
- </section>
  <section class="alma-chat-modal" id="almaChatDialog" role="dialog" aria-modal="true" aria-labelledby="almaChatTitle" hidden>
-  <div class="alma-chat-window"><header class="alma-chat-head"><div><strong id="almaChatTitle">Lía · Chat</strong><small>Asistente de Librería Ruíz</small></div><button class="alma-chat-close" id="almaChatClose" type="button" aria-label="Cerrar chat">×</button></header>
-   <div class="alma-chat-log" id="almaChatLog" aria-live="polite"><div class="alma-chat-bubble">¡Hola! Soy Lía. ¿Qué producto, marca o color buscás?</div></div>
-   <form class="alma-chat-form" id="almaChatForm"><input id="almaChatInput" maxlength="200" autocomplete="off" aria-label="Tu pregunta" placeholder="Escribí tu pregunta…" required><button type="button" id="almaChatMic" aria-label="Hablar pregunta" aria-pressed="false" title="Hablar pregunta">🎙️</button><button type="submit">Enviar</button></form>
-   <div id="almaAudioControls" class="alma-audio-controls" hidden><span id="almaAudioStatus" role="status"></span><button type="button" id="almaAudioSend" hidden>Enviar audio</button><button type="button" id="almaAudioCancel" data-cancel hidden>Descartar</button></div>
-   <div class="alma-chat-note">Consultá el catálogo vigente. El audio se envía a Google para transcribirlo; evitá incluir datos personales. Confirmá precio y stock al hacer el pedido.</div>
+  <div class="alma-chat-window">
+   <header class="alma-chat-head">
+    <div class="lia-assistant-identity"><img src="https://files2.heygen.ai/avatar/v3/75e0a87b7fd94f0981ff398b593dd47f_45570/preview_talk_4.webp" alt="" onerror="this.hidden=true"><div><strong id="almaChatTitle">Lía · Guía de ventas</strong><small>Asesora virtual · Librería Ruíz</small></div></div>
+    <button class="alma-chat-close" id="almaChatClose" type="button" aria-label="Cerrar Lía">×</button>
+   </header>
+   <nav class="lia-assistant-tabs" aria-label="Elegí cómo querés consultar">
+    <button type="button" class="lia-mode-tab is-active" id="liaProductsTab" aria-pressed="true">💬 Chat y productos</button>
+    <button type="button" class="lia-mode-tab" id="liaVoiceTab" aria-pressed="false">🎙️ Hablar con Lía</button>
+   </nav>
+   <div class="lia-chat-pane" id="liaChatPane">
+    <div class="alma-chat-log" id="almaChatLog" aria-live="polite"><div class="alma-chat-bubble">¡Hola! Soy Lía. Contame qué buscás y te muestro opciones con sus fotos, precios y fichas.</div></div>
+    <form class="alma-chat-form" id="almaChatForm"><input id="almaChatInput" maxlength="200" autocomplete="off" aria-label="Tu pregunta" placeholder="Ej.: birome azul económica…" required><button type="button" id="almaChatMic" aria-label="Grabar consulta de voz" aria-pressed="false" title="Grabar consulta de voz">🎙️</button><button type="submit">Enviar</button></form>
+    <div id="almaAudioControls" class="alma-audio-controls" hidden><span id="almaAudioStatus" role="status"></span><button type="button" id="almaAudioSend" hidden>Enviar audio</button><button type="button" id="almaAudioCancel" data-cancel hidden>Descartar</button></div>
+    <div class="alma-chat-note">El chat consulta el catálogo vigente y puede mostrar fichas, fotos, precios y stock publicado. El audio se envía a Google para transcribirlo; evitá incluir datos personales.</div>
+   </div>
+   <div class="lia-avatar-pane" id="liaAvatarPane" hidden>
+    <div class="lia-avatar-hint">Hablá con Lía por LiveAvatar. Para comparar productos y consultar precios o stock actualizados, usá <strong>Chat y productos</strong>.</div>
+    <iframe class="lia-avatar-frame" id="liaAvatarFrame" data-src="https://embed.liveavatar.com/v1/cb5fccf6-d190-4605-b9c8-6aaf1ce1f0ef?orientation=vertical" title="Lía, vendedora virtual de Librería Ruíz" allow="microphone; autoplay" allowfullscreen loading="lazy"></iframe>
+    <div class="lia-avatar-note">El avatar de voz no consulta el catálogo en tiempo real; confirmá precio y disponibilidad en el chat o en la ficha del producto.</div>
+   </div>
   </div>
  </section>
 </div>
-<script>(function(){var fab=document.getElementById('victoriaRuizFab'),panel=document.getElementById('victoriaRuizPanel'),close=document.getElementById('victoriaRuizClose'),frame=panel&&panel.querySelector('.victoria-ruiz-frame');if(!fab||!panel||!close)return;var src=frame.getAttribute('src');function open(){panel.classList.add('is-open');panel.setAttribute('aria-hidden','false');fab.setAttribute('aria-expanded','true')}function shut(){panel.classList.remove('is-open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');if(frame)frame.setAttribute('src',src)}fab.addEventListener('click',function(){panel.classList.contains('is-open')?shut():open()});close.addEventListener('click',shut);document.addEventListener('keydown',function(e){if(e.key==='Escape')shut()})})();</script><script>(function(){'use strict';var open=document.getElementById('almaChatOpen'),dlg=document.getElementById('almaChatDialog'),close=document.getElementById('almaChatClose'),form=document.getElementById('almaChatForm'),input=document.getElementById('almaChatInput'),log=document.getElementById('almaChatLog'),mic=document.getElementById('almaChatMic');if(!open||!dlg)return;var selectedCode='',previousQuery='';
+<script>(function(){'use strict';var open=document.getElementById('almaChatOpen'),dlg=document.getElementById('almaChatDialog'),close=document.getElementById('almaChatClose'),form=document.getElementById('almaChatForm'),input=document.getElementById('almaChatInput'),log=document.getElementById('almaChatLog'),mic=document.getElementById('almaChatMic'),productsTab=document.getElementById('liaProductsTab'),voiceTab=document.getElementById('liaVoiceTab'),chatPane=document.getElementById('liaChatPane'),avatarPane=document.getElementById('liaAvatarPane'),avatarFrame=document.getElementById('liaAvatarFrame');if(!open||!dlg)return;var selectedCode='',previousQuery='';
 function bubble(text,klass){var el=document.createElement('div');el.className='alma-chat-bubble '+(klass||'');el.textContent=text;log.appendChild(el);log.scrollTop=log.scrollHeight;return el}
-open.addEventListener('click',function(){var avatarPanel=document.getElementById('victoriaRuizPanel'),avatarFab=document.getElementById('victoriaRuizFab');if(avatarPanel&&avatarPanel.classList.contains('is-open')){var avatarClose=document.getElementById('victoriaRuizClose');if(avatarClose)avatarClose.click()}dlg.hidden=false;input.focus()});function shut(){dlg.hidden=true;open.focus()}close.addEventListener('click',shut);dlg.addEventListener('click',function(e){if(e.target===dlg)shut()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!dlg.hidden)shut()});
+function setMode(mode){var voice=mode==='voice';chatPane.hidden=voice;avatarPane.hidden=!voice;productsTab.classList.toggle('is-active',!voice);voiceTab.classList.toggle('is-active',voice);productsTab.setAttribute('aria-pressed',String(!voice));voiceTab.setAttribute('aria-pressed',String(voice));if(voice&&avatarFrame&&!avatarFrame.getAttribute('src'))avatarFrame.setAttribute('src',avatarFrame.getAttribute('data-src'));if(!voice&&avatarFrame&&avatarFrame.hasAttribute('src'))avatarFrame.removeAttribute('src')}
+productsTab.addEventListener('click',function(){setMode('products');input.focus()});voiceTab.addEventListener('click',function(){setMode('voice')});
+open.addEventListener('click',function(){dlg.hidden=false;setMode('products');input.focus()});function shut(){dlg.hidden=true;setMode('products');open.focus()}close.addEventListener('click',shut);dlg.addEventListener('click',function(e){if(e.target===dlg)shut()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!dlg.hidden)shut()});
 var audioControls=document.getElementById('almaAudioControls'),audioStatus=document.getElementById('almaAudioStatus'),audioSend=document.getElementById('almaAudioSend'),audioCancel=document.getElementById('almaAudioCancel'),recorder=null,stream=null,chunks=[],audioBlob=null,timer=null,canceled=false,busy=false;
 function stopTracks(){if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}if(timer){clearTimeout(timer);timer=null}}
 function setMic(isRecording){mic.setAttribute('aria-pressed',isRecording?'true':'false');mic.setAttribute('aria-label',isRecording?'Terminar grabación':'Grabar consulta de voz');mic.title=isRecording?'Terminar grabación':'Grabar consulta de voz'}
