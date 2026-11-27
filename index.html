@@ -890,13 +890,6 @@ body.catalog-libreria-ruiz .ruiz-email-honey{position:absolute;left:-10000px;wid
 
 <main>
 {% if catalogo.slug == 'libreria-ruiz' %}
-<section class="ruiz-category-carousel-wrap" aria-label="Explorá las categorías de Librería Ruíz">
-  <div class="ruiz-category-carousel-heading"><h2>📚 Buscá por categoría</h2><div class="ruiz-category-carousel-controls"><button type="button" aria-label="Categorías anteriores" title="Ver categorías anteriores" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(-1)">‹</button><span>Deslizá</span><button type="button" aria-label="Más categorías" title="Ver más categorías" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(1)">›</button></div></div>
-  <div class="ruiz-category-carousel-track" id="ruizCategoryCarousel"></div>
-</section>
-<script>function moverCarruselCategoriasRuiz(direccion){var track=document.getElementById('ruizCategoryCarousel');if(!track)return;var card=track.querySelector('.ruiz-category-carousel-card');var paso=(card?card.getBoundingClientRect().width:130)+10;track.scrollBy({left:paso*direccion,behavior:'smooth'})}(function(){var source=document.querySelector('#catNav .category-track');var target=document.getElementById('ruizCategoryCarousel');if(!source||!target)return;source.querySelectorAll('a.ruiz-category-menu').forEach(function(item){var card=item.cloneNode(true);card.classList.remove('ruiz-category-menu','active');card.classList.add('ruiz-category-carousel-card');card.removeAttribute('onclick');card.addEventListener('click',function(ev){ev.preventDefault();item.click();target.querySelectorAll('.ruiz-category-carousel-card').forEach(function(other){other.classList.remove('active')});card.classList.add('active')});target.appendChild(card)})})();</script>
-{% endif %}
-{% if catalogo.slug == 'libreria-ruiz' %}
 <div class="ruiz-search-wrap">
   <div class="ruiz-search-label">🔎 Encontrá rápido un producto</div>
   <div class="search-bar ruiz-search-bar" role="search">
@@ -918,6 +911,11 @@ body.catalog-libreria-ruiz .ruiz-email-honey{position:absolute;left:-10000px;wid
     <span class="ruiz-filter-hint">Los filtros se combinan con la búsqueda por nombre o marca.</span>
   </div>
 </div>
+<section class="ruiz-category-carousel-wrap" aria-label="Explorá las categorías de Librería Ruíz">
+  <div class="ruiz-category-carousel-heading"><h2>📚 Buscá por categoría</h2><div class="ruiz-category-carousel-controls"><button type="button" aria-label="Categorías anteriores" title="Ver categorías anteriores" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(-1)">‹</button><span>Deslizá</span><button type="button" aria-label="Más categorías" title="Ver más categorías" aria-controls="ruizCategoryCarousel" onclick="moverCarruselCategoriasRuiz(1)">›</button></div></div>
+  <div class="ruiz-category-carousel-track" id="ruizCategoryCarousel"></div>
+</section>
+<script>function moverCarruselCategoriasRuiz(direccion){var track=document.getElementById('ruizCategoryCarousel');if(!track)return;var card=track.querySelector('.ruiz-category-carousel-card');var paso=(card?card.getBoundingClientRect().width:130)+10;track.scrollBy({left:paso*direccion,behavior:'smooth'})}(function(){var source=document.querySelector('#catNav .category-track');var target=document.getElementById('ruizCategoryCarousel');if(!source||!target)return;source.querySelectorAll('a.ruiz-category-menu').forEach(function(item){var card=item.cloneNode(true);card.classList.remove('ruiz-category-menu','active');card.classList.add('ruiz-category-carousel-card');card.removeAttribute('onclick');card.addEventListener('click',function(ev){ev.preventDefault();item.click();target.querySelectorAll('.ruiz-category-carousel-card').forEach(function(other){other.classList.remove('active')});card.classList.add('active')});target.appendChild(card)})})();</script>
 {% endif %}
  {% macro showcase_card(p, tag='') -%}
  <article class="showcase-card" data-code="{{ p.codigo }}">
