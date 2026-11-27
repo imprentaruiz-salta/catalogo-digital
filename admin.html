@@ -36,6 +36,9 @@ tr:hover td{background:#f9fffe}
 </style>
 </head>
 <body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}<div role="status" style="padding:14px 18px;font-weight:700;background:{{ '#fef2f2' if category == 'error' else '#dcfce7' }};color:{{ '#991b1b' if category == 'error' else '#166534' }}">{{ message }}</div>{% endfor %}
+{% endwith %}
 <header>
   <h1>🛒 Panel Admin</h1>
   <div style="display:flex;gap:16px;align-items:center">

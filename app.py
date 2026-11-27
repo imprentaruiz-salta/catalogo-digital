@@ -75,7 +75,7 @@ def cloud_sync_background():
             cloud_sync()
     threading.Thread(target=worker,name="catalog-cloud-sync",daemon=True).start()
 
-def cloud_sync():
+def cloud_sync(timeout=180):
     """Upload one atomic catalog snapshot after a successful local change."""
     if not cloud_enabled() or not os.path.exists(DB_PATH): return False
     # Never replace a valid cloud snapshot with an empty database. This protects
@@ -95,7 +95,7 @@ def cloud_sync():
             for name in files:
                 z.write(os.path.join(root,name),os.path.join("imagenes",name))
     try:
-        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip",timeout=180) as response:
+        with cloud_request(SUPABASE_SNAPSHOT,"POST",mem.getvalue(),"application/zip",timeout=timeout) as response:
             response.read()
         return True
     except Exception:
@@ -2109,10 +2109,18 @@ def admin_editar(pid):
     return render_template('producto_form.html',producto=dict(prod),categorias=get_categorias(),catalogo=current_config())
 def _guardar_producto(pid):
     backup_db('antes-producto')
-    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); codigo_barras=''.join(ch for ch in f.get('codigo_barras','').strip() if ch.isalnum()); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip();
+    # Preserve database fields the form does not submit (barcode, cost and
+    # legacy availability), rather than silently resetting them on every edit.
+    old_product=None
+    if pid:
+        with get_db() as db:
+            old_product=db.execute('SELECT * FROM productos WHERE id=? AND catalogo_slug=?',(pid,current_slug())).fetchone()
+        if old_product is None:
+            return 'Producto no encontrado en este catálogo',404
+    f=request.form; cat=f.get('categoria',''); nivel_precio=f.get('nivel_precio','Estándar').strip() or 'Estándar'; cat=f.get('nueva_categoria','').strip() if cat=='__nueva__' else cat; codigo=f.get('codigo','').strip().upper(); codigo_barras=''.join(ch for ch in f.get('codigo_barras',old_product['codigo_barras'] or '' if old_product else '').strip() if ch.isalnum()); nombre=f.get('nombre','').strip(); desc_=f.get('descripcion','').strip();
     try: precio=float(str(f.get('precio',0) or 0).replace(',','.'))
     except (ValueError,TypeError): precio=-1
-    marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=1 if f.get('stock') else 0
+    marca=f.get('marca','').strip(); activo=1 if f.get('activo') else 0; stock=(1 if f.get('stock') else 0) if 'stock' in f or not old_product else int(old_product['stock'] or 0)
     try:
         existing_stock=0
         if pid:
@@ -2121,7 +2129,7 @@ def _guardar_producto(pid):
                 if existing_row: existing_stock=int(existing_row['stock_actual'] or 0)
         raw_stock=f.get('stock_actual','').strip()
         stock_actual=max(0,int(raw_stock)) if raw_stock else existing_stock
-        stock_minimo=max(0,int(f.get('stock_minimo',0) or 0)); costo=float(f.get('costo',0) or 0)
+        stock_minimo=max(0,int(f.get('stock_minimo',old_product['stock_minimo'] if old_product else 0) or 0)); costo=float(f.get('costo',old_product['costo'] if old_product else 0) or 0)
     except (ValueError,TypeError):
         return render_template('producto_form.html',producto=None if not pid else dict(get_db().execute('SELECT * FROM productos WHERE id=?',(pid,)).fetchone() or {}),categorias=get_categorias(),catalogo=current_config(),error='Revisá stock, stock mínimo y costo: usá números enteros para las unidades.')
     proveedor=f.get('proveedor','').strip(); foto_name=''; file=request.files.get('foto')
@@ -2148,8 +2156,20 @@ def _guardar_producto(pid):
             db.execute('UPDATE productos SET codigo=?,codigo_barras=?,nombre=?,desc_=?,precio=?,categoria=?,marca=?,foto=?,activo=?,stock=?,catalogo_slug=?,stock_actual=?,stock_minimo=?,costo=?,proveedor=?,nivel_precio=? WHERE id=?',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio,pid))
         else: db.execute('INSERT INTO productos(codigo,codigo_barras,nombre,desc_,precio,categoria,marca,foto,activo,stock,catalogo_slug,stock_actual,stock_minimo,costo,proveedor,nivel_precio) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(codigo,codigo_barras,nombre,desc_,precio,cat,marca,foto_name,activo,stock,current_slug(),stock_actual,stock_minimo,costo,proveedor,nivel_precio))
         db.commit()
-    cloud_sync_background()
     log_change('producto',current_slug(),('editar' if pid else 'crear')+' '+codigo)
+    # Do not silently claim durable success when Render's ephemeral disk cannot
+    # be mirrored. Serialize with background mirrors to avoid stale snapshots.
+    sync_ok=False
+    if CLOUD_SYNC_LOCK.acquire(timeout=1):
+        try:
+            sync_ok=cloud_sync(timeout=15)
+        finally:
+            CLOUD_SYNC_LOCK.release()
+    if sync_ok:
+        flash('Producto guardado y copia en la nube actualizada.','success')
+    else:
+        app.logger.error('Producto guardado localmente, pero la copia en la nube falló: %s',codigo)
+        flash('Atención: el producto se guardó localmente, pero no se pudo confirmar la copia en la nube. Podría perderse si el servicio se reinicia.','error')
     return redirect(url_for('admin_index'))
 @app.route('/admin/productos/disponibles',methods=['POST'])
 @login_required
