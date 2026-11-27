@@ -1043,7 +1043,27 @@ body.catalog-libreria-ruiz .ruiz-email-honey{position:absolute;left:-10000px;wid
  <div class="cat-count">{{ total.n }} producto{{ 's' if total.n != 1 else '' }} · {{ total_marcas.n }} marca{{ 's' if total_marcas.n != 1 else '' }}</div>
  </div>
  </div>
-
+ {% if catalogo.slug == 'libreria-ruiz' and cat|lower == 'biromes' %}
+ <section class="ruiz-ink-widget" aria-label="Probá los colores de biromes">
+  <button class="ruiz-ink-toggle" type="button" id="ruizInkToggle" aria-expanded="false" aria-controls="ruizInkPanel">✍️ Probá los colores</button>
+  <div class="ruiz-ink-panel" id="ruizInkPanel" hidden>
+   <h3>Escribí una palabra y elegí la tinta</h3>
+   <p class="ruiz-ink-instructions">Dibujá con el dedo en el recuadro o escribí abajo.</p>
+   <canvas class="ruiz-ink-canvas" id="ruizInkCanvas" width="720" height="210" role="img" aria-label="Pizarra para probar un trazo de tinta"></canvas>
+   <div class="ruiz-ink-text-entry"><label for="ruizInkText">También podés escribir</label><input id="ruizInkText" type="text" maxlength="32" placeholder="Ej.: Hola, Salta" autocomplete="off"><button type="button" id="ruizInkClear">Borrar</button></div>
+   <div class="ruiz-ink-colors" role="group" aria-label="Elegí el color de tinta">
+    <button type="button" class="ruiz-ink-color is-selected" data-ink="azul" aria-pressed="true"><i style="--ink-color:#245fbd"></i>Azul</button>
+    <button type="button" class="ruiz-ink-color" data-ink="negro" aria-pressed="false"><i style="--ink-color:#242424"></i>Negro</button>
+    <button type="button" class="ruiz-ink-color" data-ink="rojo" aria-pressed="false"><i style="--ink-color:#d52f3b"></i>Rojo</button>
+    <button type="button" class="ruiz-ink-color" data-ink="verde" aria-pressed="false"><i style="--ink-color:#238454"></i>Verde</button>
+   </div>
+   <p class="ruiz-ink-disclaimer">Vista previa digital: el trazo real puede variar según la birome. Algunos modelos tienen stock por color a confirmar.</p>
+   <div class="ruiz-ink-results-head"><h4 id="ruizInkResultsTitle">Biromes con tinta azul</h4><span id="ruizInkResultsCount" aria-live="polite"></span></div>
+   <div class="ruiz-ink-products" id="ruizInkProducts" aria-live="polite"></div>
+  </div>
+ </section>
+ {% endif %}
+ 
  {% for marca, productos in marcas.items() %}
  {% if catalogo.slug != 'libreria-ruiz' or marca|lower in ['keyroad','bic','paper mate','intra','filgo','ezco','katania','pelikan','auca','olami','maped','art-jet','global','ibi','genérica','leep','luma','duracell','la gotita','unipox','ibi','sandisk','pizzini','glister'] %}
  <div class="brand-block{% if catalogo.slug in ['libreria-ruiz','renas-beauty'] %} brand-open{% endif %}">
@@ -2642,6 +2662,52 @@ if(expand)expand.addEventListener('click',function(){var target=overlay.requestF
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&overlay.classList.contains('open')&&!document.fullscreenElement)window.closeRuizDemo()});
 })();
 </script>{% endif %}
+
+{% if catalogo.slug == 'libreria-ruiz' %}
+<style>
+.ruiz-ink-widget{margin:10px 0 14px;padding:0 2px}
+.ruiz-ink-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;padding:10px 14px;border:1px solid #b8d7f2;border-radius:13px;background:linear-gradient(100deg,#eff7ff,#fff7fb);color:#164e7a;font-size:14px;font-weight:850;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,121,.08)}
+.ruiz-ink-toggle:hover{background:#e8f3ff}.ruiz-ink-toggle:focus-visible,.ruiz-ink-color:focus-visible,.ruiz-ink-text-entry button:focus-visible,.ruiz-ink-product button:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.ruiz-ink-panel{margin-top:9px;padding:14px;border:1px solid #c8def2;border-radius:16px;background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 3px 14px rgba(29,78,121,.08)}
+.ruiz-ink-panel[hidden]{display:none!important}.ruiz-ink-panel h3{margin:0 0 4px;color:#164e7a;font-size:17px}.ruiz-ink-instructions{margin:0 0 9px;color:#536579;font-size:12px}
+.ruiz-ink-canvas{display:block;width:100%;height:138px;border:1px solid #cbd9e6;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;box-shadow:inset 0 1px 4px rgba(29,78,121,.06)}
+.ruiz-ink-text-entry{display:flex;align-items:center;gap:7px;margin-top:9px}.ruiz-ink-text-entry label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.ruiz-ink-text-entry input{min-width:0;flex:1;height:40px;padding:8px 10px;border:1px solid #cbd9e6;border-radius:10px;font:inherit;font-size:13px;color:#17324d;background:#fff}.ruiz-ink-text-entry button{height:40px;padding:0 12px;border:1px solid #cbd9e6;border-radius:10px;background:#fff;color:#164e7a;font-weight:800;cursor:pointer}
+.ruiz-ink-colors{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0}.ruiz-ink-color{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:6px 5px;border:1px solid #d6e2ec;border-radius:11px;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer}.ruiz-ink-color i{width:15px;height:15px;flex:none;border:2px solid #fff;border-radius:50%;background:var(--ink-color);box-shadow:0 0 0 1px #a8b7c5}.ruiz-ink-color.is-selected{border-color:#2563eb;background:#eff6ff;color:#164e7a;box-shadow:0 0 0 1px #2563eb}
+.ruiz-ink-disclaimer{margin:0 0 12px;padding:8px 9px;border-radius:9px;background:#f1f5f9;color:#536579;font-size:11px;line-height:1.35}.ruiz-ink-results-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 8px}.ruiz-ink-results-head h4{margin:0;color:#164e7a;font-size:14px}.ruiz-ink-results-head span{color:#64748b;font-size:11px}.ruiz-ink-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ruiz-ink-product{display:flex;flex-direction:column;min-width:0;padding:8px;border:1px solid #dce6ef;border-radius:12px;background:#fff;box-shadow:0 1px 5px rgba(29,78,121,.05)}.ruiz-ink-product-top{display:flex;align-items:center;gap:8px;min-height:54px}.ruiz-ink-product img{width:46px;height:52px;flex:none;object-fit:contain;border-radius:7px;background:#fff}.ruiz-ink-product-name{display:-webkit-box;overflow:hidden;color:#17324d;font-size:11px;font-weight:850;line-height:1.25;-webkit-line-clamp:3;-webkit-box-orient:vertical}.ruiz-ink-product-meta{margin:5px 0;color:#475569;font-size:10px;line-height:1.3}.ruiz-ink-product-price{color:#164e7a;font-size:12px;font-weight:900}.ruiz-ink-product-stock{display:block;margin-top:2px;color:#607080;font-size:9px;line-height:1.3}.ruiz-ink-product-actions{display:flex;gap:5px;margin-top:auto;padding-top:7px}.ruiz-ink-product-actions button{flex:1;min-height:34px;padding:5px 4px;border:1px solid #b8d7f2;border-radius:8px;background:#f0f7fd;color:#164e7a;font-size:10px;font-weight:850;cursor:pointer}.ruiz-ink-product-actions button.primary{border-color:#1d4ed8;background:#1d4ed8;color:#fff}.ruiz-ink-empty{grid-column:1/-1;padding:12px;border-radius:10px;background:#f8fafc;color:#536579;font-size:12px;text-align:center}
+@media(max-width:420px){.ruiz-ink-panel{padding:11px}.ruiz-ink-canvas{height:125px}.ruiz-ink-product{padding:7px}.ruiz-ink-product img{width:40px;height:48px}.ruiz-ink-product-name{font-size:10px}.ruiz-ink-product-actions{flex-direction:column}.ruiz-ink-product-actions button{min-height:32px}}
+</style>
+<script>
+(function(){
+ var section=document.getElementById('sec-biromes');if(!section)return;
+ var toggle=document.getElementById('ruizInkToggle'),panel=document.getElementById('ruizInkPanel'),canvas=document.getElementById('ruizInkCanvas'),textInput=document.getElementById('ruizInkText'),clear=document.getElementById('ruizInkClear'),list=document.getElementById('ruizInkProducts'),title=document.getElementById('ruizInkResultsTitle'),count=document.getElementById('ruizInkResultsCount');
+ if(!toggle||!panel||!canvas||!list)return;
+ var ctx=canvas.getContext('2d'),selected='azul',drawing=false,lastPoint=null,strokes=[];
+ var colors={azul:'#245fbd',negro:'#242424',rojo:'#d52f3b',verde:'#238454'};
+ /* Only list inks explicitly named in the published product titles/descriptions. */
+ var codes={
+  azul:['BIC-ULTRAFINA-AZUL','BIC-CRISTAL-AZ-2026','BIC-AZ-2026','KEYROAD-ADV-GEL-07-COLORES-2026','PAPERMATE-KM-AZ-2026','FILGO-BORRAX-UNICORNIO-2026','FILGO-BORRAX-SE-COLORES-2026','PIZZINI-BORRAMIO-PASTEL-2026'],
+  negro:['BIC-TR-NE-2026','BIC-NEG-2026','BIC-ULTRAFINA-NEGRA-2026','KEYROAD-ADV-GEL-07-COLORES-2026','PAPERMATE-KM-NEG-2026','PAPERMATE-INKJOY-100-CAP-NEG-2026','FILGO-BORRAX-SE-COLORES-2026'],
+  rojo:['BIC-TR-RO-2026','BIC-RO-2026','BIC-ULTRAFINA-ROJA-2026','KEYROAD-ADV-GEL-07-COLORES-2026','FILGO-BORRAX-SE-COLORES-2026'],
+  verde:['INTRA-GEL-FLUO-08-2026']
+ };
+ function paintBase(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#e8eef4';ctx.lineWidth=1;for(var y=61;y<canvas.height;y+=47){ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(canvas.width-12,y);ctx.stroke()}ctx.fillStyle='#8c9bab';ctx.font='22px system-ui,sans-serif';ctx.textBaseline='middle';ctx.fillText('Escribí o dibujá acá',18,32);if(textInput.value.trim()){ctx.fillStyle=colors[selected];ctx.font='italic 39px "DejaVu Sans",system-ui,sans-serif';ctx.textBaseline='middle';ctx.fillText(textInput.value.trim().slice(0,32),22,Math.round(canvas.height*.55),canvas.width-44)}strokes.forEach(function(path){if(path.length<2)return;ctx.beginPath();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=colors[selected];ctx.lineWidth=5;ctx.moveTo(path[0].x,path[0].y);for(var i=1;i<path.length;i++)ctx.lineTo(path[i].x,path[i].y);ctx.stroke()})}
+ function point(e){var r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
+ canvas.addEventListener('pointerdown',function(e){e.preventDefault();drawing=true;lastPoint=point(e);strokes.push([lastPoint]);canvas.setPointerCapture(e.pointerId);paintBase()});
+ canvas.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var p=point(e);var path=strokes[strokes.length-1];path.push(p);ctx.beginPath();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=colors[selected];ctx.lineWidth=5;ctx.moveTo(lastPoint.x,lastPoint.y);ctx.lineTo(p.x,p.y);ctx.stroke();lastPoint=p});
+ function endDraw(){drawing=false;lastPoint=null}canvas.addEventListener('pointerup',endDraw);canvas.addEventListener('pointercancel',endDraw);
+ textInput.addEventListener('input',paintBase);
+ clear.addEventListener('click',function(){textInput.value='';strokes=[];paintBase();textInput.focus()});
+ function priceText(card){var e=card.querySelector('.prod-price');return e?e.textContent.replace(/\s+/g,' ').trim():'Precio a confirmar'}
+ function safeText(el,tag,className,text){var n=document.createElement(tag);if(className)n.className=className;n.textContent=text;el.appendChild(n);return n}
+ function buildResults(){selected=selected||'azul';title.textContent='Biromes con tinta '+selected;list.textContent='';var wanted=codes[selected]||[],matched=wanted.map(function(code){return section.querySelector('.product-card[data-code="'+code+'"]')}).filter(Boolean);count.textContent=matched.length+' opciones';if(!matched.length){safeText(list,'p','ruiz-ink-empty','No hay biromes con este color confirmadas en la ficha por ahora.');return}
+  matched.forEach(function(card){var code=card.getAttribute('data-code'),nameEl=card.querySelector('.prod-name'),name=nameEl?nameEl.textContent.trim():code,img=card.querySelector('.prod-img img'),price=priceText(card),stockEl=card.querySelector('.stock-note'),stock=card.querySelector('.ruiz-variant-pick')?'Disponibilidad por color a confirmar':(stockEl?stockEl.textContent.trim():'Disponibilidad a consultar'),entry=document.createElement('article');entry.className='ruiz-ink-product';entry.setAttribute('data-code',code);var top=document.createElement('div');top.className='ruiz-ink-product-top';if(img){var image=document.createElement('img');image.src=img.getAttribute('src');image.alt=name;image.loading='lazy';image.decoding='async';top.appendChild(image)}safeText(top,'strong','ruiz-ink-product-name',name);entry.appendChild(top);var meta=document.createElement('div');meta.className='ruiz-ink-product-meta';safeText(meta,'span','ruiz-ink-product-price',price);safeText(meta,'span','ruiz-ink-product-stock',stock);entry.appendChild(meta);var actions=document.createElement('div');actions.className='ruiz-ink-product-actions';var details=document.createElement('button');details.type='button';details.textContent='Ver ficha';details.addEventListener('click',function(){if(nameEl)nameEl.click()});actions.appendChild(details);var sourceAdd=card.querySelector('.ruiz-add-primary');if(sourceAdd){var add=document.createElement('button');add.type='button';add.className='primary';add.textContent='Agregar';add.addEventListener('click',function(){sourceAdd.click()});actions.appendChild(add)}else{var consult=card.querySelector('.ruiz-primary-actions .consult-btn');if(consult){var ask=document.createElement('button');ask.type='button';ask.textContent=card.querySelector('.ruiz-variant-pick')?'Elegir color':'Consultar';ask.addEventListener('click',function(){consult.click()});actions.appendChild(ask)}}entry.appendChild(actions);list.appendChild(entry)})
+ }
+ document.querySelectorAll('.ruiz-ink-color').forEach(function(b){b.addEventListener('click',function(){selected=b.dataset.ink||'azul';document.querySelectorAll('.ruiz-ink-color').forEach(function(x){var on=x===b;x.classList.toggle('is-selected',on);x.setAttribute('aria-pressed',on?'true':'false')});paintBase();buildResults()})});
+ toggle.addEventListener('click',function(){var open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',open?'true':'false');panel.hidden=!open;toggle.textContent=open?'✍️ Ocultar prueba de colores':'✍️ Probá los colores';if(open){paintBase();buildResults()}});
+ paintBase();buildResults();
+})();
+</script>
+{% endif %}
 
 </body>
 </html>
