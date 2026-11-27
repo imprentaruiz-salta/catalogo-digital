@@ -1,4 +1,4 @@
-import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading
+import os, sqlite3, uuid, io, json, zipfile, tempfile, shutil, unicodedata, hashlib, hmac, urllib.request, urllib.error, urllib.parse, threading, html
 from decimal import Decimal, ROUND_CEILING, InvalidOperation
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -1246,16 +1246,56 @@ def vivero_portada_upload():
                     except OSError: pass
     urls=get_vivero_cover_urls()
     return render_template('vivero_portada_upload.html',message=message,error=error,video_url=urls['vivero_cover_video_url'],poster_url=urls['vivero_cover_poster_url'])
+def render_ruiz_emergency_price_catalog():
+    """Temporary read-only public price list from last verified page snapshot if DB is unavailable."""
+    snapshot_path=os.path.join(BASE_DIR,'libreria_ruiz_price_snapshot_20261126.json')
+    try:
+        with open(snapshot_path,encoding='utf-8') as source:
+            items=json.load(source)
+        if len(items)!=69 or len({item.get('code') for item in items})!=69:
+            raise ValueError('invalid emergency catalog snapshot')
+    except Exception:
+        app.logger.exception('No se pudo abrir el respaldo provisional de precios de Librería Ruíz')
+        return ('El catálogo está en mantenimiento. Consultanos por WhatsApp.',503)
+    def fmt(value):
+        try: return f"{int(Decimal(str(value))):,}".replace(',','.')
+        except Exception: return 'Consultar'
+    cards=[]
+    for item in items:
+        code=html.escape(str(item.get('code','')),quote=True)
+        name=html.escape(str(item.get('name','Producto')),quote=True)
+        brand=html.escape(str(item.get('brand','')),quote=True)
+        category=html.escape(str(item.get('category','')),quote=True)
+        desc=html.escape(str(item.get('desc','')),quote=True)
+        label=html.escape(str(item.get('priceLabel','Precio')),quote=True)
+        search=html.escape((str(item.get('code',''))+' '+str(item.get('name',''))+' '+str(item.get('brand',''))+' '+str(item.get('category',''))).lower(),quote=True)
+        query=urllib.parse.quote(f"Hola, consulto por {item.get('name','')} ({item.get('code','')}). ¿Hay stock disponible?")
+        desc_html=(f'<p class="desc">{desc}</p>') if desc else ''
+        cards.append(f'<article class="item" data-cat="{category.lower()}" data-search="{search}"><div class="meta">{category} · {brand}</div><h2>{name}</h2><div class="code">{code}</div>{desc_html}<div class="price">ARS {fmt(item.get("price",0))}</div><div class="label">{label}</div><a class="ask" href="https://wa.me/5493872101274?text={query}">Consultar stock por WhatsApp</a></article>')
+    categories=sorted({str(item.get('category','')).strip() for item in items if item.get('category')},key=str.casefold)
+    options=''.join(f'<option value="{html.escape(c.lower(),quote=True)}">{html.escape(c)}</option>' for c in categories)
+    page='''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="index,follow"><title>Librería Ruíz · Precios</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#102a43;font:15px system-ui,-apple-system,Segoe UI,sans-serif}header{background:linear-gradient(135deg,#102a43,#1d70b8);color:white;padding:22px 16px}header main,main{max-width:1040px;margin:auto}h1{margin:0;font-size:25px}.tag{margin-top:6px;color:#e8f1ff}.notice{background:#fff6dd;border:1px solid #f1d58a;border-radius:12px;padding:14px;margin:16px 0;line-height:1.45}.filters{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}input,select{padding:12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:white;flex:1;min-width:200px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;padding-bottom:30px}.item{background:white;border:1px solid #dce5ee;border-radius:14px;padding:16px;box-shadow:0 2px 6px #102a4310;display:flex;flex-direction:column;min-height:190px}.meta,.code,.label{color:#60758a;font-size:12px}.item h2{font-size:17px;line-height:1.25;margin:7px 0}.desc{font-size:13px;color:#526273;line-height:1.4;margin:4px 0 8px}.price{font-size:22px;font-weight:850;color:#102a43;margin-top:auto;padding-top:12px}.ask{display:block;text-align:center;text-decoration:none;background:#1d70b8;color:white;font-weight:750;border-radius:10px;padding:10px;margin-top:10px}.foot{font-size:12px;color:#60758a;padding:0 0 25px}#count{color:#60758a;font-size:13px;margin:0 0 10px}</style></head><body><header><main><h1>📚 Librería Ruíz</h1><div class="tag">Tus ideas, siempre a mano</div></main></header><main><div class="notice"><b>Lista provisional de precios.</b> Valores tomados del catálogo público el 26/11/2026 a las 19:20. El stock y la compra online están temporalmente en revisión: consultá disponibilidad por WhatsApp antes de pagar. Las fotos no están disponibles en esta lista de respaldo.</div><div class="filters"><input id="q" type="search" placeholder="Buscar producto o marca"><select id="cat"><option value="">Todas las categorías</option>__OPTIONS__</select></div><div id="count"></div><section class="grid">__CARDS__</section><p class="foot">Precios ARS · Respaldo provisional basado en la última copia pública disponible. Consultas al WhatsApp de Librería Ruíz.</p></main><script>const q=document.getElementById('q'),cat=document.getElementById('cat'),cards=[...document.querySelectorAll('.item')],count=document.getElementById('count');function filter(){let n=0;cards.forEach(c=>{let show=(!q.value||c.dataset.search.includes(q.value.toLowerCase()))&&(!cat.value||c.dataset.cat===cat.value);c.hidden=!show;if(show)n++});count.textContent=n+' productos';}q.addEventListener('input',filter);cat.addEventListener('change',filter);filter();</script></body></html>'''
+    page=page.replace('__OPTIONS__',options).replace('__CARDS__',''.join(cards))
+    return app.response_class(page,mimetype='text/html; charset=utf-8',headers={'Cache-Control':'no-store'})
+
 @app.route('/')
 def index():
-    cfg=current_config(); return render_catalog_page(get_catalogo(current_slug()),get_showcase(current_slug()),cfg)
+    slug=current_slug()
+    products=get_catalogo(slug)
+    if slug=='libreria-ruiz' and not products:
+        return render_ruiz_emergency_price_catalog()
+    cfg=current_config(); return render_catalog_page(products,get_showcase(slug),cfg)
 @app.route('/c/<slug>')
 def catalogo_publico(slug):
     if slug in ('renas-beauty','vivero-los-colibries'):
         return ('', 410)
     cfg=get_catalogo_config(slug)
     if not cfg: return redirect(url_for('index'))
-    return render_catalog_page(get_catalogo(slug),get_showcase(slug),cfg)
+    products=get_catalogo(slug)
+    if slug=='libreria-ruiz' and not products:
+        return render_ruiz_emergency_price_catalog()
+    return render_catalog_page(products,get_showcase(slug),cfg)
 
 @app.route('/lector-qr')
 def lector_qr_independiente():
