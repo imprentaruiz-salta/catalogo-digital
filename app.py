@@ -722,7 +722,7 @@ _ALMA_CHAT_ALIASES={
  'pilas':'pila','baterias':'pila','cuadernos':'cuaderno','notas':'nota','notitas':'nota','postits':'postit','postit':'nota','senaladores':'senalador','tijeras':'tijera','calculadoras':'calculadora','reglas':'regla','escuadras':'escuadra','transportadores':'transportador','encendedores':'encendedor','correctores':'corrector','adhesivos':'adhesivo','cintas':'cinta','pegamentos':'pegamento','pendrive':'usb','pendrives':'usb','memoria':'usb','memorias':'usb','sandisk':'sandisk',
  'negro':'negra','negros':'negra','negras':'negra','rojo':'roja','rojos':'roja','rojas':'roja','azules':'azul','amarilla':'amarillo','amarillas':'amarillo','verdes':'verde','rosas':'rosa'
 }
-_ALMA_CHAT_FILLERS=set('alma hola buenas buen dia tenes tiene tienen hay existe existen venden vende busco buscame buscas buscar quiero necesito quisiera si alguna algun alguno algunas algunos algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen comprar pedido pedidos ustedes dame pregunta favor saber mostrar mostrame mostra ver categoria catalogo todos todas disponibles disponible quiero quisiera decime por favor informacion info me interesa relacionados relacionado parecidos parecido'.split())
+_ALMA_CHAT_FILLERS=set('alma lia hola buenas buen dia tenes tiene tienen hay existe existen venden vende busco buscame buscas buscar quiero necesito quisiera si alguna algun alguno algunas algunos algo de esas esos esa ese del la el los las un una unos unas por para con en y o me mi a lo que tal cosa producto productos cuanto cuantos cuantas cuesta cuestan precio precios sale salen comprar pedido pedidos ustedes dame pregunta favor saber mostrar mostrame mostra ver categoria catalogo todos todas disponibles disponible quiero quisiera decime por favor informacion info me interesa relacionados relacionado parecidos parecido'.split())
 _ALMA_CHAT_COLORS=set('azul negra roja verde rosa amarillo naranja violeta celeste gris blanca blanco pastel'.split())
 _ALMA_CHAT_BRANDS={'bic','pelikan','intra','filgo','pizzini','ezco','duracell','maped','katania','ibi','paper','mate','keyroad','luma','global','auca','sandisk','glister','unipox','leep'}
 def _alma_chat_tokens(value):
@@ -858,7 +858,7 @@ def alma_chat_publico():
     client=request.remote_addr or 'unknown'; now=_alma_time.monotonic()
     with _ALMA_CHAT_RATE_LOCK:
         recent=[stamp for stamp in _ALMA_CHAT_RATE.get(client,[]) if now-stamp<60]
-        if len(recent)>=120: return jsonify({'error':'Alma recibió varias consultas seguidas. Esperá un minuto y probá de nuevo.'}),429
+        if len(recent)>=120: return jsonify({'error':'Lía recibió varias consultas seguidas. Esperá un minuto y probá de nuevo.'}),429
         recent.append(now); _ALMA_CHAT_RATE[client]=recent
         if len(_ALMA_CHAT_RATE)>2000: _ALMA_CHAT_RATE.clear()
     try:
@@ -933,7 +933,7 @@ def alma_audio_transcribe():
     """Transcribe a short spoken question in memory only; never retain uploaded audio."""
     key=os.environ.get('GEMINI_AUDIO_API_KEY','').strip()
     if not key:
-        return jsonify({'error':'El micrófono de Alma todavía no está configurado. Escribí tu consulta por ahora.'}),503
+        return jsonify({'error':'El micrófono de Lía todavía no está configurado. Escribí tu consulta por ahora.'}),503
     audio=request.files.get('audio')
     if not audio or not audio.filename:
         return jsonify({'error':'No recibí el audio. Tocá el micrófono y probá otra vez.'}),400
@@ -961,7 +961,7 @@ def alma_audio_transcribe():
         text=text.strip('"“” \n\t')
         if not text or 'AUDIO_NO_ENTENDIBLE' in text.upper(): return jsonify({'error':'No entendí el audio. Podés grabarlo otra vez o escribir la consulta.'}),422
         if len(text)>500: text=text[:500].rsplit(' ',1)[0]
-        return jsonify({'transcripcion':text,'mensaje':'Revisá lo que escuché y tocá Enviar para consultarle a Alma.'})
+        return jsonify({'transcripcion':text,'mensaje':'Revisá lo que escuché y tocá Enviar para consultarle a Lía.'})
     except (TimeoutError, _alma_socket.timeout):
         return jsonify({'error':'El audio tardó demasiado en procesarse. Probá con una grabación más corta.'}),504
     except Exception:
