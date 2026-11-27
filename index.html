@@ -431,8 +431,8 @@ body.has-ruiz .ruiz-contact-label{display:block;font-size:11px;font-weight:800;c
 @media(max-width:599px){body.has-ruiz .ruiz-order-picker-list{max-height:22vh}body.has-ruiz .ruiz-order-details strong{font-size:11px}}
 
 /* Placa flotante de Librería Ruíz — solo Librería Ruíz */
-@keyframes ruizMothersDayCycle{0%,2%{opacity:0;visibility:hidden;transform:translateY(14px) scale(.98)}4%,29%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}32%,100%{opacity:0;visibility:hidden;transform:translateY(14px) scale(.98)}}
-body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);pointer-events:none;animation:ruizMothersDayCycle 30s ease-in-out infinite}
+@keyframes ruizMothersDayCycle{0%,50%{opacity:1;visibility:visible;transform:translateY(0) scale(1)}50.01%,100%{opacity:0;visibility:hidden;transform:translateY(14px) scale(.98)}}
+body.catalog-libreria-ruiz .ruiz-mothers-banner{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 28px));z-index:850;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);pointer-events:none;animation:ruizMothersDayCycle 60s linear infinite}
 body.catalog-libreria-ruiz .ruiz-mothers-banner.is-dismissed,body.catalog-libreria-ruiz .ruiz-mothers-banner.is-expired{display:none!important;animation:none!important}
 body.catalog-libreria-ruiz .ruiz-mothers-banner img{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 12px 38px rgba(16,42,67,.28)}
 body.catalog-libreria-ruiz .ruiz-mothers-banner-close{position:absolute;z-index:2;top:7px;right:7px;width:34px;height:34px;border:1px solid rgba(255,255,255,.85);border-radius:50%;background:rgba(16,42,67,.78);color:#fff;font-size:23px;line-height:1;cursor:pointer;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
@@ -2180,10 +2180,12 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner)return;
   var placas=[
-    ['1','Un escritorio más ordenado'],
-    ['2','Terminá la semana con todo en orden'],
-    ['3','Ideas para tus trabajos y proyectos'],
-    ['4','Dejá lista la semana que viene']
+    ['1','Un escritorio más ordenado','/static/libreria_popup_30s_1_20261126.png'],
+    ['2','Terminá la semana con todo en orden','/static/libreria_popup_30s_2_20261126.png'],
+    ['3','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_3_20261126.png'],
+    ['4','Dejá lista la semana que viene','/static/libreria_popup_30s_4_20261126.png'],
+    ['5','Dale color a tus apuntes','/static/libreria_popup_30s_5_20261127.png'],
+    ['6','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_6_20261127.png']
   ];
   function actualizarPlacaFlotante(){
     var fecha=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Salta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
@@ -2191,9 +2193,9 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
     var hoy=Date.UTC(Number(partes.year),Number(partes.month)-1,Number(partes.day));
     var inicio=Date.UTC(2026,10,26), dias=Math.floor((hoy-inicio)/86400000);
     var dato=placas[((dias%placas.length)+placas.length)%placas.length];
-    var imagen=banner.querySelector('img'), src='/static/libreria_popup_30s_'+dato[0]+'_20261126.png';
+    var imagen=banner.querySelector('img'), src=dato[2];
     if(imagen.getAttribute('src')!==src)imagen.setAttribute('src',src);
-    imagen.alt=dato[1]+'. Librería Ruíz.';banner.setAttribute('aria-label',dato[1]+'. Placa promocional de Librería Ruíz.');
+    imagen.alt=dato[1]+'. Librería Ruíz. Placa flotante por 30 segundos.';banner.setAttribute('aria-label',dato[1]+'. Placa flotante promocional de Librería Ruíz, visible durante 30 segundos.');
   }
   if(closeButton)closeButton.addEventListener('click',function(){banner.classList.add('is-dismissed');});
   actualizarPlacaFlotante();window.setInterval(actualizarPlacaFlotante,60000);
