@@ -2206,7 +2206,7 @@ def admin_importar():
     uploaded=request.files.get('archivo')
     if not uploaded or not uploaded.filename.lower().endswith('.zip'): return 'Elegí una exportación ZIP válida',400
     backup_db('antes-importacion')
-    with tempfile.TemporaryDirectory() as td:
+    with tempfile.TemporaryDirectory(dir=DATA_DIR) as td:
         uploaded.save(os.path.join(td,'import.zip'))
         with zipfile.ZipFile(os.path.join(td,'import.zip')) as z:
             names=z.namelist()
