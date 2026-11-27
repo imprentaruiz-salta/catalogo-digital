@@ -2179,20 +2179,22 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
   var banner=document.getElementById('ruizMothersBanner');
   var closeButton=document.getElementById('ruizMothersBannerClose');
   if(!banner)return;
-  var placas=[
+  // Una placa flotante por día de la semana (hora de Salta): lunes a domingo.
+  var placasPorDia=[
     ['1','Un escritorio más ordenado','/static/libreria_popup_30s_1_20261126.png'],
-    ['2','Terminá la semana con todo en orden','/static/libreria_popup_30s_2_20261126.png'],
-    ['3','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_3_20261126.png'],
-    ['4','Dejá lista la semana que viene','/static/libreria_popup_30s_4_20261126.png'],
     ['5','Dale color a tus apuntes','/static/libreria_popup_30s_5_20261127.png'],
-    ['6','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_6_20261127.png']
+    ['3','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_3_20261126.png'],
+    ['6','Ideas para tus trabajos y proyectos','/static/libreria_popup_30s_6_20261127.png'],
+    ['2','Terminá la semana con todo en orden','/static/libreria_popup_30s_2_20261126.png'],
+    ['4','Dejá lista la semana que viene','/static/libreria_popup_30s_4_20261126.png'],
+    ['7','Terminá la semana con todo en orden','/static/libreria_popup_30s_7_20261127.png']
   ];
   function actualizarPlacaFlotante(){
     var fecha=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Salta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
     var partes={};fecha.forEach(function(p){partes[p.type]=p.value;});
-    var hoy=Date.UTC(Number(partes.year),Number(partes.month)-1,Number(partes.day));
-    var inicio=Date.UTC(2026,10,26), dias=Math.floor((hoy-inicio)/86400000);
-    var dato=placas[((dias%placas.length)+placas.length)%placas.length];
+    var diaSemana=new Intl.DateTimeFormat('en-US',{weekday:'short',timeZone:'America/Argentina/Salta'}).format(new Date());
+    var indicePorDia={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6};
+    var dato=placasPorDia[indicePorDia[diaSemana]]||placasPorDia[0];
     var imagen=banner.querySelector('img'), src=dato[2];
     if(imagen.getAttribute('src')!==src)imagen.setAttribute('src',src);
     imagen.alt=dato[1]+'. Librería Ruíz. Placa flotante por 30 segundos.';banner.setAttribute('aria-label',dato[1]+'. Placa flotante promocional de Librería Ruíz, visible durante 30 segundos.');
